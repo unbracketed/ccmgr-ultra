@@ -1,0 +1,82 @@
+version: "1.0.0"
+
+# Claude Code Process Monitoring Configuration
+claude:
+  # Enable Claude Code process monitoring
+  enabled: true
+  
+  # How often to check for process state changes (default: 3s)
+  poll_interval: "3s"
+  
+  # Maximum number of Claude processes to track (default: 10)
+  max_processes: 10
+  
+  # How often to clean up stale process data (default: 5m)
+  cleanup_interval: "5m"
+  
+  # How long to wait before considering a process unresponsive (default: 30s)
+  state_timeout: "30s"
+  
+  # How long to wait for a process to start up (default: 10s)
+  startup_timeout: "10s"
+  
+  # Log file patterns to monitor for state detection
+  log_paths:
+    - "~/.claude/logs"
+    - "/tmp/claude-*"
+    - "~/.config/claude/logs/*.log"
+  
+  # Regular expressions for detecting different process states
+  state_patterns:
+    busy: '(?i)(Processing|Executing|Running|Working on|Analyzing|Generating)'
+    idle: '(?i)(Waiting for input|Ready|Idle|Available)'
+    waiting: '(?i)(Waiting for confirmation|Press any key|Continue\?|Y/n)'
+    error: '(?i)(Error|Failed|Exception|Panic|Fatal)'
+  
+  # Enable log file parsing for state detection (default: true)
+  enable_log_parsing: true
+  
+  # Enable CPU/memory monitoring for state detection (default: true)
+  enable_resource_monitoring: true
+  
+  # Enable integration with tmux session management (default: true)
+  integrate_tmux: true
+  
+  # Enable integration with git worktree management (default: true)
+  integrate_worktrees: true
+
+# Status hooks will be triggered based on Claude process states
+status_hooks:
+  enabled: true
+  idle:
+    enabled: true
+    script: "~/.config/ccmgr-ultra/hooks/idle.sh"
+    timeout: 30
+    async: true
+  busy:
+    enabled: true
+    script: "~/.config/ccmgr-ultra/hooks/busy.sh"
+    timeout: 30
+    async: true
+  waiting:
+    enabled: true
+    script: "~/.config/ccmgr-ultra/hooks/waiting.sh"
+    timeout: 30
+    async: true
+
+# Example of how status hooks can respond to Claude states
+# ~/.config/ccmgr-ultra/hooks/idle.sh:
+# #!/bin/bash
+# echo "Claude is now idle in session: $CCMGR_SESSION_ID"
+# echo "Working directory: $CCMGR_WORKING_DIR"
+# echo "Worktree: $CCMGR_WORKTREE_ID"
+
+# ~/.config/ccmgr-ultra/hooks/busy.sh:
+# #!/bin/bash
+# echo "Claude is now busy in session: $CCMGR_SESSION_ID"
+# # Maybe update window title or send notification
+
+# ~/.config/ccmgr-ultra/hooks/waiting.sh:
+# #!/bin/bash
+# echo "Claude is waiting for input in session: $CCMGR_SESSION_ID"
+# # Maybe bring window to front or send urgent notification

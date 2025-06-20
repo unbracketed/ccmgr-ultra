@@ -177,53 +177,12 @@ func MergeConfigs(global, project *Config) *Config {
 // DefaultConfig returns the default configuration
 func DefaultConfig() *Config {
 	config := &Config{
-		Version: "1.0.0",
-		StatusHooks: StatusHooksConfig{
-			Enabled: true,
-			IdleHook: HookConfig{
-				Enabled: true,
-				Script:  "~/.config/ccmgr-ultra/hooks/idle.sh",
-				Timeout: 30,
-				Async:   true,
-			},
-			BusyHook: HookConfig{
-				Enabled: true,
-				Script:  "~/.config/ccmgr-ultra/hooks/busy.sh",
-				Timeout: 30,
-				Async:   true,
-			},
-			WaitingHook: HookConfig{
-				Enabled: true,
-				Script:  "~/.config/ccmgr-ultra/hooks/waiting.sh",
-				Timeout: 30,
-				Async:   true,
-			},
-		},
-		Worktree: WorktreeConfig{
-			AutoDirectory:    true,
-			DirectoryPattern: "{{.project}}-{{.branch}}",
-			DefaultBranch:    "main",
-			CleanupOnMerge:   false,
-		},
-		Tmux: TmuxConfig{
-			SessionPrefix:   "ccmgr",
-			NamingPattern:   "{{.prefix}}-{{.project}}-{{.worktree}}-{{.branch}}",
-			MaxSessionName:  50,
-			MonitorInterval: 2 * time.Second,
-			StateFile:       "~/.config/ccmgr-ultra/tmux-sessions.json",
-			DefaultEnv:      make(map[string]string),
-			AutoCleanup:     true,
-			CleanupAge:      24 * time.Hour,
-		},
-		Shortcuts: DefaultShortcuts(),
-		Commands: CommandsConfig{
-			ClaudeCommand: "claude",
-			GitCommand:    "git",
-			TmuxPrefix:    "ccmgr",
-			Environment:   make(map[string]string),
-		},
+		Version:      "1.0.0",
 		LastModified: time.Now(),
 	}
+
+	// Set all defaults using the SetDefaults method
+	config.SetDefaults()
 
 	return config
 }

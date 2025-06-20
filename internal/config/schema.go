@@ -14,6 +14,7 @@ type Config struct {
 	Worktree     WorktreeConfig         `yaml:"worktree" json:"worktree"`
 	Tmux         TmuxConfig             `yaml:"tmux" json:"tmux"`
 	Git          GitConfig              `yaml:"git" json:"git"`
+	Claude       ClaudeConfig           `yaml:"claude" json:"claude"`
 	Shortcuts    map[string]string      `yaml:"shortcuts" json:"shortcuts"`
 	Commands     CommandsConfig         `yaml:"commands" json:"commands"`
 	LastModified time.Time              `yaml:"last_modified" json:"last_modified"`
@@ -61,6 +62,27 @@ type TmuxConfig struct {
 	DefaultEnv       map[string]string `yaml:"default_env" json:"default_env"`
 	AutoCleanup      bool              `yaml:"auto_cleanup" json:"auto_cleanup"`
 	CleanupAge       time.Duration     `yaml:"cleanup_age" json:"cleanup_age"`
+}
+
+// ClaudeConfig defines Claude Code process monitoring configuration
+type ClaudeConfig struct {
+	// Monitoring settings
+	Enabled              bool              `yaml:"enabled" json:"enabled" default:"true"`
+	PollInterval         time.Duration     `yaml:"poll_interval" json:"poll_interval" default:"3s"`
+	MaxProcesses         int               `yaml:"max_processes" json:"max_processes" default:"10"`
+	CleanupInterval      time.Duration     `yaml:"cleanup_interval" json:"cleanup_interval" default:"5m"`
+	StateTimeout         time.Duration     `yaml:"state_timeout" json:"state_timeout" default:"30s"`
+	StartupTimeout       time.Duration     `yaml:"startup_timeout" json:"startup_timeout" default:"10s"`
+	
+	// Detection settings
+	LogPaths             []string          `yaml:"log_paths" json:"log_paths"`
+	StatePatterns        map[string]string `yaml:"state_patterns" json:"state_patterns"`
+	EnableLogParsing     bool              `yaml:"enable_log_parsing" json:"enable_log_parsing" default:"true"`
+	EnableResourceMonitoring bool          `yaml:"enable_resource_monitoring" json:"enable_resource_monitoring" default:"true"`
+	
+	// Integration settings
+	IntegrateTmux        bool              `yaml:"integrate_tmux" json:"integrate_tmux" default:"true"`
+	IntegrateWorktrees   bool              `yaml:"integrate_worktrees" json:"integrate_worktrees" default:"true"`
 }
 
 // GitConfig defines git worktree and operations configuration
@@ -117,6 +139,10 @@ func (c *Config) Validate() error {
 
 	if err := c.Git.Validate(); err != nil {
 		return fmt.Errorf("git validation failed: %w", err)
+	}
+
+	if err := c.Claude.Validate(); err != nil {
+		return fmt.Errorf("claude validation failed: %w", err)
 	}
 
 	// Validate shortcuts
@@ -280,6 +306,56 @@ func (t *TmuxConfig) Validate() error {
 	return nil
 }
 
+// Validate validates Claude configuration
+func (c *ClaudeConfig) Validate() error {
+	if c.PollInterval < 0 {
+		return errors.New("poll interval cannot be negative")
+	}
+	
+	if c.PollInterval < time.Second {
+		return errors.New("poll interval must be at least 1 second")
+	}
+	
+	if c.MaxProcesses < 0 {
+		return errors.New("max processes cannot be negative")
+	}
+	
+	if c.MaxProcesses > 100 {
+		return errors.New("max processes cannot exceed 100")
+	}
+	
+	if c.CleanupInterval < 0 {
+		return errors.New("cleanup interval cannot be negative")
+	}
+	
+	if c.StateTimeout < 0 {
+		return errors.New("state timeout cannot be negative")
+	}
+	
+	if c.StartupTimeout < 0 {
+		return errors.New("startup timeout cannot be negative")
+	}
+	
+	// Validate log paths
+	for _, path := range c.LogPaths {
+		if path == "" {
+			return errors.New("log path cannot be empty")
+		}
+	}
+	
+	// Validate state patterns
+	for key, pattern := range c.StatePatterns {
+		if key == "" {
+			return errors.New("state pattern key cannot be empty")
+		}
+		if pattern == "" {
+			return fmt.Errorf("state pattern for '%s' cannot be empty", key)
+		}
+	}
+	
+	return nil
+}
+
 // SetDefaults sets default values for missing configuration
 func (c *Config) SetDefaults() {
 	if c.Version == "" {
@@ -301,6 +377,9 @@ func (c *Config) SetDefaults() {
 	// Set default git config
 	c.Git.SetDefaults()
 
+	// Set default claude config
+	c.Claude.SetDefaults()
+
 	// Set default shortcuts if none provided
 	if len(c.Shortcuts) == 0 {
 		c.Shortcuts = DefaultShortcuts()
@@ -309,6 +388,7 @@ func (c *Config) SetDefaults() {
 
 // SetDefaults sets default values for status hooks
 func (s *StatusHooksConfig) SetDefaults() {
+	s.Enabled = true
 	s.IdleHook.SetDefaults("idle")
 	s.BusyHook.SetDefaults("busy")
 	s.WaitingHook.SetDefaults("waiting")
@@ -316,12 +396,14 @@ func (s *StatusHooksConfig) SetDefaults() {
 
 // SetDefaults sets default values for individual hook
 func (h *HookConfig) SetDefaults(hookType string) {
-	if h.Script == "" && h.Enabled {
+	h.Enabled = true // Enable hooks by default
+	if h.Script == "" {
 		h.Script = fmt.Sprintf("~/.config/ccmgr-ultra/hooks/%s.sh", hookType)
 	}
 	if h.Timeout == 0 {
 		h.Timeout = 30
 	}
+	h.Async = true // Set async by default
 }
 
 // SetDefaults sets default values for worktree config
@@ -403,6 +485,45 @@ Brief description of changes
 How the changes were tested`
 	}
 	// Boolean defaults are handled by Go's zero values and struct tags
+}
+
+// SetDefaults sets default values for claude config
+func (c *ClaudeConfig) SetDefaults() {
+	if c.PollInterval == 0 {
+		c.PollInterval = 3 * time.Second
+	}
+	if c.MaxProcesses == 0 {
+		c.MaxProcesses = 10
+	}
+	if c.CleanupInterval == 0 {
+		c.CleanupInterval = 5 * time.Minute
+	}
+	if c.StateTimeout == 0 {
+		c.StateTimeout = 30 * time.Second
+	}
+	if c.StartupTimeout == 0 {
+		c.StartupTimeout = 10 * time.Second
+	}
+	if len(c.LogPaths) == 0 {
+		c.LogPaths = []string{
+			"~/.claude/logs",
+			"/tmp/claude-*",
+		}
+	}
+	if len(c.StatePatterns) == 0 {
+		c.StatePatterns = map[string]string{
+			"busy":    `(?i)(Processing|Executing|Running|Working on|Analyzing|Generating)`,
+			"idle":    `(?i)(Waiting for input|Ready|Idle|Available)`,
+			"waiting": `(?i)(Waiting for confirmation|Press any key|Continue\?|Y/n)`,
+			"error":   `(?i)(Error|Failed|Exception|Panic|Fatal)`,
+		}
+	}
+	// Boolean defaults are handled by Go's zero values and struct tags
+	c.Enabled = true
+	c.EnableLogParsing = true
+	c.EnableResourceMonitoring = true
+	c.IntegrateTmux = true
+	c.IntegrateWorktrees = true
 }
 
 // DefaultShortcuts returns the default keyboard shortcuts
