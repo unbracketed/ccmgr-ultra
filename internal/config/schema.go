@@ -13,6 +13,7 @@ type Config struct {
 	StatusHooks  StatusHooksConfig      `yaml:"status_hooks" json:"status_hooks"`
 	Worktree     WorktreeConfig         `yaml:"worktree" json:"worktree"`
 	Tmux         TmuxConfig             `yaml:"tmux" json:"tmux"`
+	Git          GitConfig              `yaml:"git" json:"git"`
 	Shortcuts    map[string]string      `yaml:"shortcuts" json:"shortcuts"`
 	Commands     CommandsConfig         `yaml:"commands" json:"commands"`
 	LastModified time.Time              `yaml:"last_modified" json:"last_modified"`
@@ -62,6 +63,36 @@ type TmuxConfig struct {
 	CleanupAge       time.Duration     `yaml:"cleanup_age" json:"cleanup_age"`
 }
 
+// GitConfig defines git worktree and operations configuration
+type GitConfig struct {
+	// Worktree settings
+	AutoDirectory    bool          `yaml:"auto_directory" json:"auto_directory" default:"true"`
+	DirectoryPattern string        `yaml:"directory_pattern" json:"directory_pattern" default:"{{.project}}-{{.branch}}"`
+	MaxWorktrees     int           `yaml:"max_worktrees" json:"max_worktrees" default:"10"`
+	CleanupAge       time.Duration `yaml:"cleanup_age" json:"cleanup_age" default:"168h"`
+
+	// Branch settings
+	DefaultBranch     string   `yaml:"default_branch" json:"default_branch" default:"main"`
+	ProtectedBranches []string `yaml:"protected_branches" json:"protected_branches"`
+	AllowForceDelete  bool     `yaml:"allow_force_delete" json:"allow_force_delete" default:"false"`
+
+	// Remote settings
+	DefaultRemote string `yaml:"default_remote" json:"default_remote" default:"origin"`
+	AutoPush      bool   `yaml:"auto_push" json:"auto_push" default:"true"`
+	CreatePR      bool   `yaml:"create_pr" json:"create_pr" default:"false"`
+	PRTemplate    string `yaml:"pr_template" json:"pr_template"`
+
+	// Authentication
+	GitHubToken    string `yaml:"github_token" json:"github_token" env:"GITHUB_TOKEN"`
+	GitLabToken    string `yaml:"gitlab_token" json:"gitlab_token" env:"GITLAB_TOKEN"`
+	BitbucketToken string `yaml:"bitbucket_token" json:"bitbucket_token" env:"BITBUCKET_TOKEN"`
+
+	// Safety settings
+	RequireCleanWorkdir bool `yaml:"require_clean_workdir" json:"require_clean_workdir" default:"true"`
+	ConfirmDestructive  bool `yaml:"confirm_destructive" json:"confirm_destructive" default:"true"`
+	BackupOnDelete      bool `yaml:"backup_on_delete" json:"backup_on_delete" default:"true"`
+}
+
 // Validate validates the entire configuration
 func (c *Config) Validate() error {
 	if c.Version == "" {
@@ -82,6 +113,10 @@ func (c *Config) Validate() error {
 
 	if err := c.Tmux.Validate(); err != nil {
 		return fmt.Errorf("tmux validation failed: %w", err)
+	}
+
+	if err := c.Git.Validate(); err != nil {
+		return fmt.Errorf("git validation failed: %w", err)
 	}
 
 	// Validate shortcuts
@@ -185,6 +220,45 @@ func (c *CommandsConfig) Validate() error {
 	return nil
 }
 
+// Validate validates git configuration
+func (g *GitConfig) Validate() error {
+	if g.DefaultBranch == "" {
+		return errors.New("default branch is required")
+	}
+
+	if g.AutoDirectory && g.DirectoryPattern == "" {
+		return errors.New("directory pattern is required when auto directory is enabled")
+	}
+
+	// Validate directory pattern contains valid placeholders
+	if g.DirectoryPattern != "" {
+		if !strings.Contains(g.DirectoryPattern, "{{") || !strings.Contains(g.DirectoryPattern, "}}") {
+			return errors.New("directory pattern must contain template variables like {{.project}} or {{.branch}}")
+		}
+	}
+
+	if g.MaxWorktrees < 0 {
+		return errors.New("max worktrees cannot be negative")
+	}
+
+	if g.CleanupAge < 0 {
+		return errors.New("cleanup age cannot be negative")
+	}
+
+	// Validate protected branches
+	for _, branch := range g.ProtectedBranches {
+		if branch == "" {
+			return errors.New("protected branch name cannot be empty")
+		}
+	}
+
+	if g.DefaultRemote == "" {
+		return errors.New("default remote is required")
+	}
+
+	return nil
+}
+
 // Validate validates tmux configuration
 func (t *TmuxConfig) Validate() error {
 	if t.SessionPrefix == "" {
@@ -223,6 +297,9 @@ func (c *Config) SetDefaults() {
 
 	// Set default tmux config
 	c.Tmux.SetDefaults()
+
+	// Set default git config
+	c.Git.SetDefaults()
 
 	// Set default shortcuts if none provided
 	if len(c.Shortcuts) == 0 {
@@ -296,6 +373,36 @@ func (t *TmuxConfig) SetDefaults() {
 	if t.CleanupAge == 0 {
 		t.CleanupAge = 24 * time.Hour
 	}
+}
+
+// SetDefaults sets default values for git config
+func (g *GitConfig) SetDefaults() {
+	if g.DirectoryPattern == "" {
+		g.DirectoryPattern = "{{.project}}-{{.branch}}"
+	}
+	if g.DefaultBranch == "" {
+		g.DefaultBranch = "main"
+	}
+	if g.MaxWorktrees == 0 {
+		g.MaxWorktrees = 10
+	}
+	if g.CleanupAge == 0 {
+		g.CleanupAge = 168 * time.Hour // 7 days
+	}
+	if g.DefaultRemote == "" {
+		g.DefaultRemote = "origin"
+	}
+	if g.ProtectedBranches == nil {
+		g.ProtectedBranches = []string{"main", "master", "develop"}
+	}
+	if g.PRTemplate == "" {
+		g.PRTemplate = `## Summary
+Brief description of changes
+
+## Testing
+How the changes were tested`
+	}
+	// Boolean defaults are handled by Go's zero values and struct tags
 }
 
 // DefaultShortcuts returns the default keyboard shortcuts
