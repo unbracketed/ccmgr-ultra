@@ -1,0 +1,32 @@
+#!/bin/bash
+# Example busy hook script for ccmgr-ultra
+# This script is executed when Claude Code enters busy state
+
+# Example: Log the state change
+echo "$(date): Claude Code entered busy state" >> ~/.ccmgr-ultra.log
+
+# Example: Update terminal title
+echo -ne "\033]0;ccmgr-ultra - Working\007"
+
+# Example: Update status in tmux
+if command -v tmux &> /dev/null; then
+    tmux set-option -g status-left "#[fg=red]●#[default] ccmgr-ultra: working "
+fi
+
+# Example: Change LED indicator (if you have programmable keyboard/device)
+# echo "red" > /dev/ttyUSB0
+
+# Example: Set "Do Not Disturb" mode (macOS)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # This would require additional setup/permissions
+    # osascript -e 'tell application "System Events" to keystroke "D" using {shift down, command down}'
+    echo "Busy mode activated" > /dev/null
+fi
+
+# Example: Update external status file
+echo "busy" > ~/.ccmgr-ultra-status
+
+# Example: Disable certain notifications or services temporarily
+# systemctl --user stop some-service 2>/dev/null || true
+
+exit 0

@@ -1,0 +1,45 @@
+# ccmgr-ultra configuration file
+version: "1.0.0"
+
+# Status hooks - scripts executed on Claude Code state changes
+status_hooks:
+  enabled: true
+  idle:
+    enabled: true
+    script: "~/.config/ccmgr-ultra/hooks/idle.sh"
+    timeout: 30
+    async: true
+  busy:
+    enabled: true
+    script: "~/.config/ccmgr-ultra/hooks/busy.sh"
+    timeout: 30
+    async: true
+  waiting:
+    enabled: true
+    script: "~/.config/ccmgr-ultra/hooks/waiting.sh"
+    timeout: 30
+    async: true
+
+# Worktree settings
+worktree:
+  auto_directory: true
+  directory_pattern: "{{.project}}-{{.branch}}"
+  default_branch: "main"
+  cleanup_on_merge: false
+
+# Keyboard shortcuts
+shortcuts:
+  n: "new_worktree"
+  m: "merge_worktree"
+  d: "delete_worktree"
+  p: "push_worktree"
+  c: "continue_session"
+  r: "resume_session"
+  q: "quit"
+
+# Command settings
+commands:
+  claude_command: "claude"
+  git_command: "git"
+  tmux_prefix: "ccmgr"
+  environment: {}

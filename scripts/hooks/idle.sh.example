@@ -1,0 +1,29 @@
+#!/bin/bash
+# Example idle hook script for ccmgr-ultra
+# This script is executed when Claude Code enters idle state
+
+# Example: Log the state change
+echo "$(date): Claude Code entered idle state" >> ~/.ccmgr-ultra.log
+
+# Example: Update terminal title
+echo -ne "\033]0;ccmgr-ultra - Idle\007"
+
+# Example: Update status in tmux
+if command -v tmux &> /dev/null; then
+    tmux set-option -g status-left "#[fg=green]●#[default] ccmgr-ultra: idle "
+fi
+
+# Example: Send notification (macOS)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    osascript -e 'display notification "Claude Code is now idle" with title "ccmgr-ultra"'
+fi
+
+# Example: Send notification (Linux with notify-send)
+if command -v notify-send &> /dev/null; then
+    notify-send "ccmgr-ultra" "Claude Code is now idle"
+fi
+
+# Example: Update external status file
+echo "idle" > ~/.ccmgr-ultra-status
+
+exit 0

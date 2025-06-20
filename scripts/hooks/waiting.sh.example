@@ -1,0 +1,44 @@
+#!/bin/bash
+# Example waiting hook script for ccmgr-ultra
+# This script is executed when Claude Code enters waiting state (waiting for user input)
+
+# Example: Log the state change
+echo "$(date): Claude Code entered waiting state" >> ~/.ccmgr-ultra.log
+
+# Example: Update terminal title
+echo -ne "\033]0;ccmgr-ultra - Waiting\007"
+
+# Example: Update status in tmux
+if command -v tmux &> /dev/null; then
+    tmux set-option -g status-left "#[fg=yellow]●#[default] ccmgr-ultra: waiting "
+fi
+
+# Example: Play notification sound (macOS)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    afplay /System/Library/Sounds/Glass.aiff 2>/dev/null &
+fi
+
+# Example: Play notification sound (Linux)
+if command -v paplay &> /dev/null; then
+    paplay /usr/share/sounds/alsa/Front_Left.wav 2>/dev/null &
+fi
+
+# Example: Send gentle notification
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    osascript -e 'display notification "Ready for your input" with title "ccmgr-ultra"'
+fi
+
+if command -v notify-send &> /dev/null; then
+    notify-send "ccmgr-ultra" "Ready for your input"
+fi
+
+# Example: Update external status file
+echo "waiting" > ~/.ccmgr-ultra-status
+
+# Example: Blink keyboard lights or change color
+# echo "blue" > /dev/ttyUSB0
+
+# Example: Re-enable services that were disabled during busy state
+# systemctl --user start some-service 2>/dev/null || true
+
+exit 0
