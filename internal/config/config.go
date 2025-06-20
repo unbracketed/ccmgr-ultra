@@ -205,6 +205,16 @@ func DefaultConfig() *Config {
 			DefaultBranch:    "main",
 			CleanupOnMerge:   false,
 		},
+		Tmux: TmuxConfig{
+			SessionPrefix:   "ccmgr",
+			NamingPattern:   "{{.prefix}}-{{.project}}-{{.worktree}}-{{.branch}}",
+			MaxSessionName:  50,
+			MonitorInterval: 2 * time.Second,
+			StateFile:       "~/.config/ccmgr-ultra/tmux-sessions.json",
+			DefaultEnv:      make(map[string]string),
+			AutoCleanup:     true,
+			CleanupAge:      24 * time.Hour,
+		},
 		Shortcuts: DefaultShortcuts(),
 		Commands: CommandsConfig{
 			ClaudeCommand: "claude",

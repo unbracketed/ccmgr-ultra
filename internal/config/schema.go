@@ -12,6 +12,7 @@ type Config struct {
 	Version      string                 `yaml:"version" json:"version"`
 	StatusHooks  StatusHooksConfig      `yaml:"status_hooks" json:"status_hooks"`
 	Worktree     WorktreeConfig         `yaml:"worktree" json:"worktree"`
+	Tmux         TmuxConfig             `yaml:"tmux" json:"tmux"`
 	Shortcuts    map[string]string      `yaml:"shortcuts" json:"shortcuts"`
 	Commands     CommandsConfig         `yaml:"commands" json:"commands"`
 	LastModified time.Time              `yaml:"last_modified" json:"last_modified"`
@@ -49,6 +50,18 @@ type CommandsConfig struct {
 	Environment     map[string]string `yaml:"environment" json:"environment"`
 }
 
+// TmuxConfig defines tmux integration configuration
+type TmuxConfig struct {
+	SessionPrefix    string            `yaml:"session_prefix" json:"session_prefix"`
+	NamingPattern    string            `yaml:"naming_pattern" json:"naming_pattern"`
+	MaxSessionName   int               `yaml:"max_session_name" json:"max_session_name"`
+	MonitorInterval  time.Duration     `yaml:"monitor_interval" json:"monitor_interval"`
+	StateFile        string            `yaml:"state_file" json:"state_file"`
+	DefaultEnv       map[string]string `yaml:"default_env" json:"default_env"`
+	AutoCleanup      bool              `yaml:"auto_cleanup" json:"auto_cleanup"`
+	CleanupAge       time.Duration     `yaml:"cleanup_age" json:"cleanup_age"`
+}
+
 // Validate validates the entire configuration
 func (c *Config) Validate() error {
 	if c.Version == "" {
@@ -65,6 +78,10 @@ func (c *Config) Validate() error {
 
 	if err := c.Commands.Validate(); err != nil {
 		return fmt.Errorf("commands validation failed: %w", err)
+	}
+
+	if err := c.Tmux.Validate(); err != nil {
+		return fmt.Errorf("tmux validation failed: %w", err)
 	}
 
 	// Validate shortcuts
@@ -168,6 +185,27 @@ func (c *CommandsConfig) Validate() error {
 	return nil
 }
 
+// Validate validates tmux configuration
+func (t *TmuxConfig) Validate() error {
+	if t.SessionPrefix == "" {
+		return errors.New("tmux session prefix is required")
+	}
+
+	if t.MaxSessionName < 0 {
+		return errors.New("max session name length cannot be negative")
+	}
+
+	if t.MonitorInterval < 0 {
+		return errors.New("monitor interval cannot be negative")
+	}
+
+	if t.CleanupAge < 0 {
+		return errors.New("cleanup age cannot be negative")
+	}
+
+	return nil
+}
+
 // SetDefaults sets default values for missing configuration
 func (c *Config) SetDefaults() {
 	if c.Version == "" {
@@ -182,6 +220,9 @@ func (c *Config) SetDefaults() {
 
 	// Set default commands
 	c.Commands.SetDefaults()
+
+	// Set default tmux config
+	c.Tmux.SetDefaults()
 
 	// Set default shortcuts if none provided
 	if len(c.Shortcuts) == 0 {
@@ -229,6 +270,31 @@ func (c *CommandsConfig) SetDefaults() {
 	}
 	if c.Environment == nil {
 		c.Environment = make(map[string]string)
+	}
+}
+
+// SetDefaults sets default values for tmux config
+func (t *TmuxConfig) SetDefaults() {
+	if t.SessionPrefix == "" {
+		t.SessionPrefix = "ccmgr"
+	}
+	if t.NamingPattern == "" {
+		t.NamingPattern = "{{.prefix}}-{{.project}}-{{.worktree}}-{{.branch}}"
+	}
+	if t.MaxSessionName == 0 {
+		t.MaxSessionName = 50
+	}
+	if t.MonitorInterval == 0 {
+		t.MonitorInterval = 2 * time.Second
+	}
+	if t.StateFile == "" {
+		t.StateFile = "~/.config/ccmgr-ultra/tmux-sessions.json"
+	}
+	if t.DefaultEnv == nil {
+		t.DefaultEnv = make(map[string]string)
+	}
+	if t.CleanupAge == 0 {
+		t.CleanupAge = 24 * time.Hour
 	}
 }
 
