@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -296,7 +297,7 @@ func TestGetRemoteInfo_DefaultRemote(t *testing.T) {
 	assert.Equal(t, "origin", remote.Name)
 }
 
-func TestGetRemoteInfo_NotFound(t *testing.T) {
+func TestRemoteManager_GetRemoteInfo_NotFound(t *testing.T) {
 	repo := createTestRepository()
 	rm := NewRemoteManager(repo, createTestGitConfig(), NewMockGitCmd())
 

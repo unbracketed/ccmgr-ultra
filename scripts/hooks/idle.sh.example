@@ -2,28 +2,66 @@
 # Example idle hook script for ccmgr-ultra
 # This script is executed when Claude Code enters idle state
 
-# Example: Log the state change
+# Log the state change with context
 echo "$(date): Claude Code entered idle state" >> ~/.ccmgr-ultra.log
+if [ -n "$CCMGR_WORKTREE_BRANCH" ]; then
+    echo "  Branch: $CCMGR_WORKTREE_BRANCH" >> ~/.ccmgr-ultra.log
+fi
+if [ -n "$CCMGR_PROJECT_NAME" ]; then
+    echo "  Project: $CCMGR_PROJECT_NAME" >> ~/.ccmgr-ultra.log
+fi
 
-# Example: Update terminal title
-echo -ne "\033]0;ccmgr-ultra - Idle\007"
+# Update terminal title with context
+if [ -n "$CCMGR_PROJECT_NAME" ] && [ -n "$CCMGR_WORKTREE_BRANCH" ]; then
+    echo -ne "\033]0;ccmgr: $CCMGR_PROJECT_NAME ($CCMGR_WORKTREE_BRANCH) - Idle\007"
+else
+    echo -ne "\033]0;ccmgr-ultra - Idle\007"
+fi
 
-# Example: Update status in tmux
+# Update status in tmux
 if command -v tmux &> /dev/null; then
-    tmux set-option -g status-left "#[fg=green]●#[default] ccmgr-ultra: idle "
+    if [ -n "$CCMGR_WORKTREE_BRANCH" ]; then
+        tmux set-option -g status-left "#[fg=green]●#[default] ccmgr: $CCMGR_WORKTREE_BRANCH (idle) "
+    else
+        tmux set-option -g status-left "#[fg=green]●#[default] ccmgr-ultra: idle "
+    fi
 fi
 
-# Example: Send notification (macOS)
+# Update activity tracking with skate (if available)
+if command -v skate &> /dev/null; then
+    if [ -n "$CCMGR_WORKTREE_BRANCH" ]; then
+        skate set "${CCMGR_WORKTREE_BRANCH}@ccmgr-status" "idle"
+    fi
+    if [ -n "$CCMGR_WORKTREE_PATH" ]; then
+        skate set "${CCMGR_WORKTREE_PATH}@ccmgr-last-idle" "$CCMGR_TIMESTAMP"
+    fi
+    if [ -n "$CCMGR_SESSION_ID" ]; then
+        skate set "${CCMGR_SESSION_ID}@ccmgr-state" "idle"
+    fi
+fi
+
+# Send notification (macOS)
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    osascript -e 'display notification "Claude Code is now idle" with title "ccmgr-ultra"'
+    if [ -n "$CCMGR_PROJECT_NAME" ]; then
+        osascript -e "display notification \"$CCMGR_PROJECT_NAME is now idle\" with title \"ccmgr-ultra\""
+    else
+        osascript -e 'display notification "Claude Code is now idle" with title "ccmgr-ultra"'
+    fi
 fi
 
-# Example: Send notification (Linux with notify-send)
+# Send notification (Linux with notify-send)
 if command -v notify-send &> /dev/null; then
-    notify-send "ccmgr-ultra" "Claude Code is now idle"
+    if [ -n "$CCMGR_PROJECT_NAME" ]; then
+        notify-send "ccmgr-ultra" "$CCMGR_PROJECT_NAME is now idle"
+    else
+        notify-send "ccmgr-ultra" "Claude Code is now idle"
+    fi
 fi
 
-# Example: Update external status file
+# Update external status file
 echo "idle" > ~/.ccmgr-ultra-status
+if [ -n "$CCMGR_WORKTREE_PATH" ]; then
+    echo "idle" > "$CCMGR_WORKTREE_PATH/.ccmgr-status"
+fi
 
 exit 0

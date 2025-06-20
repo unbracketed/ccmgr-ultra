@@ -3,7 +3,6 @@ package git
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -149,7 +148,7 @@ func TestDeleteBranch_Force(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestBranchExists(t *testing.T) {
+func TestBranchOperations_BranchExists(t *testing.T) {
 	repo := createTestRepository()
 	mockGit := NewMockGitCmd()
 

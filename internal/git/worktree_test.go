@@ -1,10 +1,10 @@
 package git
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -436,7 +436,7 @@ func TestGetProjectName_NoRemote(t *testing.T) {
 	assert.Equal(t, "repo", projectName) // Falls back to directory name
 }
 
-func TestValidateWorktreePath(t *testing.T) {
+func TestWorktreeManager_ValidateWorktreePath(t *testing.T) {
 	repo := createTestRepository()
 	cfg := createTestConfig()
 	mockGit := NewMockGitCmd()

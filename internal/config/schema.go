@@ -9,15 +9,16 @@ import (
 
 // Config represents the main configuration structure
 type Config struct {
-	Version      string                 `yaml:"version" json:"version"`
-	StatusHooks  StatusHooksConfig      `yaml:"status_hooks" json:"status_hooks"`
-	Worktree     WorktreeConfig         `yaml:"worktree" json:"worktree"`
-	Tmux         TmuxConfig             `yaml:"tmux" json:"tmux"`
-	Git          GitConfig              `yaml:"git" json:"git"`
-	Claude       ClaudeConfig           `yaml:"claude" json:"claude"`
-	Shortcuts    map[string]string      `yaml:"shortcuts" json:"shortcuts"`
-	Commands     CommandsConfig         `yaml:"commands" json:"commands"`
-	LastModified time.Time              `yaml:"last_modified" json:"last_modified"`
+	Version       string                 `yaml:"version" json:"version"`
+	StatusHooks   StatusHooksConfig      `yaml:"status_hooks" json:"status_hooks"`
+	WorktreeHooks WorktreeHooksConfig    `yaml:"worktree_hooks" json:"worktree_hooks"`
+	Worktree      WorktreeConfig         `yaml:"worktree" json:"worktree"`
+	Tmux          TmuxConfig             `yaml:"tmux" json:"tmux"`
+	Git           GitConfig              `yaml:"git" json:"git"`
+	Claude        ClaudeConfig           `yaml:"claude" json:"claude"`
+	Shortcuts     map[string]string      `yaml:"shortcuts" json:"shortcuts"`
+	Commands      CommandsConfig         `yaml:"commands" json:"commands"`
+	LastModified  time.Time              `yaml:"last_modified" json:"last_modified"`
 }
 
 // StatusHooksConfig defines status hook configuration
@@ -34,6 +35,13 @@ type HookConfig struct {
 	Script   string `yaml:"script" json:"script"`
 	Timeout  int    `yaml:"timeout" json:"timeout"` // seconds
 	Async    bool   `yaml:"async" json:"async"`
+}
+
+// WorktreeHooksConfig defines worktree lifecycle hooks
+type WorktreeHooksConfig struct {
+	Enabled        bool       `yaml:"enabled" json:"enabled"`
+	CreationHook   HookConfig `yaml:"creation" json:"creation"`
+	ActivationHook HookConfig `yaml:"activation" json:"activation"`
 }
 
 // WorktreeConfig defines worktree configuration
@@ -125,6 +133,10 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("status hooks validation failed: %w", err)
 	}
 
+	if err := c.WorktreeHooks.Validate(); err != nil {
+		return fmt.Errorf("worktree hooks validation failed: %w", err)
+	}
+
 	if err := c.Worktree.Validate(); err != nil {
 		return fmt.Errorf("worktree validation failed: %w", err)
 	}
@@ -170,6 +182,19 @@ func (s *StatusHooksConfig) Validate() error {
 
 	if err := s.WaitingHook.Validate(); err != nil {
 		return fmt.Errorf("waiting hook validation failed: %w", err)
+	}
+
+	return nil
+}
+
+// Validate validates worktree hooks configuration
+func (w *WorktreeHooksConfig) Validate() error {
+	if err := w.CreationHook.Validate(); err != nil {
+		return fmt.Errorf("creation hook validation failed: %w", err)
+	}
+
+	if err := w.ActivationHook.Validate(); err != nil {
+		return fmt.Errorf("activation hook validation failed: %w", err)
 	}
 
 	return nil
@@ -364,6 +389,7 @@ func (c *Config) SetDefaults() {
 
 	// Set default hooks
 	c.StatusHooks.SetDefaults()
+	c.WorktreeHooks.SetDefaults()
 
 	// Set default worktree config
 	c.Worktree.SetDefaults()
@@ -392,6 +418,13 @@ func (s *StatusHooksConfig) SetDefaults() {
 	s.IdleHook.SetDefaults("idle")
 	s.BusyHook.SetDefaults("busy")
 	s.WaitingHook.SetDefaults("waiting")
+}
+
+// SetDefaults sets default values for worktree hooks
+func (w *WorktreeHooksConfig) SetDefaults() {
+	w.Enabled = true
+	w.CreationHook.SetDefaults("creation")
+	w.ActivationHook.SetDefaults("activation")
 }
 
 // SetDefaults sets default values for individual hook

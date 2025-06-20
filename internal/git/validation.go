@@ -40,12 +40,12 @@ type ValidationContext struct {
 }
 
 // NewValidator creates a new Validator instance
-func NewValidator(config *config.Config) *Validator {
-	if config == nil {
-		config = &config.Config{}
-		config.SetDefaults()
+func NewValidator(cfg *config.Config) *Validator {
+	if cfg == nil {
+		cfg = &config.Config{}
+		cfg.SetDefaults()
 	}
-	return &Validator{config: config}
+	return &Validator{config: cfg}
 }
 
 // ValidateBranchName validates a git branch name according to git rules

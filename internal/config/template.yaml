@@ -20,6 +20,20 @@ status_hooks:
     timeout: 30
     async: true
 
+# Worktree lifecycle hooks - scripts executed during worktree operations
+worktree_hooks:
+  enabled: true
+  creation:
+    enabled: true
+    script: "~/.config/ccmgr-ultra/hooks/creation.sh"
+    timeout: 300  # 5 minutes for dependency installation
+    async: false  # Wait for completion
+  activation:
+    enabled: true
+    script: "~/.config/ccmgr-ultra/hooks/activation.sh"
+    timeout: 60
+    async: true   # Don't block session start
+
 # Worktree settings
 worktree:
   auto_directory: true

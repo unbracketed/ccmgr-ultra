@@ -2,8 +2,6 @@ package git
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -137,7 +135,7 @@ func testCompleteWorktreeWorkflow(t *testing.T, worktreeMgr *WorktreeManager, gi
 		Branch:   "new-feature",
 		Checkout: true,
 	}
-	worktree, err := worktreeMgr.CreateWorktree("new-feature", opts)
+	_, err = worktreeMgr.CreateWorktree("new-feature", opts)
 	// This will fail due to path validation, but we can test the logic
 	assert.Error(t, err) // Expected due to mock limitations
 
@@ -183,8 +181,8 @@ func testPatternValidationIntegration(t *testing.T, patternMgr *PatternManager, 
 	assert.NoError(t, err)
 
 	// Validate the result
-	validationResult := patternMgr.ValidatePatternResult(result)
-	assert.True(t, validationResult.Valid)
+	err = patternMgr.ValidatePatternResult(result)
+	assert.NoError(t, err)
 
 	// Test with invalid pattern
 	invalidPattern := "../dangerous"
@@ -314,7 +312,7 @@ func TestPerformanceConsiderations(t *testing.T) {
 	setupMockGitCommands(mockGit)
 
 	// Create all managers
-	repoMgr := NewRepositoryManager(mockGit)
+	_ = NewRepositoryManager(mockGit) // For demonstration
 	patternMgr := NewPatternManager(&cfg.Worktree)
 	validator := NewValidator(cfg)
 
@@ -411,7 +409,7 @@ func TestMemoryUsage(t *testing.T) {
 	setupMockGitCommands(mockGit)
 
 	// Create managers
-	repoMgr := NewRepositoryManager(mockGit)
+	_ = NewRepositoryManager(mockGit) // For demonstration
 	validator := NewValidator(cfg)
 
 	// Simulate heavy usage

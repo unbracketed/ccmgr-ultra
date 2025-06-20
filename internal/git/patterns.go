@@ -40,12 +40,12 @@ type DirectoryPattern struct {
 }
 
 // NewPatternManager creates a new PatternManager
-func NewPatternManager(config *config.WorktreeConfig) *PatternManager {
-	if config == nil {
-		config = &config.WorktreeConfig{}
-		config.SetDefaults()
+func NewPatternManager(cfg *config.WorktreeConfig) *PatternManager {
+	if cfg == nil {
+		cfg = &config.WorktreeConfig{}
+		cfg.SetDefaults()
 	}
-	return &PatternManager{config: config}
+	return &PatternManager{config: cfg}
 }
 
 // ApplyPattern applies a naming pattern with the given context

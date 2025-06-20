@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/your-username/ccmgr-ultra/internal/config"
 )
 
 func TestNewValidator(t *testing.T) {

@@ -1,0 +1,124 @@
+#!/bin/bash
+# Example worktree activation hook script for ccmgr-ultra
+# This script is executed when a worktree is activated (new session, continue, or resume)
+
+echo "Activating worktree session: $CCMGR_SESSION_TYPE"
+echo "Worktree: $CCMGR_WORKTREE_PATH"
+echo "Branch: $CCMGR_WORKTREE_BRANCH"
+echo "Project: $CCMGR_PROJECT_NAME"
+echo "Session ID: $CCMGR_SESSION_ID"
+
+# Navigate to the worktree
+cd "$CCMGR_WORKTREE_PATH"
+
+# Load environment variables if .env file exists
+if [ -f ".env" ]; then
+    echo "Loading environment variables from .env"
+    export $(cat .env | grep -v '^#' | xargs)
+fi
+
+# Check if services are running and start them if needed
+if [ -f "docker-compose.yml" ] || [ -f "docker-compose.yaml" ]; then
+    echo "Checking Docker services..."
+    
+    # Check if any services are running
+    if ! docker-compose ps --services --filter "status=running" | grep -q .; then
+        echo "Starting Docker services..."
+        docker-compose up -d
+    else
+        echo "Docker services are already running"
+    fi
+fi
+
+# Session-specific setup
+case "$CCMGR_SESSION_TYPE" in
+    "new")
+        echo "Welcome to $CCMGR_PROJECT_NAME!"
+        echo "Starting fresh development session on branch $CCMGR_WORKTREE_BRANCH"
+        
+        # Show project information
+        if [ -f "README.md" ]; then
+            echo "Project README available - consider reviewing it"
+        fi
+        
+        # Show git status
+        if command -v git &> /dev/null; then
+            echo "Git status:"
+            git status --short
+        fi
+        ;;
+        
+    "continue"|"resume")
+        echo "Resuming work on $CCMGR_WORKTREE_BRANCH"
+        
+        # Show what has changed since last session
+        if command -v git &> /dev/null; then
+            echo "Recent commits:"
+            git log --oneline -5
+            echo ""
+            echo "Current status:"
+            git status --short
+        fi
+        
+        # Show previous state if available
+        if [ -n "$CCMGR_PREVIOUS_STATE" ]; then
+            echo "Previous session state: $CCMGR_PREVIOUS_STATE"
+        fi
+        ;;
+esac
+
+# Health checks
+echo "Running health checks..."
+
+# Check if development server ports are available
+check_port() {
+    local port=$1
+    if command -v nc &> /dev/null; then
+        if nc -z localhost $port 2>/dev/null; then
+            echo "Port $port is in use"
+        fi
+    fi
+}
+
+# Common development ports
+for port in 3000 8000 8080 5000 4000; do
+    check_port $port
+done
+
+# Language-specific health checks
+if [ -f "package.json" ]; then
+    echo "Node.js project detected"
+    if command -v npm &> /dev/null; then
+        npm outdated || true
+    fi
+fi
+
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+    echo "Python project detected"
+    # Check virtual environment
+    if [ -d ".venv" ]; then
+        echo "Virtual environment found at .venv"
+    fi
+fi
+
+# Update activity tracking with skate (if available)
+if command -v skate &> /dev/null; then
+    skate set "ccmgr-last-active" "$CCMGR_WORKTREE_PATH"
+    skate set "ccmgr-current-branch" "$CCMGR_WORKTREE_BRANCH"
+    skate set "ccmgr-current-project" "$CCMGR_PROJECT_NAME"
+    skate set "ccmgr-session-${CCMGR_SESSION_ID}" "$(date -Iseconds)"
+fi
+
+# Custom activation logic
+if [ -f "scripts/activate.sh" ]; then
+    echo "Running custom activation script..."
+    bash scripts/activate.sh
+fi
+
+# Update terminal title (if running in a terminal)
+if [ -n "$TERM" ]; then
+    echo -ne "\033]0;ccmgr: $CCMGR_PROJECT_NAME ($CCMGR_WORKTREE_BRANCH)\007"
+fi
+
+echo "Worktree activation complete!"
+echo "Happy coding! 🚀"

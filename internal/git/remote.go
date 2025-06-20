@@ -1,7 +1,6 @@
 package git
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -80,17 +79,17 @@ type BitbucketClient struct {
 type GenericClient struct{}
 
 // NewRemoteManager creates a new RemoteManager
-func NewRemoteManager(repo *Repository, config *config.GitConfig, gitCmd GitInterface) *RemoteManager {
+func NewRemoteManager(repo *Repository, cfg *config.GitConfig, gitCmd GitInterface) *RemoteManager {
 	if gitCmd == nil {
 		gitCmd = NewGitCmd()
 	}
-	if config == nil {
-		config = &config.GitConfig{}
+	if cfg == nil {
+		cfg = &config.GitConfig{}
 	}
 
 	rm := &RemoteManager{
 		repo:    repo,
-		config:  config,
+		config:  cfg,
 		clients: make(map[string]HostingClient),
 		gitCmd:  gitCmd,
 	}

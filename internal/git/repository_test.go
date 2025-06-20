@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -334,7 +333,7 @@ func TestGetCommitInfo_EmptyHash(t *testing.T) {
 	assert.Contains(t, err.Error(), "commit hash is empty")
 }
 
-func TestValidateRepositoryState(t *testing.T) {
+func TestRepositoryManager_ValidateRepositoryState(t *testing.T) {
 	mockGit := NewMockGitCmd()
 	rm := NewRepositoryManager(mockGit)
 
@@ -404,7 +403,7 @@ func TestGetRemoteInfo_Default(t *testing.T) {
 	assert.Equal(t, "https", remote.Protocol)
 }
 
-func TestGetRemoteInfo_NotFound(t *testing.T) {
+func TestRepositoryManager_GetRemoteInfo_NotFound(t *testing.T) {
 	mockGit := NewMockGitCmd()
 	rm := NewRepositoryManager(mockGit)
 
@@ -419,7 +418,7 @@ func TestGetRemoteInfo_NotFound(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to get remote URL")
 }
 
-func TestBranchExists(t *testing.T) {
+func TestRepositoryManager_BranchExists(t *testing.T) {
 	mockGit := NewMockGitCmd()
 	rm := NewRepositoryManager(mockGit)
 
