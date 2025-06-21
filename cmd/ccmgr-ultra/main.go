@@ -19,6 +19,15 @@ var (
 	date    = "unknown"
 )
 
+// Global flags
+var (
+	nonInteractive bool
+	configPath     string
+	verbose        bool
+	quiet          bool
+	dryRun         bool
+)
+
 var rootCmd = &cobra.Command{
 	Use:   "ccmgr-ultra",
 	Short: "Claude Multi-Project Multi-Session Manager",
@@ -27,6 +36,11 @@ across multiple projects and git worktrees. It combines the best features of
 CCManager and Claude Squad to provide seamless tmux session management,
 status monitoring, and workflow automation.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if nonInteractive {
+			// CLI-only mode - show help since no subcommand was specified
+			cmd.Help()
+			return
+		}
 		runTUI()
 	},
 }
@@ -40,6 +54,14 @@ var versionCmd = &cobra.Command{
 }
 
 func init() {
+	// Add global persistent flags
+	rootCmd.PersistentFlags().BoolVarP(&nonInteractive, "non-interactive", "n", false, "Skip TUI, use CLI-only mode")
+	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "", "Custom config file path")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
+	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "Suppress non-essential output")
+	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Show what would be done without executing")
+
+	// Add subcommands
 	rootCmd.AddCommand(versionCmd)
 }
 
