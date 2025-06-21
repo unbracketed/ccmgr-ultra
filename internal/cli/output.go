@@ -37,16 +37,16 @@ func NewFormatter(format OutputFormat, writer io.Writer) OutputFormatter {
 	case FormatYAML:
 		return &YAMLFormatter{writer: writer}
 	default:
-		return &TableFormatter{writer: writer}
+		return &SimpleTableFormatter{writer: writer}
 	}
 }
 
-// TableFormatter formats output as a simple table
-type TableFormatter struct {
+// SimpleTableFormatter formats output as a simple table (for backward compatibility)
+type SimpleTableFormatter struct {
 	writer io.Writer
 }
 
-func (f *TableFormatter) Format(data interface{}) error {
+func (f *SimpleTableFormatter) Format(data interface{}) error {
 	if data == nil {
 		return nil
 	}
@@ -60,7 +60,7 @@ func (f *TableFormatter) Format(data interface{}) error {
 	return f.formatSingle(data)
 }
 
-func (f *TableFormatter) formatSlice(data interface{}) error {
+func (f *SimpleTableFormatter) formatSlice(data interface{}) error {
 	v := reflect.ValueOf(data)
 	if v.Len() == 0 {
 		fmt.Fprintln(f.writer, "No data available")
@@ -81,7 +81,7 @@ func (f *TableFormatter) formatSlice(data interface{}) error {
 	return nil
 }
 
-func (f *TableFormatter) formatSingle(data interface{}) error {
+func (f *SimpleTableFormatter) formatSingle(data interface{}) error {
 	// Simple key-value formatting for structs
 	v := reflect.ValueOf(data)
 	t := reflect.TypeOf(data)
