@@ -18,8 +18,8 @@ const (
 	ConfigDirName  = "ccmgr-ultra"
 )
 
-// Load loads configuration from the specified path
-func Load(path string) (*Config, error) {
+// LoadFromPath loads configuration from the specified path
+func LoadFromPath(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
@@ -40,6 +40,27 @@ func Load(path string) (*Config, error) {
 
 	return &config, nil
 }
+
+// Load loads configuration from default locations
+func Load() (*Config, error) {
+	// Try to load from default config path
+	configPath := GetConfigPath()
+	configFile := filepath.Join(configPath, ConfigFileName)
+	
+	// Check if config file exists
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		// Create default config
+		config := DefaultConfig()
+		if err := Save(config, configFile); err != nil {
+			return nil, fmt.Errorf("failed to create default config: %w", err)
+		}
+		return config, nil
+	}
+	
+	// Load existing config using the path-based Load function
+	return LoadFromPath(configFile)
+}
+
 
 // Save saves configuration to the specified path
 func Save(config *Config, path string) error {
@@ -84,7 +105,7 @@ func LoadOrCreate(path string) (*Config, error) {
 		return config, nil
 	}
 
-	return Load(path)
+	return LoadFromPath(path)
 }
 
 // GetConfigPath returns the user config directory path

@@ -1,10 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
+	"github.com/your-username/ccmgr-ultra/internal/config"
+	"github.com/your-username/ccmgr-ultra/internal/tui"
 )
 
 var (
@@ -21,9 +27,7 @@ across multiple projects and git worktrees. It combines the best features of
 CCManager and Claude Squad to provide seamless tmux session management,
 status monitoring, and workflow automation.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Launch TUI
-		fmt.Println("ccmgr-ultra - Claude Multi-Project Multi-Session Manager")
-		fmt.Println("TUI implementation coming soon...")
+		runTUI()
 	},
 }
 
@@ -37,6 +41,44 @@ var versionCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
+}
+
+// runTUI initializes and runs the TUI application
+func runTUI() {
+	// Create context for graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Handle interrupt signals
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cancel()
+	}()
+
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load configuration: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Create TUI application
+	app, err := tui.NewAppModel(ctx, cfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create TUI application: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Configure program options
+	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseCellMotion())
+
+	// Run the program
+	if _, err := p.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error running TUI: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func main() {

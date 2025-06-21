@@ -14,11 +14,17 @@ type Config struct {
 	WorktreeHooks WorktreeHooksConfig    `yaml:"worktree_hooks" json:"worktree_hooks"`
 	Worktree      WorktreeConfig         `yaml:"worktree" json:"worktree"`
 	Tmux          TmuxConfig             `yaml:"tmux" json:"tmux"`
-	Git           GitConfig              `yaml:"git" json:"git"`
-	Claude        ClaudeConfig           `yaml:"claude" json:"claude"`
-	Shortcuts     map[string]string      `yaml:"shortcuts" json:"shortcuts"`
-	Commands      CommandsConfig         `yaml:"commands" json:"commands"`
-	LastModified  time.Time              `yaml:"last_modified" json:"last_modified"`
+	Git              GitConfig              `yaml:"git" json:"git"`
+	Claude           ClaudeConfig           `yaml:"claude" json:"claude"`
+	TUI              TUIConfig              `yaml:"tui" json:"tui"`
+	Shortcuts        map[string]string      `yaml:"shortcuts" json:"shortcuts"`
+	Commands         CommandsConfig         `yaml:"commands" json:"commands"`
+	LastModified     time.Time              `yaml:"last_modified" json:"last_modified"`
+	
+	// Additional common config fields
+	ConfigFile       string                 `yaml:"-" json:"-"`
+	LogLevel         string                 `yaml:"log_level" json:"log_level" default:"info"`
+	RefreshInterval  int                    `yaml:"refresh_interval" json:"refresh_interval" default:"5"`
 }
 
 // StatusHooksConfig defines status hook configuration
@@ -123,6 +129,24 @@ type GitConfig struct {
 	BackupOnDelete      bool `yaml:"backup_on_delete" json:"backup_on_delete" default:"true"`
 }
 
+// TUIConfig defines TUI application configuration
+type TUIConfig struct {
+	// Display settings
+	Theme           string `yaml:"theme" json:"theme" default:"default"`
+	RefreshInterval int    `yaml:"refresh_interval" json:"refresh_interval" default:"5"` // seconds
+	MouseSupport    bool   `yaml:"mouse_support" json:"mouse_support" default:"true"`
+	
+	// Screen settings
+	DefaultScreen   string `yaml:"default_screen" json:"default_screen" default:"dashboard"`
+	ShowStatusBar   bool   `yaml:"show_status_bar" json:"show_status_bar" default:"true"`
+	ShowKeyHelp     bool   `yaml:"show_key_help" json:"show_key_help" default:"true"`
+	
+	// Behavior settings
+	ConfirmQuit     bool   `yaml:"confirm_quit" json:"confirm_quit" default:"false"`
+	AutoRefresh     bool   `yaml:"auto_refresh" json:"auto_refresh" default:"true"`
+	DebugMode       bool   `yaml:"debug_mode" json:"debug_mode" default:"false"`
+}
+
 // Validate validates the entire configuration
 func (c *Config) Validate() error {
 	if c.Version == "" {
@@ -155,6 +179,10 @@ func (c *Config) Validate() error {
 
 	if err := c.Claude.Validate(); err != nil {
 		return fmt.Errorf("claude validation failed: %w", err)
+	}
+
+	if err := c.TUI.Validate(); err != nil {
+		return fmt.Errorf("tui validation failed: %w", err)
 	}
 
 	// Validate shortcuts
@@ -406,6 +434,9 @@ func (c *Config) SetDefaults() {
 	// Set default claude config
 	c.Claude.SetDefaults()
 
+	// Set default TUI config
+	c.TUI.SetDefaults()
+
 	// Set default shortcuts if none provided
 	if len(c.Shortcuts) == 0 {
 		c.Shortcuts = DefaultShortcuts()
@@ -557,6 +588,47 @@ func (c *ClaudeConfig) SetDefaults() {
 	c.EnableResourceMonitoring = true
 	c.IntegrateTmux = true
 	c.IntegrateWorktrees = true
+}
+
+// SetDefaults sets default values for TUI configuration
+func (t *TUIConfig) SetDefaults() {
+	if t.Theme == "" {
+		t.Theme = "default"
+	}
+	if t.RefreshInterval == 0 {
+		t.RefreshInterval = 5
+	}
+	if t.DefaultScreen == "" {
+		t.DefaultScreen = "dashboard"
+	}
+	// Boolean defaults are handled by Go's zero values
+	t.MouseSupport = true
+	t.ShowStatusBar = true
+	t.ShowKeyHelp = true
+	t.ConfirmQuit = false
+	t.AutoRefresh = true
+	t.DebugMode = false
+}
+
+// Validate validates TUI configuration
+func (t *TUIConfig) Validate() error {
+	if t.RefreshInterval < 1 {
+		return errors.New("refresh interval must be at least 1 second")
+	}
+	
+	validScreens := []string{"dashboard", "sessions", "worktrees", "config", "help"}
+	validScreen := false
+	for _, screen := range validScreens {
+		if t.DefaultScreen == screen {
+			validScreen = true
+			break
+		}
+	}
+	if !validScreen {
+		return fmt.Errorf("invalid default screen: %s", t.DefaultScreen)
+	}
+	
+	return nil
 }
 
 // DefaultShortcuts returns the default keyboard shortcuts
