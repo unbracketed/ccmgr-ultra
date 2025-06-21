@@ -48,14 +48,56 @@ type SessionInfo struct {
 
 // WorktreeInfo represents worktree information for the TUI
 type WorktreeInfo struct {
-	Path       string
-	Branch     string
-	Repository string
-	Active     bool
-	LastAccess time.Time
-	HasChanges bool
-	Status     string
+	Path           string
+	Branch         string
+	Repository     string
+	Active         bool
+	LastAccess     time.Time
+	HasChanges     bool
+	Status         string
+	ActiveSessions []SessionSummary  // New: associated sessions
+	ClaudeStatus   ClaudeStatus      // New: Claude process status
+	GitStatus      GitWorktreeStatus // New: detailed git status
 }
+
+// SessionSummary provides summary info about sessions in a worktree
+type SessionSummary struct {
+	ID       string
+	Name     string
+	State    string
+	LastUsed time.Time
+}
+
+// ClaudeStatus represents Claude Code process status for a worktree
+type ClaudeStatus struct {
+	State       string    // idle, busy, waiting, error
+	ProcessID   int
+	LastUpdate  time.Time
+	SessionID   string
+}
+
+// GitWorktreeStatus provides detailed git status information
+type GitWorktreeStatus struct {
+	IsClean      bool
+	Ahead        int
+	Behind       int
+	Staged       int
+	Modified     int
+	Untracked    int
+	Conflicted   int
+	LastCommit   string
+	LastCommitAt time.Time
+}
+
+// WorktreeSortMode defines how worktrees should be sorted
+type WorktreeSortMode int
+
+const (
+	SortByName WorktreeSortMode = iota
+	SortByLastAccess
+	SortByBranch
+	SortByStatus
+)
 
 // SystemStatus represents overall system status
 type SystemStatus struct {
@@ -216,7 +258,7 @@ func (i *Integration) refreshGitData() {
 	// Since we don't have repository context at this level,
 	// we'll implement a basic worktree discovery mechanism
 	
-	// For now, create placeholder data
+	// For now, create enhanced placeholder data
 	// In a real implementation, this would scan configured directories
 	// for git repositories and their worktrees
 	
@@ -229,6 +271,31 @@ func (i *Integration) refreshGitData() {
 			LastAccess: time.Now().Add(-30 * time.Minute),
 			HasChanges: false,
 			Status:     "clean",
+			ActiveSessions: []SessionSummary{
+				{
+					ID:       "session1",
+					Name:     "ui-work",
+					State:    "active",
+					LastUsed: time.Now().Add(-10 * time.Minute),
+				},
+			},
+			ClaudeStatus: ClaudeStatus{
+				State:      "idle",
+				ProcessID:  1234,
+				LastUpdate: time.Now().Add(-5 * time.Minute),
+				SessionID:  "session1",
+			},
+			GitStatus: GitWorktreeStatus{
+				IsClean:      true,
+				Ahead:        0,
+				Behind:       0,
+				Staged:       0,
+				Modified:     0,
+				Untracked:    0,
+				Conflicted:   0,
+				LastCommit:   "Update UI components",
+				LastCommitAt: time.Now().Add(-2 * time.Hour),
+			},
 		},
 		{
 			Path:       "/example/worktree2", 
@@ -238,6 +305,91 @@ func (i *Integration) refreshGitData() {
 			LastAccess: time.Now().Add(-2 * time.Hour),
 			HasChanges: true,
 			Status:     "modified",
+			ActiveSessions: []SessionSummary{},
+			ClaudeStatus: ClaudeStatus{
+				State:      "error",
+				ProcessID:  0,
+				LastUpdate: time.Now().Add(-1 * time.Hour),
+				SessionID:  "",
+			},
+			GitStatus: GitWorktreeStatus{
+				IsClean:      false,
+				Ahead:        2,
+				Behind:       1,
+				Staged:       3,
+				Modified:     5,
+				Untracked:    2,
+				Conflicted:   0,
+				LastCommit:   "Refactor backend services",
+				LastCommitAt: time.Now().Add(-4 * time.Hour),
+			},
+		},
+		{
+			Path:       "/example/worktree3",
+			Branch:     "main",
+			Repository: "ccmgr-ultra",
+			Active:     true,
+			LastAccess: time.Now().Add(-1 * time.Hour),
+			HasChanges: false,
+			Status:     "clean",
+			ActiveSessions: []SessionSummary{
+				{
+					ID:       "session2",
+					Name:     "main-work",
+					State:    "paused",
+					LastUsed: time.Now().Add(-45 * time.Minute),
+				},
+				{
+					ID:       "session3",
+					Name:     "docs",
+					State:    "active",
+					LastUsed: time.Now().Add(-20 * time.Minute),
+				},
+			},
+			ClaudeStatus: ClaudeStatus{
+				State:      "busy",
+				ProcessID:  5678,
+				LastUpdate: time.Now().Add(-2 * time.Minute),
+				SessionID:  "session3",
+			},
+			GitStatus: GitWorktreeStatus{
+				IsClean:      true,
+				Ahead:        0,
+				Behind:       3,
+				Staged:       0,
+				Modified:     0,
+				Untracked:    0,
+				Conflicted:   0,
+				LastCommit:   "Merge pull request #42",
+				LastCommitAt: time.Now().Add(-6 * time.Hour),
+			},
+		},
+		{
+			Path:       "/example/worktree4",
+			Branch:     "hotfix/security-patch",
+			Repository: "ccmgr-ultra",
+			Active:     false,
+			LastAccess: time.Now().Add(-3 * time.Hour),
+			HasChanges: true,
+			Status:     "conflicts",
+			ActiveSessions: []SessionSummary{},
+			ClaudeStatus: ClaudeStatus{
+				State:      "waiting",
+				ProcessID:  9012,
+				LastUpdate: time.Now().Add(-30 * time.Minute),
+				SessionID:  "",
+			},
+			GitStatus: GitWorktreeStatus{
+				IsClean:      false,
+				Ahead:        1,
+				Behind:       0,
+				Staged:       0,
+				Modified:     2,
+				Untracked:    0,
+				Conflicted:   3,
+				LastCommit:   "Security improvements",
+				LastCommitAt: time.Now().Add(-5 * time.Hour),
+			},
 		},
 	}
 }
@@ -403,6 +555,144 @@ func (i *Integration) RefreshData() tea.Cmd {
 	}
 }
 
+// GetClaudeStatusForWorktree returns Claude status for a specific worktree
+func (i *Integration) GetClaudeStatusForWorktree(worktreePath string) ClaudeStatus {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+	
+	// Find worktree and return its status
+	for _, wt := range i.worktrees {
+		if wt.Path == worktreePath {
+			return wt.ClaudeStatus
+		}
+	}
+	
+	// Return default status if not found
+	return ClaudeStatus{
+		State:      "unknown",
+		ProcessID:  0,
+		LastUpdate: time.Now(),
+		SessionID:  "",
+	}
+}
+
+// GetActiveSessionsForWorktree returns active sessions for a specific worktree
+func (i *Integration) GetActiveSessionsForWorktree(worktreePath string) []SessionSummary {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+	
+	// Find worktree and return its sessions
+	for _, wt := range i.worktrees {
+		if wt.Path == worktreePath {
+			return wt.ActiveSessions
+		}
+	}
+	
+	return []SessionSummary{}
+}
+
+// UpdateClaudeStatusForWorktree updates Claude status for a worktree
+func (i *Integration) UpdateClaudeStatusForWorktree(worktreePath string, status ClaudeStatus) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	
+	// Find and update worktree status
+	for idx, wt := range i.worktrees {
+		if wt.Path == worktreePath {
+			i.worktrees[idx].ClaudeStatus = status
+			break
+		}
+	}
+}
+
+// StartRealtimeStatusUpdates begins real-time status monitoring
+func (i *Integration) StartRealtimeStatusUpdates() tea.Cmd {
+	return tea.Tick(time.Second*2, func(t time.Time) tea.Msg {
+		return RealtimeStatusUpdateMsg{Timestamp: t}
+	})
+}
+
+// ProcessRealtimeStatusUpdate handles real-time status updates
+func (i *Integration) ProcessRealtimeStatusUpdate() tea.Cmd {
+	return func() tea.Msg {
+		// Update Claude statuses in background
+		go i.updateClaudeStatusesRealtime()
+		
+		// Return update message
+		return StatusUpdatedMsg{
+			UpdatedAt: time.Now(),
+		}
+	}
+}
+
+// updateClaudeStatusesRealtime updates Claude statuses in background
+func (i *Integration) updateClaudeStatusesRealtime() {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	
+	// Get current Claude processes
+	processes := i.claudeMgr.GetAllProcesses()
+	
+	// Update each worktree's Claude status
+	for idx := range i.worktrees {
+		wt := &i.worktrees[idx]
+		
+		// Find matching Claude process for this worktree
+		found := false
+		for _, process := range processes {
+			// In a real implementation, this would match by working directory
+			// For now, we'll simulate status changes
+			if process.SessionID != "" && len(wt.ActiveSessions) > 0 {
+				// Check if any session matches
+				for _, session := range wt.ActiveSessions {
+					if session.ID == process.SessionID {
+						wt.ClaudeStatus = ClaudeStatus{
+							State:      process.State.String(),
+							ProcessID:  process.PID,
+							LastUpdate: time.Now(),
+							SessionID:  process.SessionID,
+						}
+						found = true
+						break
+					}
+				}
+			}
+		}
+		
+		if !found {
+			// Simulate some status evolution for demo purposes
+			switch wt.ClaudeStatus.State {
+			case "idle":
+				// Sometimes become busy
+				if time.Since(wt.ClaudeStatus.LastUpdate) > 30*time.Second {
+					if wt.Path == "/example/worktree3" { // Demo: make worktree3 busy
+						wt.ClaudeStatus.State = "busy"
+						wt.ClaudeStatus.LastUpdate = time.Now()
+					}
+				}
+			case "busy":
+				// Sometimes return to idle
+				if time.Since(wt.ClaudeStatus.LastUpdate) > 45*time.Second {
+					wt.ClaudeStatus.State = "idle"
+					wt.ClaudeStatus.LastUpdate = time.Now()
+				}
+			case "error":
+				// Errors can be cleared after some time
+				if time.Since(wt.ClaudeStatus.LastUpdate) > 60*time.Second {
+					wt.ClaudeStatus.State = "idle"
+					wt.ClaudeStatus.LastUpdate = time.Now()
+				}
+			case "waiting":
+				// Waiting can transition to busy or idle
+				if time.Since(wt.ClaudeStatus.LastUpdate) > 20*time.Second {
+					wt.ClaudeStatus.State = "idle"
+					wt.ClaudeStatus.LastUpdate = time.Now()
+				}
+			}
+		}
+	}
+}
+
 // Shutdown gracefully shuts down the integration layer
 func (i *Integration) Shutdown() {
 	if i.cancel != nil {
@@ -469,3 +759,27 @@ type WorktreeCreatedMsg struct {
 	Path   string
 	Branch string
 }
+
+// New session workflow messages
+type NewSessionRequestedMsg struct {
+	Worktrees []WorktreeInfo
+}
+
+type ContinueSessionRequestedMsg struct {
+	Worktrees []WorktreeInfo
+}
+
+type ResumeSessionRequestedMsg struct {
+	Worktrees []WorktreeInfo
+}
+
+// Real-time status update messages
+type RealtimeStatusUpdateMsg struct {
+	Timestamp time.Time
+}
+
+type StatusUpdatedMsg struct {
+	UpdatedAt time.Time
+}
+
+// Note: RefreshDataMsg is defined in app.go

@@ -620,3 +620,512 @@ func (s *ConfirmationStep) Validate(data map[string]interface{}) error {
 func (s *ConfirmationStep) IsComplete(data map[string]interface{}) bool {
 	return true
 }
+
+// Enhanced Session-Worktree Integration Workflows
+// These methods support the n/c/r keyboard shortcuts from WorktreesModel
+
+// WorktreeSessionIntegration provides session operations for specific worktrees
+type WorktreeSessionIntegration struct {
+	integration Integration
+	theme       modals.Theme
+}
+
+// NewWorktreeSessionIntegration creates a new worktree session integration
+func NewWorktreeSessionIntegration(integration Integration, theme modals.Theme) *WorktreeSessionIntegration {
+	return &WorktreeSessionIntegration{
+		integration: integration,
+		theme:       theme,
+	}
+}
+
+// CreateNewSessionForWorktree creates a new session for a specific worktree
+func (w *WorktreeSessionIntegration) CreateNewSessionForWorktree(worktree WorktreeInfo) *modals.MultiStepModal {
+	steps := []modals.Step{
+		&WorktreeSessionDetailsStep{
+			integration: w.integration,
+			worktree:    worktree,
+		},
+		&WorktreeClaudeConfigStep{
+			integration: w.integration,
+			worktree:    worktree,
+		},
+		&WorktreeSessionConfirmationStep{
+			integration: w.integration,
+			worktree:    worktree,
+		},
+	}
+	
+	return modals.NewMultiStepModal(modals.MultiStepModalConfig{
+		Title:        fmt.Sprintf("New Session for %s", worktree.Branch),
+		Steps:        steps,
+		ShowProgress: true,
+	})
+}
+
+// CreateBulkSessionsForWorktrees creates sessions for multiple worktrees
+func (w *WorktreeSessionIntegration) CreateBulkSessionsForWorktrees(worktrees []WorktreeInfo) *modals.MultiStepModal {
+	steps := []modals.Step{
+		&BulkSessionConfigStep{
+			integration: w.integration,
+			worktrees:   worktrees,
+		},
+		&BulkSessionConfirmationStep{
+			integration: w.integration,
+			worktrees:   worktrees,
+		},
+	}
+	
+	return modals.NewMultiStepModal(modals.MultiStepModalConfig{
+		Title:        fmt.Sprintf("Create Sessions for %d Worktrees", len(worktrees)),
+		Steps:        steps,
+		ShowProgress: true,
+	})
+}
+
+// ContinueSessionInWorktree finds and attaches to existing session for a worktree
+func (w *WorktreeSessionIntegration) ContinueSessionInWorktree(worktree WorktreeInfo) tea.Cmd {
+	return func() tea.Msg {
+		// This would find existing sessions for the worktree
+		// For now, return a placeholder message
+		return SessionContinueMsg{
+			WorktreePath: worktree.Path,
+			Success:      true,
+			Message:      fmt.Sprintf("Continuing session in %s", worktree.Branch),
+		}
+	}
+}
+
+// ResumeSessionInWorktree restores a paused session for a worktree
+func (w *WorktreeSessionIntegration) ResumeSessionInWorktree(worktree WorktreeInfo) tea.Cmd {
+	return func() tea.Msg {
+		// This would restore a paused session
+		// For now, return a placeholder message
+		return SessionResumeMsg{
+			WorktreePath: worktree.Path,
+			Success:      true,
+			Message:      fmt.Sprintf("Resuming session in %s", worktree.Branch),
+		}
+	}
+}
+
+// WorktreeSessionDetailsStep handles session configuration for a specific worktree
+type WorktreeSessionDetailsStep struct {
+	integration Integration
+	worktree    WorktreeInfo
+	cursor      int
+	nameInput   string
+	descInput   string
+}
+
+func (s *WorktreeSessionDetailsStep) Title() string {
+	return "Session Details"
+}
+
+func (s *WorktreeSessionDetailsStep) Description() string {
+	return fmt.Sprintf("Configure session for worktree: %s (%s)", s.worktree.Path, s.worktree.Branch)
+}
+
+func (s *WorktreeSessionDetailsStep) Render(theme modals.Theme, width int, data map[string]interface{}) string {
+	var elements []string
+	
+	// Worktree info
+	worktreeStyle := lipgloss.NewStyle().Foreground(theme.Primary).Bold(true)
+	elements = append(elements, worktreeStyle.Render(fmt.Sprintf("Worktree: %s", s.worktree.Path)))
+	elements = append(elements, fmt.Sprintf("Branch: %s", s.worktree.Branch))
+	elements = append(elements, "")
+	
+	// Session name input
+	nameLabel := "Session Name:"
+	if s.cursor == 0 {
+		nameLabel = "> " + nameLabel
+	} else {
+		nameLabel = "  " + nameLabel
+	}
+	elements = append(elements, nameLabel)
+	
+	nameValue := s.nameInput
+	if nameValue == "" {
+		nameValue = fmt.Sprintf("session-%s", strings.ReplaceAll(s.worktree.Branch, "/", "-"))
+	}
+	elements = append(elements, fmt.Sprintf("  %s", nameValue))
+	elements = append(elements, "")
+	
+	// Description input
+	descLabel := "Description (optional):"
+	if s.cursor == 1 {
+		descLabel = "> " + descLabel
+	} else {
+		descLabel = "  " + descLabel
+	}
+	elements = append(elements, descLabel)
+	elements = append(elements, fmt.Sprintf("  %s", s.descInput))
+	
+	return strings.Join(elements, "\n")
+}
+
+func (s *WorktreeSessionDetailsStep) HandleKey(msg tea.KeyMsg, data map[string]interface{}) (map[string]interface{}, tea.Cmd, error) {
+	switch msg.String() {
+	case "up", "k":
+		if s.cursor > 0 {
+			s.cursor--
+		}
+	case "down", "j":
+		if s.cursor < 1 {
+			s.cursor++
+		}
+	case "backspace":
+		if s.cursor == 0 && len(s.nameInput) > 0 {
+			s.nameInput = s.nameInput[:len(s.nameInput)-1]
+		} else if s.cursor == 1 && len(s.descInput) > 0 {
+			s.descInput = s.descInput[:len(s.descInput)-1]
+		}
+	default:
+		if len(msg.Runes) > 0 {
+			char := string(msg.Runes[0])
+			if s.cursor == 0 && len(s.nameInput) < 50 {
+				s.nameInput += char
+			} else if s.cursor == 1 && len(s.descInput) < 200 {
+				s.descInput += char
+			}
+		}
+	}
+	
+	// Store in data
+	sessionName := s.nameInput
+	if sessionName == "" {
+		sessionName = fmt.Sprintf("session-%s", strings.ReplaceAll(s.worktree.Branch, "/", "-"))
+	}
+	
+	data["session_name"] = sessionName
+	data["session_description"] = s.descInput
+	data["worktree_path"] = s.worktree.Path
+	data["project_path"] = s.worktree.Path
+	data["branch"] = s.worktree.Branch
+	
+	return data, nil, nil
+}
+
+func (s *WorktreeSessionDetailsStep) Validate(data map[string]interface{}) error {
+	name, _ := data["session_name"].(string)
+	if strings.TrimSpace(name) == "" {
+		return fmt.Errorf("session name is required")
+	}
+	
+	return s.integration.ValidateSessionName(name)
+}
+
+func (s *WorktreeSessionDetailsStep) IsComplete(data map[string]interface{}) bool {
+	return s.Validate(data) == nil
+}
+
+// WorktreeClaudeConfigStep handles Claude configuration for worktree sessions
+type WorktreeClaudeConfigStep struct {
+	integration   Integration
+	worktree      WorktreeInfo
+	enableClaude  bool
+	configLoaded  bool
+	defaultConfig ClaudeConfig
+}
+
+func (s *WorktreeClaudeConfigStep) Title() string {
+	return "Claude Configuration"
+}
+
+func (s *WorktreeClaudeConfigStep) Description() string {
+	return "Configure Claude Code integration for this session"
+}
+
+func (s *WorktreeClaudeConfigStep) Render(theme modals.Theme, width int, data map[string]interface{}) string {
+	if !s.configLoaded {
+		// Load default config for worktree
+		config, err := s.integration.GetDefaultClaudeConfig(s.worktree.Path)
+		if err == nil {
+			s.defaultConfig = config
+			s.enableClaude = config.Enabled
+		}
+		s.configLoaded = true
+	}
+	
+	var elements []string
+	
+	// Enable/disable toggle
+	enableText := "Disable Claude Code"
+	if !s.enableClaude {
+		enableText = "Enable Claude Code"
+	}
+	elements = append(elements, fmt.Sprintf("> %s", enableText))
+	elements = append(elements, "")
+	
+	if s.enableClaude {
+		elements = append(elements, "Claude Code Configuration:")
+		elements = append(elements, fmt.Sprintf("  Config Path: %s", s.defaultConfig.ConfigPath))
+		elements = append(elements, fmt.Sprintf("  MCP Servers: %d configured", len(s.defaultConfig.MCPServers)))
+		elements = append(elements, fmt.Sprintf("  Permissions: %d configured", len(s.defaultConfig.Permissions)))
+	} else {
+		elements = append(elements, "Claude Code will not be enabled for this session.")
+	}
+	
+	return strings.Join(elements, "\n")
+}
+
+func (s *WorktreeClaudeConfigStep) HandleKey(msg tea.KeyMsg, data map[string]interface{}) (map[string]interface{}, tea.Cmd, error) {
+	switch msg.String() {
+	case "enter", " ":
+		s.enableClaude = !s.enableClaude
+	}
+	
+	// Store configuration
+	if s.enableClaude {
+		data["claude_config"] = s.defaultConfig
+	} else {
+		data["claude_config"] = ClaudeConfig{Enabled: false}
+	}
+	
+	return data, nil, nil
+}
+
+func (s *WorktreeClaudeConfigStep) Validate(data map[string]interface{}) error {
+	return nil
+}
+
+func (s *WorktreeClaudeConfigStep) IsComplete(data map[string]interface{}) bool {
+	return true
+}
+
+// WorktreeSessionConfirmationStep shows confirmation for worktree session creation
+type WorktreeSessionConfirmationStep struct {
+	integration Integration
+	worktree    WorktreeInfo
+}
+
+func (s *WorktreeSessionConfirmationStep) Title() string {
+	return "Confirm Session Creation"
+}
+
+func (s *WorktreeSessionConfirmationStep) Description() string {
+	return "Review session configuration before creation"
+}
+
+func (s *WorktreeSessionConfirmationStep) Render(theme modals.Theme, width int, data map[string]interface{}) string {
+	var elements []string
+	
+	// Header
+	headerStyle := lipgloss.NewStyle().Foreground(theme.Primary).Bold(true)
+	elements = append(elements, headerStyle.Render("Session Configuration Summary"))
+	elements = append(elements, "")
+	
+	// Session details
+	if sessionName, ok := data["session_name"].(string); ok {
+		elements = append(elements, fmt.Sprintf("Session Name: %s", sessionName))
+	}
+	
+	if description, ok := data["session_description"].(string); ok && description != "" {
+		elements = append(elements, fmt.Sprintf("Description: %s", description))
+	}
+	
+	elements = append(elements, fmt.Sprintf("Worktree: %s", s.worktree.Path))
+	elements = append(elements, fmt.Sprintf("Branch: %s", s.worktree.Branch))
+	
+	// Claude configuration
+	if claudeConfig, ok := data["claude_config"].(ClaudeConfig); ok {
+		claudeStatus := "Disabled"
+		if claudeConfig.Enabled {
+			claudeStatus = "Enabled"
+		}
+		elements = append(elements, fmt.Sprintf("Claude Code: %s", claudeStatus))
+	}
+	
+	elements = append(elements, "")
+	
+	// Confirmation message
+	confirmStyle := lipgloss.NewStyle().Foreground(theme.Success).Bold(true)
+	elements = append(elements, confirmStyle.Render("Press Ctrl+Enter to create session"))
+	
+	return strings.Join(elements, "\n")
+}
+
+func (s *WorktreeSessionConfirmationStep) HandleKey(msg tea.KeyMsg, data map[string]interface{}) (map[string]interface{}, tea.Cmd, error) {
+	return data, nil, nil
+}
+
+func (s *WorktreeSessionConfirmationStep) Validate(data map[string]interface{}) error {
+	return nil
+}
+
+func (s *WorktreeSessionConfirmationStep) IsComplete(data map[string]interface{}) bool {
+	return true
+}
+
+// Bulk session creation steps
+
+// BulkSessionConfigStep handles configuration for bulk session creation
+type BulkSessionConfigStep struct {
+	integration    Integration
+	worktrees      []WorktreeInfo
+	cursor         int
+	namingPattern  string
+	enableClaude   bool
+	autoStart      bool
+}
+
+func (s *BulkSessionConfigStep) Title() string {
+	return "Bulk Session Configuration"
+}
+
+func (s *BulkSessionConfigStep) Description() string {
+	return fmt.Sprintf("Configure sessions for %d worktrees", len(s.worktrees))
+}
+
+func (s *BulkSessionConfigStep) Render(theme modals.Theme, width int, data map[string]interface{}) string {
+	var elements []string
+	
+	// Worktree list
+	elements = append(elements, "Selected Worktrees:")
+	for _, wt := range s.worktrees {
+		elements = append(elements, fmt.Sprintf("  • %s (%s)", wt.Path, wt.Branch))
+	}
+	elements = append(elements, "")
+	
+	// Configuration options
+	options := []string{
+		fmt.Sprintf("Naming Pattern: %s", s.getNameExample()),
+		fmt.Sprintf("Enable Claude: %t", s.enableClaude),
+		fmt.Sprintf("Auto Start: %t", s.autoStart),
+	}
+	
+	for i, option := range options {
+		if i == s.cursor {
+			elements = append(elements, "> "+option)
+		} else {
+			elements = append(elements, "  "+option)
+		}
+	}
+	
+	return strings.Join(elements, "\n")
+}
+
+func (s *BulkSessionConfigStep) getNameExample() string {
+	if s.namingPattern == "" {
+		s.namingPattern = "session-{branch}"
+	}
+	return s.namingPattern
+}
+
+func (s *BulkSessionConfigStep) HandleKey(msg tea.KeyMsg, data map[string]interface{}) (map[string]interface{}, tea.Cmd, error) {
+	switch msg.String() {
+	case "up", "k":
+		if s.cursor > 0 {
+			s.cursor--
+		}
+	case "down", "j":
+		if s.cursor < 2 {
+			s.cursor++
+		}
+	case "enter", " ":
+		switch s.cursor {
+		case 1: // Enable Claude
+			s.enableClaude = !s.enableClaude
+		case 2: // Auto Start
+			s.autoStart = !s.autoStart
+		}
+	}
+	
+	// Store configuration
+	data["naming_pattern"] = s.namingPattern
+	data["enable_claude"] = s.enableClaude
+	data["auto_start"] = s.autoStart
+	data["worktrees"] = s.worktrees
+	
+	return data, nil, nil
+}
+
+func (s *BulkSessionConfigStep) Validate(data map[string]interface{}) error {
+	return nil
+}
+
+func (s *BulkSessionConfigStep) IsComplete(data map[string]interface{}) bool {
+	return true
+}
+
+// BulkSessionConfirmationStep shows confirmation for bulk session creation
+type BulkSessionConfirmationStep struct {
+	integration Integration
+	worktrees   []WorktreeInfo
+}
+
+func (s *BulkSessionConfirmationStep) Title() string {
+	return "Confirm Bulk Session Creation"
+}
+
+func (s *BulkSessionConfirmationStep) Description() string {
+	return "Review bulk session configuration"
+}
+
+func (s *BulkSessionConfirmationStep) Render(theme modals.Theme, width int, data map[string]interface{}) string {
+	var elements []string
+	
+	headerStyle := lipgloss.NewStyle().Foreground(theme.Primary).Bold(true)
+	elements = append(elements, headerStyle.Render("Bulk Session Creation Summary"))
+	elements = append(elements, "")
+	
+	elements = append(elements, fmt.Sprintf("Sessions to create: %d", len(s.worktrees)))
+	
+	if pattern, ok := data["naming_pattern"].(string); ok {
+		elements = append(elements, fmt.Sprintf("Naming pattern: %s", pattern))
+	}
+	
+	if enableClaude, ok := data["enable_claude"].(bool); ok {
+		elements = append(elements, fmt.Sprintf("Claude enabled: %t", enableClaude))
+	}
+	
+	if autoStart, ok := data["auto_start"].(bool); ok {
+		elements = append(elements, fmt.Sprintf("Auto start: %t", autoStart))
+	}
+	
+	elements = append(elements, "")
+	elements = append(elements, "Sessions will be created for:")
+	for _, wt := range s.worktrees {
+		sessionName := strings.ReplaceAll("session-{branch}", "{branch}", wt.Branch)
+		elements = append(elements, fmt.Sprintf("  • %s → %s", wt.Path, sessionName))
+	}
+	
+	elements = append(elements, "")
+	confirmStyle := lipgloss.NewStyle().Foreground(theme.Success).Bold(true)
+	elements = append(elements, confirmStyle.Render("Press Ctrl+Enter to create all sessions"))
+	
+	return strings.Join(elements, "\n")
+}
+
+func (s *BulkSessionConfirmationStep) HandleKey(msg tea.KeyMsg, data map[string]interface{}) (map[string]interface{}, tea.Cmd, error) {
+	return data, nil, nil
+}
+
+func (s *BulkSessionConfirmationStep) Validate(data map[string]interface{}) error {
+	return nil
+}
+
+func (s *BulkSessionConfirmationStep) IsComplete(data map[string]interface{}) bool {
+	return true
+}
+
+// Message types for session-worktree integration
+type SessionContinueMsg struct {
+	WorktreePath string
+	Success      bool
+	Message      string
+	SessionID    string
+}
+
+type SessionResumeMsg struct {
+	WorktreePath string
+	Success      bool
+	Message      string
+	SessionID    string
+}
+
+type SessionCreatedMsg struct {
+	WorktreePath string
+	SessionID    string
+	Success      bool
+	Message      string
+}

@@ -65,12 +65,15 @@ type Theme struct {
 	Success     lipgloss.Color
 	Warning     lipgloss.Color
 	Error       lipgloss.Color
+	Info        lipgloss.Color    // New: for info status indicators
 	
-	BorderStyle  lipgloss.Border
-	TitleStyle   lipgloss.Style
-	HeaderStyle  lipgloss.Style
-	ContentStyle lipgloss.Style
-	FooterStyle  lipgloss.Style
+	BorderStyle   lipgloss.Border
+	TitleStyle    lipgloss.Style
+	HeaderStyle   lipgloss.Style
+	ContentStyle  lipgloss.Style
+	FooterStyle   lipgloss.Style
+	SelectedStyle lipgloss.Style   // New: for highlighting selected items
+	StatusStyle   lipgloss.Style   // New: for status/help bar
 }
 
 // DefaultTheme returns the default color theme
@@ -85,6 +88,7 @@ func DefaultTheme() Theme {
 		Success:     lipgloss.Color("#A6E3A1"),
 		Warning:     lipgloss.Color("#F9E2AF"),
 		Error:       lipgloss.Color("#F38BA8"),
+		Info:        lipgloss.Color("#89B4FA"), // New: blue for info status
 		
 		BorderStyle: lipgloss.RoundedBorder(),
 		
@@ -104,6 +108,16 @@ func DefaultTheme() Theme {
 			
 		FooterStyle: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#6C7086")).
+			Padding(0, 1),
+			
+		SelectedStyle: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#1E1E2E")).
+			Background(lipgloss.Color("#646CFF")).
+			Bold(true),
+			
+		StatusStyle: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#CDD6F4")).
+			Background(lipgloss.Color("#313244")).
 			Padding(0, 1),
 	}
 }
