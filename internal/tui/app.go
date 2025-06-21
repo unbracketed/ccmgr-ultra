@@ -74,6 +74,12 @@ type Theme struct {
 	FooterStyle   lipgloss.Style
 	SelectedStyle lipgloss.Style   // New: for highlighting selected items
 	StatusStyle   lipgloss.Style   // New: for status/help bar
+	LabelStyle    lipgloss.Style   // New: for form labels
+	FocusedStyle  lipgloss.Style   // New: for focused form elements
+	MutedStyle    lipgloss.Style   // New: for muted text
+	SuccessStyle  lipgloss.Style   // New: for success messages
+	ErrorStyle    lipgloss.Style   // New: for error messages
+	WarningStyle  lipgloss.Style   // New: for warning messages
 }
 
 // DefaultTheme returns the default color theme
@@ -119,6 +125,29 @@ func DefaultTheme() Theme {
 			Foreground(lipgloss.Color("#CDD6F4")).
 			Background(lipgloss.Color("#313244")).
 			Padding(0, 1),
+			
+		LabelStyle: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#CDD6F4")).
+			Bold(false),
+			
+		FocusedStyle: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#646CFF")).
+			Bold(true),
+			
+		MutedStyle: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#6C7086")),
+			
+		SuccessStyle: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#A6E3A1")).
+			Bold(true),
+			
+		ErrorStyle: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#F38BA8")).
+			Bold(true),
+			
+		WarningStyle: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#F9E2AF")).
+			Bold(true),
 	}
 }
 
@@ -205,7 +234,7 @@ func (m *AppModel) initializeScreens() {
 	m.screens[ScreenDashboard] = NewDashboardModel(m.integration, m.theme)
 	m.screens[ScreenSessions] = NewSessionsModel(m.integration, m.theme)
 	m.screens[ScreenWorktrees] = NewWorktreesModel(m.integration, m.theme)
-	m.screens[ScreenConfig] = NewConfigModel(m.config, m.theme)
+	m.screens[ScreenConfig] = NewConfigMenuModel(m.config, m.theme)
 	m.screens[ScreenHelp] = NewHelpModel(m.theme)
 }
 
