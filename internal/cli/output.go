@@ -41,6 +41,26 @@ func NewFormatter(format OutputFormat, writer io.Writer) OutputFormatter {
 	}
 }
 
+// NewStatusFormatter creates a new formatter specifically for status data
+func NewStatusFormatter(format OutputFormat, writer io.Writer) OutputFormatter {
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	switch format {
+	case FormatJSON:
+		return &JSONFormatter{writer: writer}
+	case FormatYAML:
+		return &YAMLFormatter{writer: writer}
+	case FormatTable:
+		// Use the sophisticated TableFormatter for status data
+		return NewStatusTableFormatter(writer)
+	default:
+		// Fallback to simple formatter for unknown formats
+		return &SimpleTableFormatter{writer: writer}
+	}
+}
+
 // SimpleTableFormatter formats output as a simple table (for backward compatibility)
 type SimpleTableFormatter struct {
 	writer io.Writer

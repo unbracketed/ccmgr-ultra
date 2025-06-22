@@ -124,7 +124,7 @@ func runStatusCommand(cmd *cobra.Command, args []string) error {
 		statusData = filterByWorktree(statusData, statusFlags.worktree)
 	}
 
-	formatter, err := setupOutputFormatter(statusFlags.format)
+	formatter, err := setupStatusOutputFormatter(statusFlags.format)
 	if err != nil {
 		return handleCLIError(err)
 	}
@@ -167,7 +167,7 @@ func displayStatus() error {
 		statusData = filterByWorktree(statusData, statusFlags.worktree)
 	}
 
-	formatter, err := setupOutputFormatter(statusFlags.format)
+	formatter, err := setupStatusOutputFormatter(statusFlags.format)
 	if err != nil {
 		return handleCLIError(err)
 	}
