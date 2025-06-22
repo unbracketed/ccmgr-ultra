@@ -31,7 +31,7 @@ FULL_LDFLAGS := -ldflags="-s -w -X main.version=$(VERSION) -X main.date=$(BUILD_
 .PHONY: all build clean test install uninstall run fmt vet deps tidy help test-env test-env-clean
 
 # Default target
-all: build
+all: help
 
 build: ## Build the binary
 	@echo "Building $(BINARY_NAME)..."
