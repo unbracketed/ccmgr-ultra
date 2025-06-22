@@ -42,6 +42,23 @@ func (m *DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "n":
+			// New session - handled by app level, just pass through
+			return m, nil
+		case "w":
+			// New worktree - handled by app level, just pass through
+			return m, nil
+		case "r":
+			// Refresh data
+			return m, func() tea.Msg {
+				return RefreshDataMsg{}
+			}
+		case "c":
+			// Configuration - handled by app level (key "4"), just pass through
+			return m, nil
+		}
 	case RefreshDataMsg:
 		// Refresh dashboard data
 		return m, nil

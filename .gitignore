@@ -24,6 +24,8 @@ go.work.sum
 # Build output
 /ccmgr-ultra
 /cmd/ccmgr-ultra/ccmgr-ultra
+/build/
+/tmp/
 
 # IDE
 .idea/
@@ -39,3 +41,9 @@ Thumbs.db
 # Project specific
 *.log
 .cache/
+coverage.html
+air.log
+
+# Release archives
+*.tar.gz
+*.zip

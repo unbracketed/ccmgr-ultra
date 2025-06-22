@@ -342,6 +342,23 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			modal := modals.NewSimpleErrorModal("Not Implemented", "Worktree wizard not yet implemented")
 			m.modalManager.ShowModal(modal)
 			return m, nil
+			
+		// Dashboard quick actions (only when on dashboard screen)
+		case "n":
+			if m.currentScreen == ScreenDashboard {
+				// New session - switch to worktrees screen
+				return m.switchScreen(ScreenWorktrees)
+			}
+		case "w":
+			if m.currentScreen == ScreenDashboard {
+				// New worktree - switch to worktrees screen
+				return m.switchScreen(ScreenWorktrees)
+			}
+		case "c":
+			if m.currentScreen == ScreenDashboard {
+				// Configuration - switch to config screen
+				return m.switchScreen(ScreenConfig)
+			}
 		}
 		
 		// Pass key to current screen
