@@ -170,6 +170,13 @@ func (m *ConfigMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Reset all changes
 			return m, m.resetAll()
 		}
+
+	case RefreshDataMsg:
+		// Handle refresh data message
+		// Refresh all config screens if needed
+		for _, item := range m.menuItems {
+			item.Screen.Update(msg)
+		}
 	}
 
 	return m, nil

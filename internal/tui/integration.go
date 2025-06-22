@@ -160,7 +160,10 @@ func NewIntegration(config *config.Config) (*Integration, error) {
 		cancel:          cancel,
 	}
 	
-	// Start initial data refresh
+	// Start initial data refresh - do initial sync before returning
+	integration.refreshAllData()
+	
+	// Start background refresh
 	go integration.startBackgroundRefresh()
 	
 	return integration, nil
@@ -171,8 +174,7 @@ func (i *Integration) startBackgroundRefresh() {
 	ticker := time.NewTicker(i.refreshInterval)
 	defer ticker.Stop()
 	
-	// Initial refresh
-	i.refreshAllData()
+	// No need for initial refresh here - already done in NewIntegration
 	
 	for {
 		select {

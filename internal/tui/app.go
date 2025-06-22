@@ -249,6 +249,11 @@ func (m *AppModel) initializeScreens() {
 	m.screens[ScreenWorktrees] = NewWorktreesModel(m.integration, m.theme)
 	m.screens[ScreenConfig] = NewConfigMenuModel(m.config, m.theme)
 	m.screens[ScreenHelp] = NewHelpModel(m.theme)
+	
+	// Initialize all screens to ensure proper state
+	for _, screen := range m.screens {
+		screen.Init()
+	}
 }
 
 // Init implements the tea.Model interface
@@ -453,6 +458,14 @@ func (m *AppModel) switchScreen(screen AppScreen) (tea.Model, tea.Cmd) {
 	
 	// Refresh screen data if needed
 	if screenModel, exists := m.screens[screen]; exists {
+		// Ensure screen has window size before refreshing data
+		if m.width > 0 && m.height > 0 {
+			// Send window size to screen first
+			screenModel, _ = screenModel.Update(tea.WindowSizeMsg{
+				Width:  m.width,
+				Height: m.height,
+			})
+		}
 		screenModel, cmd := screenModel.Update(RefreshDataMsg{})
 		m.screens[screen] = screenModel
 		return m, cmd
