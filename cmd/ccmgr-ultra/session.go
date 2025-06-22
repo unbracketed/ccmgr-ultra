@@ -291,7 +291,7 @@ func runSessionListCommand(cmd *cobra.Command, args []string) error {
 		spinner.StopWithMessage(fmt.Sprintf("Found %d sessions", listData.Total))
 	}
 
-	formatter, err := setupOutputFormatter(sessionListFlags.format)
+	formatter, err := setupSessionOutputFormatter(sessionListFlags.format)
 	if err != nil {
 		return handleCLIError(err)
 	}

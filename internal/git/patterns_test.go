@@ -736,3 +736,18 @@ func TestGetUserName(t *testing.T) {
 	assert.NotContains(t, name, "\\")
 	assert.NotContains(t, name, " ")
 }
+
+func TestDefaultConfigurationPatternsValid(t *testing.T) {
+	cfg := &config.Config{}
+	cfg.SetDefaults()
+	
+	pm := NewPatternManager(&cfg.Worktree)
+	
+	// Test WorktreeConfig default pattern
+	err := pm.ValidatePattern(cfg.Worktree.DirectoryPattern)
+	assert.NoError(t, err, "Default WorktreeConfig pattern should be valid")
+	
+	// Test GitConfig default pattern  
+	err = pm.ValidatePattern(cfg.Git.DirectoryPattern)
+	assert.NoError(t, err, "Default GitConfig pattern should be valid")
+}

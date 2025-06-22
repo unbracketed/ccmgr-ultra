@@ -58,6 +58,16 @@ func setupStatusOutputFormatter(format string) (cli.OutputFormatter, error) {
 	return cli.NewStatusFormatter(outputFormat, nil), nil
 }
 
+// setupSessionOutputFormatter creates an output formatter specifically for session data
+func setupSessionOutputFormatter(format string) (cli.OutputFormatter, error) {
+	outputFormat, err := cli.ValidateFormat(format)
+	if err != nil {
+		return nil, err
+	}
+	
+	return cli.NewSessionFormatter(outputFormat, nil), nil
+}
+
 // validateWorktreeArg validates a worktree name argument
 func validateWorktreeArg(name string) error {
 	return cli.ValidateWorktreeName(name)

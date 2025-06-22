@@ -61,6 +61,24 @@ func NewStatusFormatter(format OutputFormat, writer io.Writer) OutputFormatter {
 	}
 }
 
+// NewSessionFormatter creates a new formatter specifically for session data
+func NewSessionFormatter(format OutputFormat, writer io.Writer) OutputFormatter {
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	switch format {
+	case FormatJSON:
+		return &JSONFormatter{writer: writer}
+	case FormatYAML:
+		return &YAMLFormatter{writer: writer}
+	case FormatTable:
+		return NewSessionTableFormatter(writer)
+	default:
+		return &SimpleTableFormatter{writer: writer}
+	}
+}
+
 // SimpleTableFormatter formats output as a simple table (for backward compatibility)
 type SimpleTableFormatter struct {
 	writer io.Writer

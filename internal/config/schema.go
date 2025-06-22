@@ -118,10 +118,10 @@ type GitConfig struct {
 	AutoDirectory    bool          `yaml:"auto_directory" json:"auto_directory" default:"true"`
 	// DirectoryPattern defines the template for worktree directory names.
 	// Supports Go template syntax with variables:
-	// - {{.project}}: Project/repository name (sanitized)
-	// - {{.branch}}: Git branch name (sanitized)  
-	// - {{.worktree}}: Unique worktree identifier
-	// - {{.timestamp}}: Current timestamp (YYYYMMDD-HHMMSS)
+	// - {{.Project}}: Project/repository name (sanitized)
+	// - {{.Branch}}: Git branch name (sanitized)  
+	// - {{.Worktree}}: Unique worktree identifier
+	// - {{.Timestamp}}: Current timestamp (YYYYMMDD-HHMMSS)
 	// - {{.user}}: Git user name or system user (sanitized)
 	// - {{.prefix}}: Configured prefix value
 	// - {{.suffix}}: Configured suffix value
@@ -346,7 +346,7 @@ func (w *WorktreeConfig) Validate() error {
 	// Validate directory pattern contains valid placeholders
 	if w.DirectoryPattern != "" {
 		if !strings.Contains(w.DirectoryPattern, "{{") || !strings.Contains(w.DirectoryPattern, "}}") {
-			return errors.New("directory pattern must contain template variables like {{.project}} or {{.branch}}")
+			return errors.New("directory pattern must contain template variables like {{.Project}} or {{.Branch}}")
 		}
 	}
 
@@ -396,7 +396,7 @@ func (g *GitConfig) Validate() error {
 	// Validate directory pattern contains valid placeholders
 	if g.DirectoryPattern != "" {
 		if !strings.Contains(g.DirectoryPattern, "{{") || !strings.Contains(g.DirectoryPattern, "}}") {
-			return errors.New("directory pattern must contain template variables like {{.project}} or {{.branch}}")
+			return errors.New("directory pattern must contain template variables like {{.Project}} or {{.Branch}}")
 		}
 	}
 
@@ -560,7 +560,7 @@ func (h *HookConfig) SetDefaults(hookType string) {
 // SetDefaults sets default values for worktree config
 func (w *WorktreeConfig) SetDefaults() {
 	if w.DirectoryPattern == "" {
-		w.DirectoryPattern = "{{.project}}-{{.branch}}"
+		w.DirectoryPattern = "{{.Project}}-{{.Branch}}"
 	}
 	if w.DefaultBranch == "" {
 		w.DefaultBranch = "main"
@@ -589,7 +589,7 @@ func (t *TmuxConfig) SetDefaults() {
 		t.SessionPrefix = "ccmgr"
 	}
 	if t.NamingPattern == "" {
-		t.NamingPattern = "{{.prefix}}-{{.project}}-{{.worktree}}-{{.branch}}"
+		t.NamingPattern = "{{.Prefix}}-{{.Project}}-{{.Worktree}}-{{.Branch}}"
 	}
 	if t.MaxSessionName == 0 {
 		t.MaxSessionName = 50
@@ -611,7 +611,7 @@ func (t *TmuxConfig) SetDefaults() {
 // SetDefaults sets default values for git config
 func (g *GitConfig) SetDefaults() {
 	if g.DirectoryPattern == "" {
-		g.DirectoryPattern = "{{.project}}-{{.branch}}"
+		g.DirectoryPattern = "{{.Project}}-{{.Branch}}"
 	}
 	if g.DefaultBranch == "" {
 		g.DefaultBranch = "main"

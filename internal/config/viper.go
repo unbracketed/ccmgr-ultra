@@ -160,7 +160,7 @@ func (vm *ViperManager) setDefaults(v *viper.Viper) {
 	
 	// Worktree
 	v.SetDefault("worktree.auto_directory", true)
-	v.SetDefault("worktree.directory_pattern", "{{.project}}-{{.branch}}")
+	v.SetDefault("worktree.directory_pattern", "{{.Project}}-{{.Branch}}")
 	v.SetDefault("worktree.default_branch", "main")
 	v.SetDefault("worktree.cleanup_on_merge", false)
 	

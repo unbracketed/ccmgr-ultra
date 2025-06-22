@@ -37,7 +37,7 @@ worktree_hooks:
 # Worktree settings
 worktree:
   auto_directory: true
-  directory_pattern: "{{.project}}-{{.branch}}"
+  directory_pattern: "{{.Project}}-{{.Branch}}"
   default_branch: "main"
   cleanup_on_merge: false
 
