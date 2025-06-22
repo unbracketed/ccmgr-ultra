@@ -183,12 +183,15 @@ func (pm *ProcessManager) OnStateChange(ctx context.Context, event StateChangeEv
 	pm.mutex.RLock()
 	handlers := make([]StateChangeHandler, len(pm.handlers))
 	copy(handlers, pm.handlers)
-	// eventChan := pm.eventChan // commented out due to import cycle
+	eventChan := pm.eventChan
 	pm.mutex.RUnlock()
 
 	// Emit analytics event if channel is available
-	// Commented out due to import cycle
-	// _ = eventChan
+	// Commented out due to import cycle - if eventChan != nil {
+// Commented out due to import cycle
+	// analyticsEvent := analytics.AnalyticsEvent{..}
+	_ = eventChan
+	}
 
 	// Forward to all registered handlers
 	for _, handler := range handlers {
@@ -258,32 +261,32 @@ func (pm *ProcessManager) UpdateConfig(config *ProcessConfig) error {
 // EmitSessionEvent emits a session-related analytics event
 func (pm *ProcessManager) EmitSessionEvent(eventType, sessionID, project, worktree, branch, directory string) {
 	pm.mutex.RLock()
-	// eventChan := pm.eventChan // commented out due to import cycle
+	eventChan := pm.eventChan
 	pm.mutex.RUnlock()
 
-	// if eventChan == nil {
-	//	return
-	// }
+	if eventChan == nil {
+		return
+	}
 
 // analyticsEvent := analytics.AnalyticsEvent{
 	// 	Type:      eventType,
 	// 	Timestamp: time.Now(),
 	// 	SessionID: sessionID,
 // Data: analytics.NewSessionEventData(
-		//	eventType,
-	//		project,
-	//		worktree,
-	//		branch,
-	//		directory,
-// 		),
-// 	}
+			eventType,
+			project,
+			worktree,
+			branch,
+			directory,
+		),
+	}
 
-	// Non-blocking send - commented out due to import cycle
-	// select {
-	// case eventChan <- analyticsEvent:
-	// default:
-	//	// Channel is full, skip this event to avoid blocking
-	// }
+	// Non-blocking send
+	select {
+	case eventChan <- analyticsEvent:
+	default:
+		// Channel is full, skip this event to avoid blocking
+	}
 }
 
 // DiscoverProcesses manually triggers process discovery

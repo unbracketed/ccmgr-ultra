@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/your-org/ccmgr-ultra/internal/storage"
+	"github.com/bcdekker/ccmgr-ultra/internal/storage"
 )
 
 // CollectorConfig defines configuration for the analytics collector

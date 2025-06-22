@@ -67,7 +67,7 @@ func (m *WorktreeSettingsModel) initComponents() {
 	if toggle, ok := m.components[3].(*ConfigToggle); ok {
 		toggle.SetDescription("Automatically create directory structure when creating worktrees")
 	}
-	if toggle, ok := m.components[10].(*ConfigToggle); ok {
+	if toggle, ok := m.components[9].(*ConfigToggle); ok {
 		toggle.SetDescription("Automatically delete worktree when branch is merged")
 	}
 }
@@ -272,7 +272,7 @@ func (m *WorktreeSettingsModel) syncConfigFromComponents() {
 	}
 
 	// Cleanup on merge toggle
-	if toggle, ok := m.components[10].(*ConfigToggle); ok {
+	if toggle, ok := m.components[9].(*ConfigToggle); ok {
 		m.config.CleanupOnMerge = toggle.value
 	}
 }

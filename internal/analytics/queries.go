@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/your-org/ccmgr-ultra/internal/storage"
+	"github.com/bcdekker/ccmgr-ultra/internal/storage"
 )
 
 // QueryBuilder provides pre-built analytics queries for efficient data retrieval
