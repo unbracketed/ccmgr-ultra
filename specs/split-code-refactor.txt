@@ -1,0 +1,184 @@
+Library/CLI Split Implementation Plan for ccmgr-ultra
+
+  Executive Summary
+
+  RECOMMENDATION: Proceed with the library/CLI split - The analysis shows your codebase is exceptionally
+  well-architected for this refactoring with clear boundaries already established. The Integration layer
+  provides a perfect API surface, and the benefits significantly outweigh the risks.
+
+  Architecture Analysis
+
+  Current State Assessment
+
+  EXCELLENT separation of concerns:
+  internal/
+  ├── tui/integration.go    <- Perfect API boundary
+  ├── git/                  <- Well-tested core logic
+  ├── tmux/                 <- Well-tested core logic
+  ├── claude/               <- Well-tested core logic
+  ├── storage/              <- Clean data layer
+  └── config/               <- Configuration management
+
+  Result: 90% of the work is already done
+
+  Proposed Architecture
+
+  ccmgr-ultra/
+  ├── pkg/ccmgr/           <- New public library API
+  │   ├── api.go           <- Client interface
+  │   ├── sessions.go      <- Session management
+  │   ├── worktrees.go     <- Worktree operations
+  │   └── types.go         <- Shared types
+  ├── cmd/ccmgr-ultra/     <- CLI using library
+  ├── cmd/ccmgr-tui/       <- TUI using library
+  └── internal/            <- Implementation details
+
+  Implementation Phases
+
+  Phase 1: Prerequisites (CRITICAL)
+
+  Status: Required before proceeding
+
+  1. Fix Broken Tests
+    - Config module: Update Load() function signature in tests
+    - Git module: Implement missing NewGitLabClient and NewBitbucketClient
+    - Validate: All tests must pass (make test)
+  2. Establish Baseline
+    - Run full test suite: make test-coverage
+    - Fix any critical failures
+    - Document current test coverage
+
+  Phase 2: Core Library Design
+
+  Dependencies: Phase 1 complete
+
+  3. API Design
+    - Define pkg/ccmgr/api.go with clean client interface
+    - Design manager interfaces (SessionManager, WorktreeManager, etc.)
+    - Create shared types and error patterns
+  4. Proof of Concept
+    - Implement basic Session operations
+    - Create simple CLI command using new API
+    - Validate approach with core workflows
+
+  Phase 3: Incremental Refactoring
+
+  Dependencies: Phase 2 validated
+
+  5. Extract Well-Tested Modules
+  Order of extraction:
+  1. internal/git/      <- 7 test files, safe to refactor
+  2. internal/tmux/     <- 5 test files, well-tested
+  3. internal/claude/   <- 4 test files, core functionality
+  6. Package Restructuring
+    - Move public APIs to pkg/ccmgr/
+    - Update import paths
+    - Maintain internal implementation details
+
+  Phase 4: Consumer Updates
+
+  Dependencies: Phase 3 complete
+
+  7. CLI Refactoring
+    - Update cmd/ccmgr-ultra/ to use new library
+    - Simplify command implementations
+    - Maintain existing CLI interface
+  8. TUI Adaptation
+    - Minimal changes to TUI (Integration layer already perfect)
+    - Update to use library instead of direct internal imports
+    - Preserve existing functionality
+
+  Phase 5: Validation & Documentation
+
+  Dependencies: Phase 4 complete
+
+  9. Testing & Validation
+    - Comprehensive test suite for new API
+    - Integration tests for both CLI and TUI
+    - Performance validation
+  10. Documentation
+    - Library API documentation
+    - Usage examples
+    - Migration guide
+
+  Risk Assessment
+
+  LOW RISK FACTORS
+
+  - Excellent existing architecture - Clean boundaries already exist
+  - Comprehensive tests - Well-tested modules can be refactored safely
+  - No backward compatibility - Freedom to design optimal API
+  - Prototype status - Low cost of changes
+
+  MITIGATION STRATEGIES
+
+  - Incremental approach - Refactor one module at a time
+  - Test-first mentality - Fix tests before refactoring
+  - Proof of concept - Validate approach before full implementation
+  - Rollback capability - Git branches for each phase
+
+  Key Success Factors
+
+  TECHNICAL
+
+  1. Test suite passes before starting refactoring
+  2. Clean API design that feels natural to use
+  3. Minimal changes to existing functionality
+  4. Comprehensive testing of new library
+
+  PROCESS
+
+  1. Incremental delivery - working software at each phase
+  2. Validation checkpoints - can stop/adjust if needed
+  3. Documentation - clear usage patterns and examples
+
+  Decision Framework
+
+  GO CRITERIA
+
+  - All tests pass in current codebase
+  - API design feels natural and complete
+  - Proof of concept demonstrates value
+  - Team comfortable with Go module patterns
+
+  NO-GO CRITERIA
+
+  - Tests cannot be easily fixed
+  - API design feels forced or complex
+  - Proof of concept reveals major issues
+  - Implementation becomes significantly complex
+
+  Alternative Approach
+
+  If the split seems too complex: Keep current architecture but invest in:
+  - Comprehensive test coverage for untested modules
+  - Better documentation and examples
+  - CI/CD pipeline for quality assurance
+  - Keep the excellent Integration layer as internal API
+
+  Immediate Next Steps
+
+  STEP 1: Validation
+
+  # Fix broken tests
+  make test
+  # Expected: All tests should pass
+
+  STEP 2: API Design
+
+  - Design library interface in pkg/ccmgr/api.go
+  - Focus on Session and Worktree operations first
+  - Keep it simple and intuitive
+
+  STEP 3: Proof of Concept
+
+  - Implement basic session list/create operations
+  - Create simple CLI command using new API
+  - Validate the approach feels right
+
+  STEP 4: Decision Point
+
+  - If POC feels good: proceed with full implementation
+  - If issues discovered: adjust approach or consider alternative
+
+  ---

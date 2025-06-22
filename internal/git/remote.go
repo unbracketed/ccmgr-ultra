@@ -689,3 +689,81 @@ func getPRURL(pr *PullRequest) string {
 	}
 	return pr.URL
 }
+
+// GitLabClient - stub implementation for tests
+type GitLabClient struct {
+	token  string
+	apiURL string
+}
+
+// NewGitLabClient creates a new GitLab client (stub implementation)
+func NewGitLabClient(token string) *GitLabClient {
+	return &GitLabClient{
+		token:  token,
+		apiURL: "https://gitlab.com/api/v4",
+	}
+}
+
+// GetHostingService returns the service name
+func (gc *GitLabClient) GetHostingService() string {
+	return "gitlab"
+}
+
+// CreatePullRequest creates a GitLab merge request (stub implementation)
+func (gc *GitLabClient) CreatePullRequest(req PullRequestRequest) (*PullRequest, error) {
+	return nil, fmt.Errorf("GitLab client not fully implemented")
+}
+
+// GetPullRequests lists GitLab merge requests (stub implementation)
+func (gc *GitLabClient) GetPullRequests(owner, repo string) ([]PullRequest, error) {
+	return nil, fmt.Errorf("GitLab client not fully implemented")
+}
+
+// AuthenticateToken validates GitLab token (stub implementation)
+func (gc *GitLabClient) AuthenticateToken(token string) error {
+	return fmt.Errorf("GitLab client not fully implemented")
+}
+
+// ValidateRepository validates GitLab repository (stub implementation)
+func (gc *GitLabClient) ValidateRepository(owner, repo string) error {
+	return fmt.Errorf("GitLab client not fully implemented")
+}
+
+// BitbucketClient - stub implementation for tests
+type BitbucketClient struct {
+	token  string
+	apiURL string
+}
+
+// NewBitbucketClient creates a new Bitbucket client (stub implementation)
+func NewBitbucketClient(token string) *BitbucketClient {
+	return &BitbucketClient{
+		token:  token,
+		apiURL: "https://api.bitbucket.org/2.0",
+	}
+}
+
+// GetHostingService returns the service name
+func (bc *BitbucketClient) GetHostingService() string {
+	return "bitbucket"
+}
+
+// CreatePullRequest creates a Bitbucket pull request (stub implementation)
+func (bc *BitbucketClient) CreatePullRequest(req PullRequestRequest) (*PullRequest, error) {
+	return nil, fmt.Errorf("Bitbucket client not fully implemented")
+}
+
+// GetPullRequests lists Bitbucket pull requests (stub implementation)
+func (bc *BitbucketClient) GetPullRequests(owner, repo string) ([]PullRequest, error) {
+	return nil, fmt.Errorf("Bitbucket client not fully implemented")
+}
+
+// AuthenticateToken validates Bitbucket token (stub implementation)
+func (bc *BitbucketClient) AuthenticateToken(token string) error {
+	return fmt.Errorf("Bitbucket client not fully implemented")
+}
+
+// ValidateRepository validates Bitbucket repository (stub implementation)
+func (bc *BitbucketClient) ValidateRepository(owner, repo string) error {
+	return fmt.Errorf("Bitbucket client not fully implemented")
+}

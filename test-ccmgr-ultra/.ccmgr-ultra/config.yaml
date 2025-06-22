@@ -1,0 +1,156 @@
+version: 1.0.0
+status_hooks:
+    enabled: true
+    idle:
+        enabled: true
+        script: ~/.config/ccmgr-ultra/hooks/idle.sh
+        timeout: 30
+        async: true
+    busy:
+        enabled: true
+        script: ~/.config/ccmgr-ultra/hooks/busy.sh
+        timeout: 30
+        async: true
+    waiting:
+        enabled: true
+        script: ~/.config/ccmgr-ultra/hooks/waiting.sh
+        timeout: 30
+        async: true
+worktree_hooks:
+    enabled: true
+    creation:
+        enabled: true
+        script: ~/.config/ccmgr-ultra/hooks/creation.sh
+        timeout: 30
+        async: true
+    activation:
+        enabled: true
+        script: ~/.config/ccmgr-ultra/hooks/activation.sh
+        timeout: 30
+        async: true
+worktree:
+    auto_directory: false
+    directory_pattern: '{{.project}}-{{.branch}}'
+    default_branch: main
+    cleanup_on_merge: false
+tmux:
+    session_prefix: ccmgr
+    naming_pattern: '{{.prefix}}-{{.project}}-{{.worktree}}-{{.branch}}'
+    max_session_name: 50
+    monitor_interval: 2s
+    state_file: ~/.config/ccmgr-ultra/tmux-sessions.json
+    default_env: {}
+    auto_cleanup: false
+    cleanup_age: 24h0m0s
+git:
+    auto_directory: false
+    directory_pattern: '{{.project}}-{{.branch}}'
+    max_worktrees: 10
+    cleanup_age: 168h0m0s
+    default_branch: main
+    protected_branches:
+        - main
+        - master
+        - develop
+    allow_force_delete: false
+    default_remote: origin
+    auto_push: false
+    create_pr: false
+    pr_template: |-
+        ## Summary
+        Brief description of changes
+
+        ## Testing
+        How the changes were tested
+    github_token: ""
+    gitlab_token: ""
+    bitbucket_token: ""
+    github_pr_template: |-
+        ## Summary
+        Brief description of changes
+
+        ## Test plan
+        - [ ] Manual testing completed
+        - [ ] Unit tests pass
+        - [ ] Integration tests pass
+
+        ## Checklist
+        - [ ] Code follows project conventions
+        - [ ] Documentation updated if needed
+    default_pr_target_branch: main
+    require_clean_workdir: false
+    confirm_destructive: false
+    backup_on_delete: false
+claude:
+    enabled: true
+    poll_interval: 3s
+    max_processes: 10
+    cleanup_interval: 5m0s
+    state_timeout: 30s
+    startup_timeout: 10s
+    log_paths:
+        - ~/.claude/logs
+        - /tmp/claude-*
+    state_patterns:
+        busy: (?i)(Processing|Executing|Running|Working on|Analyzing|Generating)
+        error: (?i)(Error|Failed|Exception|Panic|Fatal)
+        idle: (?i)(Waiting for input|Ready|Idle|Available)
+        waiting: (?i)(Waiting for confirmation|Press any key|Continue\?|Y/n)
+    enable_log_parsing: true
+    enable_resource_monitoring: true
+    integrate_tmux: true
+    integrate_worktrees: true
+tui:
+    theme: default
+    refresh_interval: 5
+    mouse_support: true
+    default_screen: dashboard
+    show_status_bar: true
+    show_key_help: true
+    confirm_quit: false
+    auto_refresh: true
+    debug_mode: false
+analytics:
+    enabled: true
+    collector:
+        poll_interval: 30s
+        buffer_size: 1000
+        batch_size: 50
+        enable_metrics: true
+        retention_days: 90
+    engine:
+        cache_size: 1000
+        cache_ttl: 5m0s
+        batch_processing: true
+        precompute_daily: true
+    hooks:
+        enabled: true
+        capture_state_changes: true
+        capture_worktree_events: true
+        capture_session_events: true
+    retention:
+        session_events_days: 90
+        aggregated_data_days: 365
+        cleanup_interval: 24h0m0s
+        enable_auto_cleanup: true
+    performance:
+        max_cpu_usage: 5
+        max_memory_usage_mb: 100
+        max_query_time: 100ms
+        enable_monitoring: true
+shortcuts:
+    c: continue_session
+    d: delete_worktree
+    m: merge_worktree
+    "n": new_worktree
+    p: push_worktree
+    q: quit
+    r: resume_session
+commands:
+    claude_command: claude
+    git_command: git
+    tmux_prefix: ccmgr
+    environment: {}
+last_modified: 2025-06-21T23:03:13.256298-07:00
+log_level: ""
+refresh_interval: 0

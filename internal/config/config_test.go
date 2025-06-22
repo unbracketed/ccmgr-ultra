@@ -162,7 +162,7 @@ func TestConfigFileOperations(t *testing.T) {
 		require.NoError(t, err)
 
 		// Load configuration
-		loaded, err := Load(configPath)
+		loaded, err := LoadFromPath(configPath)
 		require.NoError(t, err)
 
 		assert.Equal(t, original.Version, loaded.Version)
@@ -172,7 +172,7 @@ func TestConfigFileOperations(t *testing.T) {
 	})
 
 	t.Run("load non-existent config fails", func(t *testing.T) {
-		_, err := Load("/non/existent/path")
+		_, err := LoadFromPath("/non/existent/path")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to read config file")
 	})
@@ -183,7 +183,7 @@ func TestConfigFileOperations(t *testing.T) {
 		err := os.WriteFile(invalidPath, []byte(invalidYAML), 0600)
 		require.NoError(t, err)
 
-		_, err = Load(invalidPath)
+		_, err = LoadFromPath(invalidPath)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to parse config file")
 	})
