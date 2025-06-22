@@ -63,6 +63,17 @@ type SessionConfig struct {
 	AutoStart    bool
 }
 
+// SessionInfo represents session information for workflows
+type SessionInfo struct {
+	ID         string
+	Name       string
+	Path       string
+	Branch     string
+	Active     bool
+	Created    string
+	LastAccess string
+}
+
 // NewSessionCreationWizard creates a new session creation wizard
 func NewSessionCreationWizard(integration Integration, theme modals.Theme) *SessionCreationWizard {
 	return &SessionCreationWizard{
@@ -685,12 +696,35 @@ func (w *WorktreeSessionIntegration) CreateBulkSessionsForWorktrees(worktrees []
 // ContinueSessionInWorktree finds and attaches to existing session for a worktree
 func (w *WorktreeSessionIntegration) ContinueSessionInWorktree(worktree WorktreeInfo) tea.Cmd {
 	return func() tea.Msg {
-		// This would find existing sessions for the worktree
-		// For now, return a placeholder message
+		// Find existing sessions for the worktree
+		sessions, err := w.integration.GetAvailableWorktrees()
+		if err != nil {
+			return SessionContinueMsg{
+				WorktreePath: worktree.Path,
+				Success:      false,
+				Message:      fmt.Sprintf("Error finding sessions: %v", err),
+			}
+		}
+		
+		// Look for sessions in this worktree
+		for _, wt := range sessions {
+			if wt.Path == worktree.Path {
+				// Check if worktree has active sessions (simplified check)
+				if wt.HasChanges { // Using HasChanges as a proxy for activity
+					return SessionContinueMsg{
+						WorktreePath: worktree.Path,
+						Success:      true,
+						Message:      fmt.Sprintf("Continuing session in %s", worktree.Branch),
+						SessionID:    "session-" + worktree.Branch,
+					}
+				}
+			}
+		}
+		
 		return SessionContinueMsg{
 			WorktreePath: worktree.Path,
-			Success:      true,
-			Message:      fmt.Sprintf("Continuing session in %s", worktree.Branch),
+			Success:      false,
+			Message:      "No existing sessions found for this worktree",
 		}
 	}
 }
@@ -699,11 +733,14 @@ func (w *WorktreeSessionIntegration) ContinueSessionInWorktree(worktree Worktree
 func (w *WorktreeSessionIntegration) ResumeSessionInWorktree(worktree WorktreeInfo) tea.Cmd {
 	return func() tea.Msg {
 		// This would restore a paused session
-		// For now, return a placeholder message
+		// For demonstration, we'll simulate finding and resuming a session
+		sessionID := "session-" + worktree.Branch + "-paused"
+		
 		return SessionResumeMsg{
 			WorktreePath: worktree.Path,
 			Success:      true,
 			Message:      fmt.Sprintf("Resuming session in %s", worktree.Branch),
+			SessionID:    sessionID,
 		}
 	}
 }

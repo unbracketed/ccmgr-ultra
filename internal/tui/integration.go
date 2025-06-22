@@ -605,6 +605,50 @@ func (i *Integration) UpdateClaudeStatusForWorktree(worktreePath string, status 
 	}
 }
 
+// FindSessionsForWorktree finds existing sessions for a worktree
+func (i *Integration) FindSessionsForWorktree(worktreePath string) ([]SessionSummary, error) {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+	
+	var result []SessionSummary
+	for _, session := range i.sessions {
+		if session.Directory == worktreePath {
+			result = append(result, SessionSummary{
+				ID:       session.ID,
+				Name:     session.Name,
+				State:    session.Status,
+				LastUsed: session.LastAccess,
+			})
+		}
+	}
+	
+	return result, nil
+}
+
+// AttachToExistingSession attaches to an existing tmux session
+func (i *Integration) AttachToExistingSession(sessionID string) tea.Cmd {
+	return func() tea.Msg {
+		err := i.tmuxMgr.AttachSession(sessionID)
+		if err != nil {
+			return ErrorMsg{Error: err}
+		}
+		return SessionAttachedMsg{SessionID: sessionID}
+	}
+}
+
+// ResumeSession resumes a paused session
+func (i *Integration) ResumeSession(sessionID string) tea.Cmd {
+	return func() tea.Msg {
+		// Implementation would restore session state
+		// For now, treat as attach operation
+		err := i.tmuxMgr.AttachSession(sessionID)
+		if err != nil {
+			return ErrorMsg{Error: err}
+		}
+		return SessionResumedMsg{SessionID: sessionID, Success: true}
+	}
+}
+
 // StartRealtimeStatusUpdates begins real-time status monitoring
 func (i *Integration) StartRealtimeStatusUpdates() tea.Cmd {
 	return tea.Tick(time.Second*2, func(t time.Time) tea.Msg {
@@ -780,6 +824,12 @@ type RealtimeStatusUpdateMsg struct {
 
 type StatusUpdatedMsg struct {
 	UpdatedAt time.Time
+}
+
+// SessionResumedMsg indicates a session was resumed
+type SessionResumedMsg struct {
+	Success   bool
+	SessionID string
 }
 
 // Note: RefreshDataMsg is defined in app.go

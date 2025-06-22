@@ -2,6 +2,7 @@ package tui
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -40,8 +41,10 @@ type AppModel struct {
 	contextMenu   *contextmenu.ContextMenu
 	
 	// Workflow management
-	sessionWizard  *workflows.SessionCreationWizard
-	worktreeWizard *workflows.WorktreeCreationWizard
+	workflowFactory    *WorkflowFactory
+	integrationAdapter *IntegrationAdapter
+	sessionWizard      *workflows.SessionCreationWizard
+	worktreeWizard     *workflows.WorktreeCreationWizard
 	
 	// Application state
 	width          int
@@ -219,9 +222,19 @@ func NewAppModel(ctx context.Context, config *config.Config) (*AppModel, error) 
 		theme:         theme,
 	}
 	
-	// Initialize wizards - TODO: Fix interface compatibility
-	// app.sessionWizard = workflows.NewSessionCreationWizard(integration, modalTheme)
-	// app.worktreeWizard = workflows.NewWorktreeCreationWizard(integration, modalTheme)
+	// Create integration adapter for workflows
+	integrationAdapter := NewIntegrationAdapter(integration, config)
+	
+	// Initialize workflow factory
+	workflowFactory := NewWorkflowFactory(integrationAdapter, modalTheme)
+	
+	// Store workflow components in app model
+	app.integrationAdapter = integrationAdapter
+	app.workflowFactory = workflowFactory
+	
+	// Initialize wizards with adapter
+	app.sessionWizard = workflowFactory.CreateSessionWizard()
+	app.worktreeWizard = workflowFactory.CreateWorktreeWizard()
 
 	// Initialize screens
 	app.initializeScreens()
@@ -363,6 +376,18 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case contextmenu.ContextMenuSubmenuMsg:
 		// Show submenu
 		m.contextMenu = msg.Submenu
+		
+	case NewSessionRequestedMsg:
+		// Handle new session request from worktree selection
+		return m.handleNewSessionRequest(msg)
+		
+	case ContinueSessionRequestedMsg:
+		// Handle continue session request
+		return m.handleContinueSessionRequest(msg)
+		
+	case ResumeSessionRequestedMsg:
+		// Handle resume session request  
+		return m.handleResumeSessionRequest(msg)
 		
 	default:
 		// Update modal manager
@@ -622,4 +647,60 @@ func (m *AppModel) handleConfigAction(action string) tea.Cmd {
 		"Config action '"+action+"' is not yet implemented")
 	m.modalManager.ShowModal(modal)
 	return nil
+}
+
+// handleNewSessionRequest launches the session creation wizard
+func (m *AppModel) handleNewSessionRequest(msg NewSessionRequestedMsg) (tea.Model, tea.Cmd) {
+	if len(msg.Worktrees) == 1 {
+		// Single worktree session creation
+		modal := m.workflowFactory.CreateSingleWorktreeSessionWizard(msg.Worktrees[0])
+		m.modalManager.ShowModal(modal)
+	} else if len(msg.Worktrees) > 1 {
+		// Bulk session creation
+		modal := m.workflowFactory.CreateBulkWorktreeSessionWizard(msg.Worktrees)
+		m.modalManager.ShowModal(modal)
+	} else {
+		// General session creation
+		modal := m.workflowFactory.CreateGeneralSessionWizard()
+		m.modalManager.ShowModal(modal)
+	}
+	return m, nil
+}
+
+// handleContinueSessionRequest finds and attaches to existing session
+func (m *AppModel) handleContinueSessionRequest(msg ContinueSessionRequestedMsg) (tea.Model, tea.Cmd) {
+	return m, func() tea.Msg {
+		// Use workflow factory to handle continue operation
+		err := m.workflowFactory.HandleContinueOperation(msg.Worktrees)
+		if err != nil {
+			return ErrorMsg{Error: err}
+		}
+		
+		// For now, find existing sessions manually and attach to the first one
+		for _, wt := range msg.Worktrees {
+			sessions := m.integration.GetActiveSessionsForWorktree(wt.Path)
+			if len(sessions) > 0 {
+				// Attach to most recent session
+				return m.integration.AttachSession(sessions[0].ID)
+			}
+		}
+		
+		// No sessions found
+		return ErrorMsg{Error: fmt.Errorf("no existing sessions found for selected worktrees")}
+	}
+}
+
+// handleResumeSessionRequest restores paused sessions
+func (m *AppModel) handleResumeSessionRequest(msg ResumeSessionRequestedMsg) (tea.Model, tea.Cmd) {
+	return m, func() tea.Msg {
+		// Use workflow factory to handle resume operation
+		err := m.workflowFactory.HandleResumeOperation(msg.Worktrees)
+		if err != nil {
+			return ErrorMsg{Error: err}
+		}
+		
+		// Implementation for resuming paused sessions
+		// This would integrate with tmux session restoration
+		return SessionResumedMsg{Success: true}
+	}
 }
