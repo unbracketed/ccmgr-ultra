@@ -2,7 +2,7 @@
 
 # Variables
 BINARY_NAME := ccmgr-ultra
-MAIN_PATH := cmd/ccmgr-ultra/main.go
+MAIN_PATH := ./cmd/ccmgr-ultra
 BUILD_DIR := build
 INSTALL_DIR := $(HOME)/.local/bin
 
