@@ -28,7 +28,7 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 # Full build flags with version info
 FULL_LDFLAGS := -ldflags="-s -w -X main.version=$(VERSION) -X main.date=$(BUILD_TIME) -X main.commit=$(GIT_COMMIT)"
 
-.PHONY: all build clean test install uninstall run fmt vet deps tidy help
+.PHONY: all build clean test install uninstall run fmt vet deps tidy help test-env test-env-clean
 
 # Default target
 all: build
@@ -117,6 +117,30 @@ dev: ## Run with hot reload (requires air)
 	fi
 
 check: fmt vet lint ## Run fmt, vet, and lint
+
+test-env: ## Create a temporary git repo for testing
+	@echo "Creating test environment..."
+	@mkdir -p .testdirs
+	@TESTDIR=".testdirs/test-$$(date +%Y%m%d-%H%M%S)"; \
+	mkdir -p "$$TESTDIR" && \
+	cd "$$TESTDIR" && \
+	git init -q && \
+	echo "test README" > README.md && \
+	git add README.md && \
+	git commit -q -m "Initial commit" && \
+	echo "" && \
+	echo "Test environment created! To use it, run:" && \
+	echo "  cd $$TESTDIR" && \
+	echo ""
+
+test-env-clean: ## Clean up all test environments
+	@echo "Cleaning test environments..."
+	@if [ -d .testdirs ]; then \
+		rm -rf .testdirs && \
+		echo "All test environments removed"; \
+	else \
+		echo "No test environments found"; \
+	fi
 
 release: ## Build release binaries for multiple platforms
 	@echo "Building release binaries..."
