@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/your-username/ccmgr-ultra/internal/config"
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 type ProcessState int

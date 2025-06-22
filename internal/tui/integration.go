@@ -6,10 +6,10 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/your-username/ccmgr-ultra/internal/claude"
-	"github.com/your-username/ccmgr-ultra/internal/config"
-	"github.com/your-username/ccmgr-ultra/internal/git"
-	"github.com/your-username/ccmgr-ultra/internal/tmux"
+	"github.com/bcdekker/ccmgr-ultra/internal/claude"
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	"github.com/bcdekker/ccmgr-ultra/internal/git"
+	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
 )
 
 // Integration manages the integration between TUI and backend services

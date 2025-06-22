@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/your-username/ccmgr-ultra/internal/cli"
-	"github.com/your-username/ccmgr-ultra/internal/config"
-	"github.com/your-username/ccmgr-ultra/internal/git"
+	"github.com/bcdekker/ccmgr-ultra/internal/cli"
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	"github.com/bcdekker/ccmgr-ultra/internal/git"
 )
 
 var initCmd = &cobra.Command{

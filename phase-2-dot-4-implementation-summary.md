@@ -372,11 +372,11 @@ $ go test ./internal/claude/ -v
 --- PASS: TestStateMonitor_WithRealProcesses (2.24s)
 
 PASS
-ok      github.com/your-username/ccmgr-ultra/internal/claude   7.122s
+ok      github.com/bcdekker/ccmgr-ultra/internal/claude   7.122s
 
 $ go test ./internal/config/
 PASS
-ok      github.com/your-username/ccmgr-ultra/internal/config   0.199s
+ok      github.com/bcdekker/ccmgr-ultra/internal/config   0.199s
 
 $ go build ./cmd/ccmgr-ultra/
 [SUCCESS - No errors]

@@ -9,8 +9,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
-	"github.com/your-username/ccmgr-ultra/internal/config"
-	"github.com/your-username/ccmgr-ultra/internal/tui"
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	"github.com/bcdekker/ccmgr-ultra/internal/tui"
 )
 
 var (

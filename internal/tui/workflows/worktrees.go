@@ -7,7 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/your-username/ccmgr-ultra/internal/tui/modals"
+	"github.com/bcdekker/ccmgr-ultra/internal/tui/modals"
 )
 
 // WorktreeCreationWizard implements a step-by-step worktree creation process

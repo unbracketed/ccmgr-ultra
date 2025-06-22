@@ -1,4 +1,4 @@
-module github.com/your-username/ccmgr-ultra
+module github.com/bcdekker/ccmgr-ultra
 
 go 1.24.4
 
@@ -7,6 +7,8 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.5
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/fsnotify/fsnotify v1.8.0
+	github.com/google/uuid v1.6.0
+	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0

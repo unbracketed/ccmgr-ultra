@@ -6,11 +6,11 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/your-username/ccmgr-ultra/internal/config"
-	"github.com/your-username/ccmgr-ultra/internal/tui/components"
-	"github.com/your-username/ccmgr-ultra/internal/tui/modals"
-	contextmenu "github.com/your-username/ccmgr-ultra/internal/tui/context"
-	"github.com/your-username/ccmgr-ultra/internal/tui/workflows"
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	"github.com/bcdekker/ccmgr-ultra/internal/tui/components"
+	"github.com/bcdekker/ccmgr-ultra/internal/tui/modals"
+	contextmenu "github.com/bcdekker/ccmgr-ultra/internal/tui/context"
+	"github.com/bcdekker/ccmgr-ultra/internal/tui/workflows"
 )
 
 // AppScreen represents different screens in the TUI

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/your-username/ccmgr-ultra/internal/config"
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 // CommandsConfigModel represents the commands configuration screen

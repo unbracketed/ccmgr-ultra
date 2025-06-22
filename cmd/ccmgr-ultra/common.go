@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/your-username/ccmgr-ultra/internal/cli"
-	"github.com/your-username/ccmgr-ultra/internal/config"
+	"github.com/bcdekker/ccmgr-ultra/internal/cli"
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 // loadConfigWithOverrides loads configuration with command-line overrides

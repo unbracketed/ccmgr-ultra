@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/ccmgr-ultra/internal/config"
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 func TestIntegration_NewIntegration(t *testing.T) {

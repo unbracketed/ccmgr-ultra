@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/your-username/ccmgr-ultra/internal/cli"
-	"github.com/your-username/ccmgr-ultra/internal/claude"
-	"github.com/your-username/ccmgr-ultra/internal/tmux"
+	"github.com/bcdekker/ccmgr-ultra/internal/cli"
+	"github.com/bcdekker/ccmgr-ultra/internal/claude"
+	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
 )
 
 // SessionListData represents data for session list output

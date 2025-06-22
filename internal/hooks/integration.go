@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/your-username/ccmgr-ultra/internal/config"
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 // GlobalHookManager is a global instance for easy access across the application

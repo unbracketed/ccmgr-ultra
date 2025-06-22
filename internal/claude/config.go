@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/your-username/ccmgr-ultra/internal/config"
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 // ConfigAdapter adapts the main config.ClaudeConfig to our internal ProcessConfig
