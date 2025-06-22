@@ -38,7 +38,17 @@ func NewWorktreeManager(repo *Repository, config *config.Config, gitCmd GitInter
 	}
 	
 	repoMgr := NewRepositoryManager(gitCmd)
-	patternMgr := NewPatternManager(&config.Worktree)
+	
+	// Create worktree config that uses Git config values for compatibility
+	worktreeConfig := config.Worktree
+	if config.Git.DirectoryPattern != "" {
+		worktreeConfig.DirectoryPattern = config.Git.DirectoryPattern
+	}
+	if config.Git.AutoDirectory != worktreeConfig.AutoDirectory {
+		worktreeConfig.AutoDirectory = config.Git.AutoDirectory
+	}
+	
+	patternMgr := NewPatternManager(&worktreeConfig)
 
 	return &WorktreeManager{
 		repo:        repo,

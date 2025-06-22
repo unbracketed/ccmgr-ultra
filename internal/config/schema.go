@@ -54,7 +54,19 @@ type WorktreeHooksConfig struct {
 // WorktreeConfig defines worktree configuration
 type WorktreeConfig struct {
 	AutoDirectory    bool   `yaml:"auto_directory" json:"auto_directory"`
-	DirectoryPattern string `yaml:"directory_pattern" json:"directory_pattern"` // e.g., "{{.project}}-{{.branch}}"
+	// DirectoryPattern defines the template for worktree directory names.
+	// Supports Go template syntax with variables:
+	// - {{.Project}}: Project/repository name (sanitized)
+	// - {{.Branch}}: Git branch name (sanitized)  
+	// - {{.Worktree}}: Unique worktree identifier
+	// - {{.Timestamp}}: Current timestamp (YYYYMMDD-HHMMSS)
+	// - {{.UserName}}: Git user name or system user (sanitized)
+	// - {{.Prefix}}: Configured prefix value
+	// - {{.Suffix}}: Configured suffix value
+	// 
+	// Template functions available: lower, upper, title, replace, trim, sanitize, truncate
+	// Example: "{{.Project}}-{{.Branch}}" or "{{.Project | upper}}-{{.Branch | lower}}"
+	DirectoryPattern string `yaml:"directory_pattern" json:"directory_pattern"` // e.g., "{{.Project}}-{{.Branch}}"
 	DefaultBranch    string `yaml:"default_branch" json:"default_branch"`
 	CleanupOnMerge   bool   `yaml:"cleanup_on_merge" json:"cleanup_on_merge"`
 }
@@ -104,7 +116,19 @@ type ClaudeConfig struct {
 type GitConfig struct {
 	// Worktree settings
 	AutoDirectory    bool          `yaml:"auto_directory" json:"auto_directory" default:"true"`
-	DirectoryPattern string        `yaml:"directory_pattern" json:"directory_pattern" default:"{{.project}}-{{.branch}}"`
+	// DirectoryPattern defines the template for worktree directory names.
+	// Supports Go template syntax with variables:
+	// - {{.project}}: Project/repository name (sanitized)
+	// - {{.branch}}: Git branch name (sanitized)  
+	// - {{.worktree}}: Unique worktree identifier
+	// - {{.timestamp}}: Current timestamp (YYYYMMDD-HHMMSS)
+	// - {{.user}}: Git user name or system user (sanitized)
+	// - {{.prefix}}: Configured prefix value
+	// - {{.suffix}}: Configured suffix value
+	// 
+	// Template functions available: lower, upper, title, replace, trim, sanitize, truncate
+	// Example: "{{.Project}}-{{.Branch}}" or "{{.Project | upper}}-{{.Branch | lower}}"
+	DirectoryPattern string        `yaml:"directory_pattern" json:"directory_pattern" default:"{{.Project}}-{{.Branch}}"`
 	MaxWorktrees     int           `yaml:"max_worktrees" json:"max_worktrees" default:"10"`
 	CleanupAge       time.Duration `yaml:"cleanup_age" json:"cleanup_age" default:"168h"`
 

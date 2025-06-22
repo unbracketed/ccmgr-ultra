@@ -354,24 +354,13 @@ func runWorktreeCreateCommand(cmd *cobra.Command, args []string) error {
 
 	// Determine worktree directory
 	worktreeDir := worktreeCreateFlags.directory
-	if worktreeDir == "" {
-		worktreeDir, err = generateWorktreeDirectory(cfg, branchName)
-		if err != nil {
-			return handleCLIError(err)
-		}
-	}
+	useAutoName := worktreeDir == ""
 
 	if spinner != nil {
-		spinner.SetMessage(fmt.Sprintf("Creating worktree at %s...", worktreeDir))
-	}
-
-	// Check if worktree already exists
-	if !worktreeCreateFlags.force {
-		if _, err := os.Stat(worktreeDir); err == nil {
-			return handleCLIError(cli.NewErrorWithSuggestion(
-				fmt.Sprintf("worktree directory already exists: %s", worktreeDir),
-				"Use --force to overwrite or specify a different directory with --directory",
-			))
+		if useAutoName {
+			spinner.SetMessage("Creating worktree...")
+		} else {
+			spinner.SetMessage(fmt.Sprintf("Creating worktree at %s...", worktreeDir))
 		}
 	}
 
@@ -383,10 +372,11 @@ func runWorktreeCreateCommand(cmd *cobra.Command, args []string) error {
 		Force:        worktreeCreateFlags.force,
 		Checkout:     true,
 		TrackRemote:  worktreeCreateFlags.remote,
+		AutoName:     useAutoName,
 	}
-	_, err = worktreeManager.CreateWorktree(branchName, opts)
+	worktreeInfo, err := worktreeManager.CreateWorktree(branchName, opts)
 	if err != nil {
-		return handleCLIError(cli.NewErrorWithCause("failed to create worktree", err))
+		return handlePatternError(cli.NewErrorWithCause("failed to create worktree", err))
 	}
 
 	if spinner != nil {
@@ -401,11 +391,17 @@ func runWorktreeCreateCommand(cmd *cobra.Command, args []string) error {
 
 		sessionManager := tmux.NewSessionManager(cfg)
 		
+		// Use actual path for session creation
+		sessionPath := worktreeDir
+		if useAutoName && worktreeInfo != nil {
+			sessionPath = worktreeInfo.Path
+		}
+		
 		session, err := sessionManager.CreateSession(
 			getCurrentProjectName(), // project
 			branchName,              // worktree
 			branchName,              // branch
-			worktreeDir,             // directory
+			sessionPath,             // directory
 		)
 		if err != nil {
 			// Don't fail the entire operation if session creation fails
@@ -429,14 +425,20 @@ func runWorktreeCreateCommand(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Get actual path for display
+	actualPath := worktreeDir
+	if useAutoName && worktreeInfo != nil {
+		actualPath = worktreeInfo.Path
+	}
+
 	if spinner != nil {
-		spinner.StopWithMessage(fmt.Sprintf("Worktree '%s' created successfully at %s", branchName, worktreeDir))
+		spinner.StopWithMessage(fmt.Sprintf("Worktree '%s' created successfully at %s", branchName, actualPath))
 	}
 
 	if !isQuiet() {
 		fmt.Printf("\nWorktree created:\n")
 		fmt.Printf("  Branch: %s\n", branchName)
-		fmt.Printf("  Path: %s\n", worktreeDir)
+		fmt.Printf("  Path: %s\n", actualPath)
 		if worktreeCreateFlags.startSession {
 			fmt.Printf("  Session: Started\n")
 		}
@@ -750,27 +752,16 @@ func runWorktreePushCommand(cmd *cobra.Command, args []string) error {
 
 // Helper functions
 
-func generateWorktreeDirectory(cfg *config.Config, branchName string) (string, error) {
-	// Use configured pattern or default
-	pattern := "../%s"
-	if cfg.Git.DirectoryPattern != "" {
-		pattern = cfg.Git.DirectoryPattern
+func handlePatternError(err error) error {
+	if strings.Contains(err.Error(), "template") || 
+	   strings.Contains(err.Error(), "pattern") ||
+	   strings.Contains(err.Error(), "variable") {
+		return cli.NewErrorWithSuggestion(
+			fmt.Sprintf("Template pattern error: %v", err),
+			"Check your directory_pattern in config. Use Go template syntax like {{.Project}}-{{.Branch}}",
+		)
 	}
-
-	// Replace placeholders
-	dir := strings.ReplaceAll(pattern, "%s", branchName)
-	dir = strings.ReplaceAll(dir, "{branch}", branchName)
-
-	// Make absolute path
-	if !filepath.IsAbs(dir) {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return "", cli.NewErrorWithCause("failed to get current directory", err)
-		}
-		dir = filepath.Join(cwd, dir)
-	}
-
-	return dir, nil
+	return handleCLIError(err)
 }
 
 func generateSessionName(cfg *config.Config, branchName string) string {

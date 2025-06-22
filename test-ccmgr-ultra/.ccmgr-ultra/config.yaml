@@ -30,7 +30,7 @@ worktree_hooks:
         async: true
 worktree:
     auto_directory: false
-    directory_pattern: '{{.project}}-{{.branch}}'
+    directory_pattern: '{{.Project}}-{{.Branch}}'
     default_branch: main
     cleanup_on_merge: false
 tmux:
@@ -44,7 +44,7 @@ tmux:
     cleanup_age: 24h0m0s
 git:
     auto_directory: false
-    directory_pattern: '{{.project}}-{{.branch}}'
+    directory_pattern: '{{.Project}}-{{.Branch}}'
     max_worktrees: 10
     cleanup_age: 168h0m0s
     default_branch: main
