@@ -283,9 +283,6 @@ func (c *Collector) performCleanup() {
 
 	cutoffTime := time.Now().AddDate(0, 0, -c.config.RetentionDays)
 	
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-	defer cancel()
-
 	// This would require implementing a cleanup method in storage
 	// For now, we'll log the operation
 	fmt.Printf("Analytics cleanup: removing events older than %s\n", cutoffTime.Format(time.RFC3339))

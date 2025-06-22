@@ -588,14 +588,164 @@ func runWorktreeMergeCommand(cmd *cobra.Command, args []string) error {
 }
 
 func runWorktreePushCommand(cmd *cobra.Command, args []string) error {
-	// Placeholder implementation - this would involve git operations and potentially GitHub CLI
 	worktreeName := args[0]
 	
 	if err := validateWorktreeArg(worktreeName); err != nil {
 		return handleCLIError(err)
 	}
 
-	return handleCLIError(cli.NewError("worktree push command not yet implemented"))
+	cfg, err := loadConfigWithOverrides()
+	if err != nil {
+		return handleCLIError(err)
+	}
+
+	var spinner *cli.Spinner
+	if shouldShowProgress() {
+		spinner = cli.NewSpinner(fmt.Sprintf("Pushing worktree '%s'...", worktreeName))
+		spinner.Start()
+		defer spinner.Stop()
+	}
+
+	// Initialize git repository manager
+	gitCmd := git.NewGitCmd()
+	repoManager := git.NewRepositoryManager(gitCmd)
+	repo, err := repoManager.DetectRepository(".")
+	if err != nil {
+		return handleCLIError(cli.NewErrorWithCause("failed to detect git repository", err))
+	}
+
+	// Find the target worktree
+	worktreeManager := git.NewWorktreeManager(repo, cfg, gitCmd)
+	worktrees, err := worktreeManager.ListWorktrees()
+	if err != nil {
+		return handleCLIError(cli.NewErrorWithCause("failed to list worktrees", err))
+	}
+
+	var targetWorktree *git.WorktreeInfo
+	for _, wt := range worktrees {
+		if filepath.Base(wt.Path) == worktreeName || wt.Branch == worktreeName || wt.Path == worktreeName {
+			targetWorktree = &wt
+			break
+		}
+	}
+
+	if targetWorktree == nil {
+		return handleCLIError(cli.NewErrorWithSuggestion(
+			fmt.Sprintf("worktree not found: %s", worktreeName),
+			"Use 'ccmgr-ultra worktree list' to see available worktrees",
+		))
+	}
+
+	if spinner != nil {
+		spinner.SetMessage(fmt.Sprintf("Found worktree '%s' on branch '%s'", worktreeName, targetWorktree.Branch))
+	}
+
+	// Initialize remote manager
+	remoteManager := git.NewRemoteManager(repo, &cfg.Git, gitCmd)
+
+	// Detect hosting service
+	service, err := remoteManager.DetectHostingService(repo.Origin)
+	if err != nil {
+		return handleCLIError(cli.NewErrorWithCause("failed to detect hosting service", err))
+	}
+
+	if service != "github" {
+		return handleCLIError(cli.NewErrorWithSuggestion(
+			fmt.Sprintf("hosting service '%s' not supported", service),
+			"Currently only GitHub repositories are supported for push operations",
+		))
+	}
+
+	// Validate GitHub authentication if creating PR
+	if worktreePushFlags.createPR {
+		if spinner != nil {
+			spinner.SetMessage("Validating GitHub authentication...")
+		}
+
+		if err := remoteManager.ValidateAuthentication("github"); err != nil {
+			return handleCLIError(cli.NewErrorWithSuggestion(
+				fmt.Sprintf("GitHub authentication failed: %v", err),
+				"Set GITHUB_TOKEN environment variable or configure github_token in config",
+			))
+		}
+	}
+
+	// Push the branch first
+	if spinner != nil {
+		spinner.SetMessage(fmt.Sprintf("Pushing branch '%s' to remote...", targetWorktree.Branch))
+	}
+
+	if worktreePushFlags.createPR {
+		// Determine target branch
+		targetBranch := repo.DefaultBranch
+		if cfg.Git.DefaultPRTargetBranch != "" {
+			targetBranch = cfg.Git.DefaultPRTargetBranch
+		}
+
+		// Prepare pull request options
+		prOptions := git.PullRequestRequest{
+			Title:        worktreePushFlags.prTitle,
+			Description:  worktreePushFlags.prBody,
+			SourceBranch: targetWorktree.Branch,
+			TargetBranch: targetBranch,
+			Draft:        worktreePushFlags.draft,
+		}
+
+		// Set default PR title if not provided
+		if prOptions.Title == "" {
+			prOptions.Title = fmt.Sprintf("Feature: %s", targetWorktree.Branch)
+		}
+
+		// Set default PR body if not provided and template exists
+		if prOptions.Description == "" {
+			// Use GitHub-specific template if available
+			if cfg.Git.GitHubPRTemplate != "" {
+				prOptions.Description = cfg.Git.GitHubPRTemplate
+			} else if cfg.Git.PRTemplate != "" {
+				prOptions.Description = cfg.Git.PRTemplate
+			}
+		}
+
+		if spinner != nil {
+			spinner.SetMessage("Creating GitHub pull request...")
+		}
+
+		// Push and create PR
+		pr, err := remoteManager.PushAndCreatePR(targetWorktree, prOptions)
+		if err != nil {
+			return handleCLIError(cli.NewErrorWithCause("failed to push and create pull request", err))
+		}
+
+		if spinner != nil {
+			spinner.StopWithMessage(fmt.Sprintf("Successfully pushed and created PR #%d", pr.Number))
+		}
+
+		if !isQuiet() {
+			fmt.Printf("\nPull Request Created:\n")
+			fmt.Printf("  Title: %s\n", pr.Title)
+			fmt.Printf("  Number: #%d\n", pr.Number)
+			fmt.Printf("  URL: %s\n", pr.URL)
+			fmt.Printf("  Status: %s\n", pr.State)
+			if pr.Draft {
+				fmt.Printf("  Type: Draft\n")
+			}
+		}
+	} else {
+		// Just push without creating PR
+		if err := remoteManager.PushBranch(targetWorktree.Branch); err != nil {
+			return handleCLIError(cli.NewErrorWithCause("failed to push branch", err))
+		}
+
+		if spinner != nil {
+			spinner.StopWithMessage(fmt.Sprintf("Successfully pushed branch '%s'", targetWorktree.Branch))
+		}
+
+		if !isQuiet() {
+			fmt.Printf("Branch '%s' pushed successfully\n", targetWorktree.Branch)
+		}
+	}
+
+	return nil
 }
 
 // Helper functions

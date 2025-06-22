@@ -23,6 +23,10 @@ const (
 	EventTypeBranchChange   = "branch_change"
 	EventTypeActivity       = "activity"
 	EventTypeIdle           = "idle_detection"
+	
+	// GitHub operations (Phase 5.3)
+	EventTypeGitHubPush     = "github_push"
+	EventTypeGitHubPRCreated = "github_pr_created"
 )
 
 // EventEmitter defines the interface for emitting analytics events
@@ -168,4 +172,35 @@ func NewActivityEventData(activityType string, duration time.Duration) map[strin
 		"activity_type": activityType,
 		"duration_ms":   duration.Milliseconds(),
 	}
+}
+
+// GitHub-specific event data functions (Phase 5.3)
+func NewGitHubPushEventData(branch, remote, worktree string, success bool, errorMsg string) map[string]interface{} {
+	data := map[string]interface{}{
+		"branch":   branch,
+		"remote":   remote,
+		"worktree": worktree,
+		"success":  success,
+	}
+	if errorMsg != "" {
+		data["error"] = errorMsg
+	}
+	return data
+}
+
+func NewGitHubPREventData(prNumber int, prURL, title, branch, targetBranch, worktree string, draft bool, success bool, errorMsg string) map[string]interface{} {
+	data := map[string]interface{}{
+		"pr_number":     prNumber,
+		"pr_url":        prURL,
+		"title":         title,
+		"branch":        branch,
+		"target_branch": targetBranch,
+		"worktree":      worktree,
+		"draft":         draft,
+		"success":       success,
+	}
+	if errorMsg != "" {
+		data["error"] = errorMsg
+	}
+	return data
 }

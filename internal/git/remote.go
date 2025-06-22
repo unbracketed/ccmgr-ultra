@@ -1,22 +1,28 @@
 package git
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/bcdekker/ccmgr-ultra/internal/analytics"
 	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 // RemoteManager handles remote repository operations
 type RemoteManager struct {
-	repo    *Repository
-	config  *config.GitConfig
-	clients map[string]HostingClient
-	gitCmd  GitInterface
+	repo            *Repository
+	config          *config.GitConfig
+	clients         map[string]HostingClient
+	gitCmd          GitInterface
+	analyticsEmitter analytics.EventEmitter
 }
 
 // HostingClient interface for different git hosting services
@@ -57,23 +63,50 @@ type PullRequest struct {
 	Labels      []string
 }
 
+// GitHub API response structures
+type GitHubPullRequestResponse struct {
+	ID        int                    `json:"id"`
+	Number    int                    `json:"number"`
+	Title     string                 `json:"title"`
+	HTMLURL   string                 `json:"html_url"`
+	State     string                 `json:"state"`
+	Draft     bool                   `json:"draft"`
+	CreatedAt time.Time              `json:"created_at"`
+	UpdatedAt time.Time              `json:"updated_at"`
+	User      GitHubUser             `json:"user"`
+	Head      GitHubBranch           `json:"head"`
+	Base      GitHubBranch           `json:"base"`
+	Labels    []GitHubLabel          `json:"labels"`
+}
+
+type GitHubUser struct {
+	Login string `json:"login"`
+	ID    int    `json:"id"`
+}
+
+type GitHubBranch struct {
+	Ref  string `json:"ref"`
+	SHA  string `json:"sha"`
+	Repo GitHubRepo `json:"repo"`
+}
+
+type GitHubRepo struct {
+	Name     string `json:"name"`
+	FullName string `json:"full_name"`
+}
+
+type GitHubLabel struct {
+	Name  string `json:"name"`
+	Color string `json:"color"`
+}
+
 // GitHubClient implements HostingClient for GitHub
 type GitHubClient struct {
 	token  string
 	apiURL string
 }
 
-// GitLabClient implements HostingClient for GitLab
-type GitLabClient struct {
-	token  string
-	apiURL string
-}
-
-// BitbucketClient implements HostingClient for Bitbucket
-type BitbucketClient struct {
-	token  string
-	apiURL string
-}
+// Removed GitLab and Bitbucket clients per Phase 5.3 spec - focusing on GitHub only
 
 // GenericClient for repositories without PR/MR support
 type GenericClient struct{}
@@ -88,16 +121,22 @@ func NewRemoteManager(repo *Repository, cfg *config.GitConfig, gitCmd GitInterfa
 	}
 
 	rm := &RemoteManager{
-		repo:    repo,
-		config:  cfg,
-		clients: make(map[string]HostingClient),
-		gitCmd:  gitCmd,
+		repo:            repo,
+		config:          cfg,
+		clients:         make(map[string]HostingClient),
+		gitCmd:          gitCmd,
+		analyticsEmitter: nil, // Will be set via SetAnalyticsEmitter if needed
 	}
 
 	// Initialize hosting clients
 	rm.initializeClients()
 
 	return rm
+}
+
+// SetAnalyticsEmitter sets the analytics emitter for tracking GitHub operations
+func (rm *RemoteManager) SetAnalyticsEmitter(emitter analytics.EventEmitter) {
+	rm.analyticsEmitter = emitter
 }
 
 // DetectHostingService detects the hosting service from a remote URL
@@ -176,12 +215,32 @@ func (rm *RemoteManager) CreatePullRequest(worktree *WorktreeInfo, req PullReque
 	}
 
 	// Apply PR template if no description provided
-	if req.Description == "" && rm.config.PRTemplate != "" {
-		req.Description = rm.config.PRTemplate
+	if req.Description == "" {
+		// Use GitHub-specific template if available for GitHub service
+		if service == "github" && rm.config.GitHubPRTemplate != "" {
+			req.Description = rm.config.GitHubPRTemplate
+		} else if rm.config.PRTemplate != "" {
+			req.Description = rm.config.PRTemplate
+		}
 	}
 
 	// Create the pull request
 	pr, err := client.CreatePullRequest(req)
+	
+	// Emit analytics event for PR creation
+	if rm.analyticsEmitter != nil && rm.analyticsEmitter.IsEnabled() {
+		prEvent := analytics.AnalyticsEvent{
+			Type:      analytics.EventTypeGitHubPRCreated,
+			Timestamp: time.Now(),
+			SessionID: rm.getCurrentSessionID(),
+			Data: analytics.NewGitHubPREventData(
+				getPRNumber(pr), getPRURL(pr), req.Title, req.SourceBranch, req.TargetBranch,
+				worktree.Path, req.Draft, err == nil, getErrorMessage(err),
+			),
+		}
+		rm.analyticsEmitter.EmitEventAsync(prEvent)
+	}
+	
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pull request: %w", err)
 	}
@@ -192,12 +251,43 @@ func (rm *RemoteManager) CreatePullRequest(worktree *WorktreeInfo, req PullReque
 // PushAndCreatePR pushes a worktree branch and creates a PR in one operation
 func (rm *RemoteManager) PushAndCreatePR(worktree *WorktreeInfo, prOptions PullRequestRequest) (*PullRequest, error) {
 	// Push the branch first
-	if err := rm.ensureBranchPushed(worktree.Branch); err != nil {
-		return nil, fmt.Errorf("failed to push branch: %w", err)
+	pushErr := rm.ensureBranchPushed(worktree.Branch)
+	
+	// Emit analytics event for push operation
+	if rm.analyticsEmitter != nil && rm.analyticsEmitter.IsEnabled() {
+		pushEvent := analytics.AnalyticsEvent{
+			Type:      analytics.EventTypeGitHubPush,
+			Timestamp: time.Now(),
+			SessionID: rm.getCurrentSessionID(),
+			Data:      analytics.NewGitHubPushEventData(worktree.Branch, rm.config.DefaultRemote, worktree.Path, pushErr == nil, getErrorMessage(pushErr)),
+		}
+		rm.analyticsEmitter.EmitEventAsync(pushEvent)
+	}
+	
+	if pushErr != nil {
+		return nil, fmt.Errorf("failed to push branch: %w", pushErr)
 	}
 
 	// Create the pull request
 	return rm.CreatePullRequest(worktree, prOptions)
+}
+
+// PushBranch pushes a branch to remote without creating a PR
+func (rm *RemoteManager) PushBranch(branch string) error {
+	err := rm.ensureBranchPushed(branch)
+	
+	// Emit analytics event for push operation
+	if rm.analyticsEmitter != nil && rm.analyticsEmitter.IsEnabled() {
+		pushEvent := analytics.AnalyticsEvent{
+			Type:      analytics.EventTypeGitHubPush,
+			Timestamp: time.Now(),
+			SessionID: rm.getCurrentSessionID(),
+			Data:      analytics.NewGitHubPushEventData(branch, rm.config.DefaultRemote, "", err == nil, getErrorMessage(err)),
+		}
+		rm.analyticsEmitter.EmitEventAsync(pushEvent)
+	}
+	
+	return err
 }
 
 // GetHostingClient returns the appropriate hosting client for the service
@@ -216,17 +306,13 @@ func (rm *RemoteManager) ValidateAuthentication(service string) error {
 		return err
 	}
 
-	// Get the appropriate token
+	// Get the appropriate token - currently only GitHub is supported
 	var token string
 	switch service {
 	case "github":
 		token = rm.config.GitHubToken
-	case "gitlab":
-		token = rm.config.GitLabToken
-	case "bitbucket":
-		token = rm.config.BitbucketToken
 	default:
-		return fmt.Errorf("authentication not supported for service: %s", service)
+		return fmt.Errorf("authentication not supported for service: %s (only GitHub is currently supported)", service)
 	}
 
 	if token == "" {
@@ -238,7 +324,7 @@ func (rm *RemoteManager) ValidateAuthentication(service string) error {
 
 // initializeClients sets up hosting service clients
 func (rm *RemoteManager) initializeClients() {
-	// GitHub client
+	// GitHub client - primary focus for Phase 5.3
 	if rm.config.GitHubToken != "" {
 		rm.clients["github"] = &GitHubClient{
 			token:  rm.config.GitHubToken,
@@ -246,23 +332,7 @@ func (rm *RemoteManager) initializeClients() {
 		}
 	}
 
-	// GitLab client
-	if rm.config.GitLabToken != "" {
-		rm.clients["gitlab"] = &GitLabClient{
-			token:  rm.config.GitLabToken,
-			apiURL: "https://gitlab.com/api/v4",
-		}
-	}
-
-	// Bitbucket client
-	if rm.config.BitbucketToken != "" {
-		rm.clients["bitbucket"] = &BitbucketClient{
-			token:  rm.config.BitbucketToken,
-			apiURL: "https://api.bitbucket.org/2.0",
-		}
-	}
-
-	// Generic client (always available)
+	// Generic client (always available for non-GitHub repos)
 	rm.clients["generic"] = &GenericClient{}
 }
 
@@ -317,25 +387,51 @@ func (gc *GitHubClient) CreatePullRequest(req PullRequestRequest) (*PullRequest,
 	// Create HTTP request
 	apiURL := fmt.Sprintf("%s/repos/%s/%s/pulls", gc.apiURL, req.Owner, req.Repository)
 	
-	// This is a simplified implementation - in a real scenario you'd use a proper HTTP client
-	// For now, we'll return a mock response
-	pr := &PullRequest{
-		ID:          12345,
-		Number:      1,
-		Title:       req.Title,
-		URL:         fmt.Sprintf("https://github.com/%s/%s/pull/1", req.Owner, req.Repository),
-		State:       "open",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		Author:      "user",
-		SourceBranch: req.SourceBranch,
-		TargetBranch: req.TargetBranch,
-		Draft:       req.Draft,
-		Labels:      req.Labels,
+	// Marshal payload to JSON
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	_ = payload // Avoid unused variable warning
-	_ = apiURL  // Avoid unused variable warning
+	// Create HTTP request
+	headers := buildAuthHeaders("github", gc.token)
+	resp, err := makeHTTPRequest("POST", apiURL, headers, payloadBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pull request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("GitHub API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	// Parse response
+	var githubPR GitHubPullRequestResponse
+	if err := parseJSONResponse(resp, &githubPR); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	// Convert to our PR format
+	pr := &PullRequest{
+		ID:          githubPR.ID,
+		Number:      githubPR.Number,
+		Title:       githubPR.Title,
+		URL:         githubPR.HTMLURL,
+		State:       githubPR.State,
+		CreatedAt:   githubPR.CreatedAt,
+		UpdatedAt:   githubPR.UpdatedAt,
+		Author:      githubPR.User.Login,
+		SourceBranch: githubPR.Head.Ref,
+		TargetBranch: githubPR.Base.Ref,
+		Draft:       githubPR.Draft,
+	}
+
+	// Extract labels
+	for _, label := range githubPR.Labels {
+		pr.Labels = append(pr.Labels, label.Name)
+	}
 
 	return pr, nil
 }
@@ -352,7 +448,24 @@ func (gc *GitHubClient) AuthenticateToken(token string) error {
 		return fmt.Errorf("GitHub token is empty")
 	}
 	
-	// Simplified validation - would normally make API call to verify token
+	// Call /user endpoint to validate token
+	apiURL := fmt.Sprintf("%s/user", gc.apiURL)
+	headers := buildAuthHeaders("github", token)
+	
+	resp, err := makeHTTPRequest("GET", apiURL, headers, nil)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate token: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 401 {
+		return fmt.Errorf("invalid GitHub token")
+	}
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("GitHub API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
 	return nil
 }
 
@@ -366,150 +479,7 @@ func (gc *GitHubClient) ValidateRepository(owner, repo string) error {
 	return nil
 }
 
-// GitLab Client Implementation
-
-// NewGitLabClient creates a new GitLab client
-func NewGitLabClient(token string) *GitLabClient {
-	return &GitLabClient{
-		token:  token,
-		apiURL: "https://gitlab.com/api/v4",
-	}
-}
-
-// GetHostingService returns the service name
-func (glc *GitLabClient) GetHostingService() string {
-	return "gitlab"
-}
-
-// CreatePullRequest creates a GitLab merge request
-func (glc *GitLabClient) CreatePullRequest(req PullRequestRequest) (*PullRequest, error) {
-	// GitLab uses "merge requests" instead of "pull requests"
-	payload := map[string]interface{}{
-		"title":         req.Title,
-		"description":   req.Description,
-		"source_branch": req.SourceBranch,
-		"target_branch": req.TargetBranch,
-	}
-
-	// Create HTTP request to GitLab API
-	projectPath := fmt.Sprintf("%s/%s", req.Owner, req.Repository)
-	apiURL := fmt.Sprintf("%s/projects/%s/merge_requests", glc.apiURL, url.QueryEscape(projectPath))
-
-	// Simplified implementation
-	pr := &PullRequest{
-		ID:          67890,
-		Number:      1,
-		Title:       req.Title,
-		URL:         fmt.Sprintf("https://gitlab.com/%s/%s/-/merge_requests/1", req.Owner, req.Repository),
-		State:       "opened",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		Author:      "user",
-		SourceBranch: req.SourceBranch,
-		TargetBranch: req.TargetBranch,
-		Draft:       req.Draft,
-		Labels:      req.Labels,
-	}
-
-	_ = payload // Avoid unused variable warning
-	_ = apiURL  // Avoid unused variable warning
-
-	return pr, nil
-}
-
-// GetPullRequests gets GitLab merge requests
-func (glc *GitLabClient) GetPullRequests(owner, repo string) ([]PullRequest, error) {
-	return []PullRequest{}, nil
-}
-
-// AuthenticateToken validates GitLab token
-func (glc *GitLabClient) AuthenticateToken(token string) error {
-	if token == "" {
-		return fmt.Errorf("GitLab token is empty")
-	}
-	return nil
-}
-
-// ValidateRepository validates GitLab repository access
-func (glc *GitLabClient) ValidateRepository(owner, repo string) error {
-	if owner == "" || repo == "" {
-		return fmt.Errorf("owner and repository name are required")
-	}
-	return nil
-}
-
-// Bitbucket Client Implementation
-
-// NewBitbucketClient creates a new Bitbucket client
-func NewBitbucketClient(token string) *BitbucketClient {
-	return &BitbucketClient{
-		token:  token,
-		apiURL: "https://api.bitbucket.org/2.0",
-	}
-}
-
-// GetHostingService returns the service name
-func (bc *BitbucketClient) GetHostingService() string {
-	return "bitbucket"
-}
-
-// CreatePullRequest creates a Bitbucket pull request
-func (bc *BitbucketClient) CreatePullRequest(req PullRequestRequest) (*PullRequest, error) {
-	payload := map[string]interface{}{
-		"title":       req.Title,
-		"description": req.Description,
-		"source": map[string]interface{}{
-			"branch": map[string]string{"name": req.SourceBranch},
-		},
-		"destination": map[string]interface{}{
-			"branch": map[string]string{"name": req.TargetBranch},
-		},
-	}
-
-	apiURL := fmt.Sprintf("%s/repositories/%s/%s/pullrequests", bc.apiURL, req.Owner, req.Repository)
-
-	// Simplified implementation
-	pr := &PullRequest{
-		ID:          54321,
-		Number:      1,
-		Title:       req.Title,
-		URL:         fmt.Sprintf("https://bitbucket.org/%s/%s/pull-requests/1", req.Owner, req.Repository),
-		State:       "OPEN",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		Author:      "user",
-		SourceBranch: req.SourceBranch,
-		TargetBranch: req.TargetBranch,
-		Draft:       req.Draft,
-		Labels:      req.Labels,
-	}
-
-	_ = payload // Avoid unused variable warning
-	_ = apiURL  // Avoid unused variable warning
-
-	return pr, nil
-}
-
-// GetPullRequests gets Bitbucket pull requests
-func (bc *BitbucketClient) GetPullRequests(owner, repo string) ([]PullRequest, error) {
-	return []PullRequest{}, nil
-}
-
-// AuthenticateToken validates Bitbucket token
-func (bc *BitbucketClient) AuthenticateToken(token string) error {
-	if token == "" {
-		return fmt.Errorf("Bitbucket token is empty")
-	}
-	return nil
-}
-
-// ValidateRepository validates Bitbucket repository access
-func (bc *BitbucketClient) ValidateRepository(owner, repo string) error {
-	if owner == "" || repo == "" {
-		return fmt.Errorf("owner and repository name are required")
-	}
-	return nil
-}
+// GitLab and Bitbucket clients removed per Phase 5.3 spec - focusing on GitHub only
 
 // Generic Client Implementation
 
@@ -541,46 +511,88 @@ func (genClient *GenericClient) ValidateRepository(owner, repo string) error {
 // Utility functions for making HTTP requests (simplified)
 
 // makeHTTPRequest is a helper function for making HTTP requests
-func makeHTTPRequest(method, url string, headers map[string]string, body []byte) (*http.Response, error) {
-	// This is a placeholder for actual HTTP request implementation
-	// In a real implementation, you would:
-	// 1. Create an HTTP client with proper timeouts
-	// 2. Set up authentication headers
-	// 3. Handle request/response properly
-	// 4. Parse JSON responses
-	// 5. Handle rate limiting and retries
+func makeHTTPRequest(method, apiURL string, headers map[string]string, body []byte) (*http.Response, error) {
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 
-	return nil, fmt.Errorf("HTTP request implementation not included in this example")
+	// Create request context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+	defer cancel()
+
+	// Create request
+	var bodyReader io.Reader
+	if body != nil {
+		bodyReader = bytes.NewReader(body)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, apiURL, bodyReader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set headers
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	// Set content type for POST/PUT requests
+	if method == "POST" || method == "PUT" || method == "PATCH" {
+		if req.Header.Get("Content-Type") == "" {
+			req.Header.Set("Content-Type", "application/json")
+		}
+	}
+
+	// Set User-Agent
+	if req.Header.Get("User-Agent") == "" {
+		req.Header.Set("User-Agent", "ccmgr-ultra/1.0")
+	}
+
+	// Make the request
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("HTTP request failed: %w", err)
+	}
+
+	// Handle rate limiting
+	if resp.StatusCode == 403 {
+		if resp.Header.Get("X-RateLimit-Remaining") == "0" {
+			return nil, fmt.Errorf("GitHub API rate limit exceeded")
+		}
+	}
+
+	return resp, nil
 }
 
 // parseJSONResponse is a helper function for parsing JSON responses
 func parseJSONResponse(resp *http.Response, target interface{}) error {
-	// This is a placeholder for JSON parsing
-	// In a real implementation, you would:
-	// 1. Read the response body
-	// 2. Parse JSON into the target struct
-	// 3. Handle parsing errors appropriately
+	// Read response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
 
-	_ = resp   // Avoid unused variable warning
-	_ = target // Avoid unused variable warning
+	// Parse JSON
+	if err := json.Unmarshal(body, target); err != nil {
+		return fmt.Errorf("failed to parse JSON response: %w", err)
+	}
 
-	return fmt.Errorf("JSON parsing implementation not included in this example")
+	return nil
 }
 
-// buildAuthHeaders creates authentication headers for different services
+// buildAuthHeaders creates authentication headers for GitHub
 func buildAuthHeaders(service, token string) map[string]string {
 	headers := make(map[string]string)
 	
 	switch service {
 	case "github":
-		headers["Authorization"] = fmt.Sprintf("Bearer %s", token)
+		headers["Authorization"] = fmt.Sprintf("token %s", token)
 		headers["Accept"] = "application/vnd.github.v3+json"
-	case "gitlab":
-		headers["Authorization"] = fmt.Sprintf("Bearer %s", token)
-		headers["Content-Type"] = "application/json"
-	case "bitbucket":
-		headers["Authorization"] = fmt.Sprintf("Bearer %s", token)
-		headers["Content-Type"] = "application/json"
+	default:
+		// Only GitHub is supported in Phase 5.3
+		headers["Authorization"] = fmt.Sprintf("token %s", token)
+		headers["Accept"] = "application/vnd.github.v3+json"
 	}
 
 	return headers
@@ -643,4 +655,37 @@ func (rm *RemoteManager) GetPullRequestTemplate() string {
 // SetPullRequestTemplate sets the PR template
 func (rm *RemoteManager) SetPullRequestTemplate(template string) {
 	rm.config.PRTemplate = template
+}
+
+// Helper functions for analytics
+
+// getCurrentSessionID gets the current session ID for analytics
+func (rm *RemoteManager) getCurrentSessionID() string {
+	// For now, return a simple session ID. In a full implementation,
+	// this would integrate with the session management system
+	return fmt.Sprintf("session-%d", time.Now().Unix())
+}
+
+// getErrorMessage safely extracts error message
+func getErrorMessage(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
+}
+
+// getPRNumber safely extracts PR number
+func getPRNumber(pr *PullRequest) int {
+	if pr == nil {
+		return 0
+	}
+	return pr.Number
+}
+
+// getPRURL safely extracts PR URL
+func getPRURL(pr *PullRequest) string {
+	if pr == nil {
+		return ""
+	}
+	return pr.URL
 }

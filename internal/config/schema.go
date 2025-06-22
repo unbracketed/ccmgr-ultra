@@ -124,6 +124,10 @@ type GitConfig struct {
 	GitLabToken    string `yaml:"gitlab_token" json:"gitlab_token" env:"GITLAB_TOKEN"`
 	BitbucketToken string `yaml:"bitbucket_token" json:"bitbucket_token" env:"BITBUCKET_TOKEN"`
 
+	// GitHub-specific configuration (Phase 5.3)
+	GitHubPRTemplate       string `yaml:"github_pr_template" json:"github_pr_template"`
+	DefaultPRTargetBranch  string `yaml:"default_pr_target_branch" json:"default_pr_target_branch" default:"main"`
+
 	// Safety settings
 	RequireCleanWorkdir bool `yaml:"require_clean_workdir" json:"require_clean_workdir" default:"true"`
 	ConfirmDestructive  bool `yaml:"confirm_destructive" json:"confirm_destructive" default:"true"`
@@ -607,6 +611,26 @@ Brief description of changes
 ## Testing
 How the changes were tested`
 	}
+	
+	// GitHub-specific defaults (Phase 5.3)
+	if g.GitHubPRTemplate == "" {
+		g.GitHubPRTemplate = `## Summary
+Brief description of changes
+
+## Test plan
+- [ ] Manual testing completed
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+
+## Checklist
+- [ ] Code follows project conventions
+- [ ] Documentation updated if needed`
+	}
+	
+	if g.DefaultPRTargetBranch == "" {
+		g.DefaultPRTargetBranch = "main"
+	}
+	
 	// Boolean defaults are handled by Go's zero values and struct tags
 }
 
