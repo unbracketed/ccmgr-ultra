@@ -20,13 +20,13 @@ type PatternManager struct {
 
 // PatternContext provides variables for pattern substitution
 type PatternContext struct {
-	Project   string
-	Branch    string
-	Worktree  string
-	Timestamp string
-	UserName  string
-	Prefix    string
-	Suffix    string
+	Project   string `json:"project"`
+	Branch    string `json:"branch"`
+	Worktree  string `json:"worktree"`
+	Timestamp string `json:"timestamp"`
+	UserName  string `json:"user"`
+	Prefix    string `json:"prefix"`
+	Suffix    string `json:"suffix"`
 }
 
 // DirectoryPattern represents a naming pattern configuration
@@ -83,7 +83,7 @@ func (pm *PatternManager) ValidatePattern(pattern string) error {
 	}
 
 	// Check for template syntax
-	_, err := template.New("pattern").Parse(pattern)
+	_, err := createPatternTemplate(pattern)
 	if err != nil {
 		return fmt.Errorf("invalid template syntax: %w", err)
 	}
@@ -109,8 +109,8 @@ func (pm *PatternManager) ValidatePattern(pattern string) error {
 
 	// Validate against known variables
 	validVars := []string{
-		"{{.project}}", "{{.branch}}", "{{.worktree}}", 
-		"{{.timestamp}}", "{{.user}}", "{{.prefix}}", "{{.suffix}}",
+		"{{.Project}}", "{{.Branch}}", "{{.Worktree}}", 
+		"{{.Timestamp}}", "{{.UserName}}", "{{.Prefix}}", "{{.Suffix}}",
 	}
 
 	// Extract variables from pattern
@@ -191,8 +191,14 @@ func (pm *PatternManager) GenerateWorktreePath(branch, project string) (string, 
 		return "", fmt.Errorf("failed to get current directory: %w", err)
 	}
 
-	// Create full path
-	fullPath := filepath.Join(cwd, "..", dirName)
+	// Create .worktrees base directory if it doesn't exist
+	worktreeBaseDir := filepath.Join(cwd, ".worktrees")
+	if err := os.MkdirAll(worktreeBaseDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create .worktrees directory: %w", err)
+	}
+
+	// Create full path within .worktrees
+	fullPath := filepath.Join(worktreeBaseDir, dirName)
 	
 	// Clean the path
 	fullPath = filepath.Clean(fullPath)
@@ -223,7 +229,7 @@ func createPatternTemplate(pattern string) (*template.Template, error) {
 		"lower":     strings.ToLower,
 		"upper":     strings.ToUpper,
 		"title":     strings.Title,
-		"replace":   strings.ReplaceAll,
+		"replace":   replaceString,
 		"trim":      strings.TrimSpace,
 		"sanitize":  sanitizeForFilesystem,
 		"truncate":  truncateString,
@@ -379,26 +385,26 @@ func (pm *PatternManager) CreateDirectory(path string) error {
 // GetPatternVariables returns all available pattern variables with descriptions
 func (pm *PatternManager) GetPatternVariables() map[string]string {
 	return map[string]string{
-		"{{.project}}":   "Project/repository name (sanitized)",
-		"{{.branch}}":    "Git branch name (sanitized)",
-		"{{.worktree}}":  "Unique worktree identifier",
-		"{{.timestamp}}": "Current timestamp (YYYYMMDD-HHMMSS)",
-		"{{.user}}":      "Git user name or system user (sanitized)",
-		"{{.prefix}}":    "Configured prefix value",
-		"{{.suffix}}":    "Configured suffix value",
+		"{{.Project}}":   "Project/repository name (sanitized)",
+		"{{.Branch}}":    "Git branch name (sanitized)",
+		"{{.Worktree}}":  "Unique worktree identifier",
+		"{{.Timestamp}}": "Current timestamp (YYYYMMDD-HHMMSS)",
+		"{{.UserName}}":  "Git user name or system user (sanitized)",
+		"{{.Prefix}}":    "Configured prefix value",
+		"{{.Suffix}}":    "Configured suffix value",
 	}
 }
 
 // GetPatternFunctions returns all available template functions with descriptions
 func (pm *PatternManager) GetPatternFunctions() map[string]string {
 	return map[string]string{
-		"lower":     "Convert to lowercase: {{.branch | lower}}",
-		"upper":     "Convert to uppercase: {{.branch | upper}}",
-		"title":     "Convert to title case: {{.branch | title}}",
-		"replace":   "Replace text: {{.branch | replace \"/\" \"-\"}}",
-		"trim":      "Trim whitespace: {{.branch | trim}}",
-		"sanitize":  "Sanitize for filesystem: {{.branch | sanitize}}",
-		"truncate":  "Truncate to length: {{.branch | truncate 10}}",
+		"lower":     "Convert to lowercase: {{.Branch | lower}}",
+		"upper":     "Convert to uppercase: {{.Branch | upper}}",
+		"title":     "Convert to title case: {{.Branch | title}}",
+		"replace":   "Replace text: {{.Branch | replace \"/\" \"-\"}}",
+		"trim":      "Trim whitespace: {{.Branch | trim}}",
+		"sanitize":  "Sanitize for filesystem: {{.Branch | sanitize}}",
+		"truncate":  "Truncate to length: {{.Branch | truncate 10}}",
 	}
 }
 
@@ -419,6 +425,12 @@ func truncateString(s string, length int) string {
 		return s[:length]
 	}
 	return s[:length-3] + "..."
+}
+
+// replaceString replaces all occurrences of old with new in the string
+// For template usage: {{.field | replace "old" "new"}}
+func replaceString(old, new, s string) string {
+	return strings.ReplaceAll(s, old, new)
 }
 
 // ValidatePatternResult validates the result of pattern application

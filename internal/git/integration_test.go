@@ -121,7 +121,7 @@ func testCompleteWorktreeWorkflow(t *testing.T, worktreeMgr *WorktreeManager, gi
 		Branch:  "feature-user-auth",
 		Timestamp: "20240101-120000",
 	}
-	path, err := patternMgr.ApplyPattern("{{.project}}-{{.branch}}", context)
+	path, err := patternMgr.ApplyPattern("{{.Project}}-{{.Branch}}", context)
 	require.NoError(t, err)
 	assert.Equal(t, "test-repo-feature-user-auth", path)
 

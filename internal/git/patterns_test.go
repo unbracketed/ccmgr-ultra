@@ -36,12 +36,12 @@ func TestValidatePattern(t *testing.T) {
 	}{
 		{
 			name:    "Valid simple pattern",
-			pattern: "{{.project}}-{{.branch}}",
+			pattern: "{{.Project}}-{{.Branch}}",
 			valid:   true,
 		},
 		{
 			name:    "Valid complex pattern",
-			pattern: "{{.prefix}}/{{.project}}-{{.branch}}-{{.timestamp}}",
+			pattern: "{{.Prefix}}-{{.Project}}-{{.Branch}}-{{.Timestamp}}",
 			valid:   true,
 		},
 		{
@@ -56,32 +56,32 @@ func TestValidatePattern(t *testing.T) {
 		},
 		{
 			name:    "Invalid template syntax",
-			pattern: "{{.project}-{{.branch}}",
+			pattern: "{{.Project}-{{.Branch}}",
 			valid:   false,
 		},
 		{
 			name:    "Parent directory traversal",
-			pattern: "../{{.project}}-{{.branch}}",
+			pattern: "../{{.Project}}-{{.Branch}}",
 			valid:   false,
 		},
 		{
 			name:    "Home directory",
-			pattern: "~/{{.project}}-{{.branch}}",
+			pattern: "~/{{.Project}}-{{.Branch}}",
 			valid:   false,
 		},
 		{
 			name:    "Absolute path",
-			pattern: "/tmp/{{.project}}-{{.branch}}",
+			pattern: "/tmp/{{.Project}}-{{.Branch}}",
 			valid:   false,
 		},
 		{
 			name:    "Unknown variable",
-			pattern: "{{.project}}-{{.unknown}}",
+			pattern: "{{.Project}}-{{.unknown}}",
 			valid:   false,
 		},
 		{
 			name:    "Valid with functions",
-			pattern: "{{.project | lower}}-{{.branch | sanitize}}",
+			pattern: "{{.Project | lower}}-{{.Branch | sanitize}}",
 			valid:   true,
 		},
 	}
@@ -202,12 +202,12 @@ func TestSanitizeComponent(t *testing.T) {
 
 func TestApplyPattern(t *testing.T) {
 	pm := NewPatternManager(&config.WorktreeConfig{
-		DirectoryPattern: "{{.project}}-{{.branch}}",
+		DirectoryPattern: "{{.Project}}-{{.Branch}}",
 	})
 
 	context := PatternContext{
 		Project:   "my-project",
-		Branch:    "feature/auth",
+		Branch:    "feature-auth",
 		Worktree:  "feature-auth-0102-1430",
 		Timestamp: "20240102-143045",
 		UserName:  "john-doe",
@@ -223,19 +223,19 @@ func TestApplyPattern(t *testing.T) {
 	}{
 		{
 			name:     "Simple pattern",
-			pattern:  "{{.project}}-{{.branch}}",
+			pattern:  "{{.Project}}-{{.Branch}}",
 			expected: "my-project-feature-auth",
 			hasError: false,
 		},
 		{
 			name:     "Complex pattern",
-			pattern:  "{{.prefix}}/{{.project}}-{{.branch}}-{{.timestamp}}",
+			pattern:  "{{.Prefix}}-{{.Project}}-{{.Branch}}-{{.Timestamp}}",
 			expected: "main-my-project-feature-auth-20240102-143045",
 			hasError: false,
 		},
 		{
 			name:     "Pattern with functions",
-			pattern:  "{{.project | upper}}-{{.branch | lower}}",
+			pattern:  "{{.Project | upper}}-{{.Branch | lower}}",
 			expected: "MY-PROJECT-feature-auth",
 			hasError: false,
 		},
@@ -287,25 +287,25 @@ func TestResolvePatternVariables(t *testing.T) {
 	}{
 		{
 			name:     "All variables",
-			template: "{{.project}}-{{.branch}}-{{.worktree}}-{{.timestamp}}-{{.user}}-{{.prefix}}-{{.suffix}}",
+			template: "{{.Project}}-{{.Branch}}-{{.Worktree}}-{{.Timestamp}}-{{.UserName}}-{{.Prefix}}-{{.Suffix}}",
 			expected: "test-project-main-main-0102-1430-20240102-143045-test-user-prefix-suffix",
 			hasError: false,
 		},
 		{
 			name:     "With functions",
-			template: "{{.project | upper}}-{{.branch | lower}}",
+			template: "{{.Project | upper}}-{{.Branch | lower}}",
 			expected: "TEST-PROJECT-main",
 			hasError: false,
 		},
 		{
 			name:     "With replace function",
-			template: "{{.branch | replace \"/\" \"-\"}}",
+			template: "{{.Branch | replace \"/\" \"-\"}}",
 			expected: "main",
 			hasError: false,
 		},
 		{
 			name:     "Invalid syntax",
-			template: "{{.project}-{{.branch}}",
+			template: "{{.Project}-{{.Branch}}",
 			expected: "",
 			hasError: true,
 		},
@@ -326,19 +326,159 @@ func TestResolvePatternVariables(t *testing.T) {
 
 func TestGenerateWorktreePath(t *testing.T) {
 	pm := NewPatternManager(&config.WorktreeConfig{
-		DirectoryPattern: "{{.project}}-{{.branch}}",
+		DirectoryPattern: "{{.Project}}-{{.Branch}}",
 		DefaultBranch:    "main",
 	})
 
 	path, err := pm.GenerateWorktreePath("feature/auth", "my-project")
 	require.NoError(t, err)
 
-	// Should be relative to parent of current directory
+	// Should be relative to .worktrees directory
 	cwd, _ := os.Getwd()
-	expectedBase := filepath.Join(cwd, "..")
+	expectedBase := filepath.Join(cwd, ".worktrees")
 	expectedPath := filepath.Join(expectedBase, "my-project-feature-auth")
 
 	assert.Equal(t, filepath.Clean(expectedPath), path)
+}
+
+func TestGenerateWorktreePath_CreatesWorktreesDirectory(t *testing.T) {
+	// Create a temporary directory for testing
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-worktrees-creation")
+	defer os.RemoveAll(tempDir)
+	
+	// Change to temp directory
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	
+	os.MkdirAll(tempDir, 0755)
+	os.Chdir(tempDir)
+
+	pm := NewPatternManager(&config.WorktreeConfig{
+		DirectoryPattern: "{{.Project}}-{{.Branch}}",
+		DefaultBranch:    "main",
+	})
+
+	// Verify .worktrees doesn't exist yet
+	worktreesDir := filepath.Join(tempDir, ".worktrees")
+	_, err := os.Stat(worktreesDir)
+	assert.True(t, os.IsNotExist(err))
+
+	// Generate worktree path
+	path, err := pm.GenerateWorktreePath("feature/test", "test-project")
+	require.NoError(t, err)
+
+	// Verify .worktrees directory was created
+	stat, err := os.Stat(worktreesDir)
+	assert.NoError(t, err)
+	assert.True(t, stat.IsDir())
+
+	// Verify correct permissions
+	assert.Equal(t, os.FileMode(0755), stat.Mode().Perm())
+
+	// Verify path is within .worktrees
+	assert.Contains(t, path, ".worktrees")
+	assert.Contains(t, path, "test-project-feature-test")
+}
+
+func TestGenerateWorktreePath_UsesWorktreesBasePath(t *testing.T) {
+	pm := NewPatternManager(&config.WorktreeConfig{
+		DirectoryPattern: "{{.Project}}-{{.Branch}}",
+		DefaultBranch:    "main",
+	})
+
+	path, err := pm.GenerateWorktreePath("feature/auth", "my-project")
+	require.NoError(t, err)
+
+	// Should use .worktrees as base directory, not parent directory
+	assert.Contains(t, path, ".worktrees")
+	assert.NotContains(t, path, "..")
+	
+	cwd, _ := os.Getwd()
+	expectedPrefix := filepath.Join(cwd, ".worktrees")
+	assert.True(t, strings.HasPrefix(path, expectedPrefix))
+}
+
+func TestGenerateWorktreePath_DirectoryCreationError(t *testing.T) {
+	// Create a temporary directory for testing
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-creation-error")
+	defer os.RemoveAll(tempDir)
+	
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	
+	os.MkdirAll(tempDir, 0755)
+	os.Chdir(tempDir)
+
+	// Create a file where .worktrees directory should be (to cause error)
+	worktreesPath := filepath.Join(tempDir, ".worktrees")
+	file, err := os.Create(worktreesPath)
+	require.NoError(t, err)
+	file.Close()
+
+	pm := NewPatternManager(&config.WorktreeConfig{
+		DirectoryPattern: "{{.Project}}-{{.Branch}}",
+		DefaultBranch:    "main",
+	})
+
+	// Should fail because .worktrees exists as a file, not directory
+	_, err = pm.GenerateWorktreePath("feature/test", "test-project")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to create .worktrees directory")
+}
+
+func TestGenerateWorktreePath_PreservesPatternFunctionality(t *testing.T) {
+	// Create a temporary directory for testing
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-pattern-functionality")
+	defer os.RemoveAll(tempDir)
+	
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	
+	os.MkdirAll(tempDir, 0755)
+	os.Chdir(tempDir)
+
+	pm := NewPatternManager(&config.WorktreeConfig{
+		DirectoryPattern: "{{.Prefix}}-{{.Project}}-{{.Branch}}-{{.Suffix}}",
+		DefaultBranch:    "main",
+	})
+
+	path, err := pm.GenerateWorktreePath("feature/auth", "my-project")
+	require.NoError(t, err)
+
+	// Should preserve all pattern functionality
+	assert.Contains(t, path, ".worktrees")
+	assert.Contains(t, path, "main-my-project-feature-auth")
+	
+	// Verify the pattern variables are properly processed
+	dirName := filepath.Base(path)
+	assert.Equal(t, "main-my-project-feature-auth", dirName)
+}
+
+func TestGenerateWorktreePath_CorrectPermissions(t *testing.T) {
+	// Create a temporary directory for testing
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-permissions")
+	defer os.RemoveAll(tempDir)
+	
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	
+	os.MkdirAll(tempDir, 0755)
+	os.Chdir(tempDir)
+
+	pm := NewPatternManager(&config.WorktreeConfig{
+		DirectoryPattern: "{{.Project}}-{{.Branch}}",
+		DefaultBranch:    "main",
+	})
+
+	_, err := pm.GenerateWorktreePath("feature/test", "test-project")
+	require.NoError(t, err)
+
+	// Verify .worktrees directory has correct permissions
+	worktreesDir := filepath.Join(tempDir, ".worktrees")
+	stat, err := os.Stat(worktreesDir)
+	require.NoError(t, err)
+	
+	assert.Equal(t, os.FileMode(0755), stat.Mode().Perm())
 }
 
 func TestTruncatePath(t *testing.T) {
@@ -505,7 +645,7 @@ func TestValidatePatternResult(t *testing.T) {
 func TestGenerateExamplePaths(t *testing.T) {
 	pm := NewPatternManager(nil)
 
-	pattern := "{{.project}}-{{.branch}}"
+	pattern := "{{.Project}}-{{.Branch}}"
 	examples, err := pm.GenerateExamplePaths(pattern)
 
 	require.NoError(t, err)
@@ -535,13 +675,13 @@ func TestGetPatternVariables(t *testing.T) {
 	variables := pm.GetPatternVariables()
 	
 	assert.NotEmpty(t, variables)
-	assert.Contains(t, variables, "{{.project}}")
-	assert.Contains(t, variables, "{{.branch}}")
-	assert.Contains(t, variables, "{{.worktree}}")
-	assert.Contains(t, variables, "{{.timestamp}}")
-	assert.Contains(t, variables, "{{.user}}")
-	assert.Contains(t, variables, "{{.prefix}}")
-	assert.Contains(t, variables, "{{.suffix}}")
+	assert.Contains(t, variables, "{{.Project}}")
+	assert.Contains(t, variables, "{{.Branch}}")
+	assert.Contains(t, variables, "{{.Worktree}}")
+	assert.Contains(t, variables, "{{.Timestamp}}")
+	assert.Contains(t, variables, "{{.UserName}}")
+	assert.Contains(t, variables, "{{.Prefix}}")
+	assert.Contains(t, variables, "{{.Suffix}}")
 }
 
 func TestGetPatternFunctions(t *testing.T) {
