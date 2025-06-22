@@ -47,3 +47,6 @@ air.log
 # Release archives
 *.tar.gz
 *.zip
+
+# Test directories
+.testdirs/
