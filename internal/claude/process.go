@@ -5,19 +5,22 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/your-org/ccmgr-ultra/internal/analytics"
 )
 
 // ProcessManager provides a unified API for Claude Code process management
 type ProcessManager struct {
-	config    *ProcessConfig
-	detector  ProcessDetector
-	monitor   StateMonitor
-	tracker   ProcessTracker
-	handlers  []StateChangeHandler
-	running   bool
-	mutex     sync.RWMutex
-	ctx       context.Context
-	cancel    context.CancelFunc
+	config      *ProcessConfig
+	detector    ProcessDetector
+	monitor     StateMonitor
+	tracker     ProcessTracker
+	handlers    []StateChangeHandler
+	eventChan   chan<- analytics.AnalyticsEvent
+	running     bool
+	mutex       sync.RWMutex
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
 
 // NewProcessManager creates a new process manager with default implementations
@@ -180,7 +183,30 @@ func (pm *ProcessManager) OnStateChange(ctx context.Context, event StateChangeEv
 	pm.mutex.RLock()
 	handlers := make([]StateChangeHandler, len(pm.handlers))
 	copy(handlers, pm.handlers)
+	eventChan := pm.eventChan
 	pm.mutex.RUnlock()
+
+	// Emit analytics event if channel is available
+	if eventChan != nil {
+		analyticsEvent := analytics.AnalyticsEvent{
+			Type:      analytics.EventTypeStateChange,
+			Timestamp: event.Timestamp,
+			SessionID: event.SessionID,
+			Data: analytics.NewStateChangeEventData(
+				event.OldState.String(),
+				event.NewState.String(),
+				event.WorktreeID,
+				"", // Branch information not available in StateChangeEvent
+			),
+		}
+		
+		// Non-blocking send
+		select {
+		case eventChan <- analyticsEvent:
+		default:
+			// Channel is full, skip this event to avoid blocking
+		}
+	}
 
 	// Forward to all registered handlers
 	for _, handler := range handlers {
@@ -238,6 +264,44 @@ func (pm *ProcessManager) UpdateConfig(config *ProcessConfig) error {
 
 	pm.config = config
 	return nil
+}
+
+// SetEventChannel sets the analytics event channel for event emission
+func (pm *ProcessManager) SetEventChannel(eventChan chan<- analytics.AnalyticsEvent) {
+	pm.mutex.Lock()
+	defer pm.mutex.Unlock()
+	pm.eventChan = eventChan
+}
+
+// EmitSessionEvent emits a session-related analytics event
+func (pm *ProcessManager) EmitSessionEvent(eventType, sessionID, project, worktree, branch, directory string) {
+	pm.mutex.RLock()
+	eventChan := pm.eventChan
+	pm.mutex.RUnlock()
+
+	if eventChan == nil {
+		return
+	}
+
+	analyticsEvent := analytics.AnalyticsEvent{
+		Type:      eventType,
+		Timestamp: time.Now(),
+		SessionID: sessionID,
+		Data: analytics.NewSessionEventData(
+			eventType,
+			project,
+			worktree,
+			branch,
+			directory,
+		),
+	}
+
+	// Non-blocking send
+	select {
+	case eventChan <- analyticsEvent:
+	default:
+		// Channel is full, skip this event to avoid blocking
+	}
 }
 
 // DiscoverProcesses manually triggers process discovery

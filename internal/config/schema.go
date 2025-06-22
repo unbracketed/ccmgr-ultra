@@ -17,6 +17,7 @@ type Config struct {
 	Git              GitConfig              `yaml:"git" json:"git"`
 	Claude           ClaudeConfig           `yaml:"claude" json:"claude"`
 	TUI              TUIConfig              `yaml:"tui" json:"tui"`
+	Analytics        AnalyticsConfig        `yaml:"analytics" json:"analytics"`
 	Shortcuts        map[string]string      `yaml:"shortcuts" json:"shortcuts"`
 	Commands         CommandsConfig         `yaml:"commands" json:"commands"`
 	LastModified     time.Time              `yaml:"last_modified" json:"last_modified"`
@@ -147,6 +148,57 @@ type TUIConfig struct {
 	DebugMode       bool   `yaml:"debug_mode" json:"debug_mode" default:"false"`
 }
 
+// AnalyticsConfig defines analytics configuration
+type AnalyticsConfig struct {
+	Enabled         bool                    `yaml:"enabled" json:"enabled" default:"true"`
+	Collector       AnalyticsCollectorConfig `yaml:"collector" json:"collector"`
+	Engine          AnalyticsEngineConfig    `yaml:"engine" json:"engine"`
+	Hooks           AnalyticsHooksConfig     `yaml:"hooks" json:"hooks"`
+	Retention       AnalyticsRetentionConfig `yaml:"retention" json:"retention"`
+	Performance     AnalyticsPerformanceConfig `yaml:"performance" json:"performance"`
+}
+
+// AnalyticsCollectorConfig defines collector configuration
+type AnalyticsCollectorConfig struct {
+	PollInterval    time.Duration `yaml:"poll_interval" json:"poll_interval" default:"30s"`
+	BufferSize      int           `yaml:"buffer_size" json:"buffer_size" default:"1000"`
+	BatchSize       int           `yaml:"batch_size" json:"batch_size" default:"50"`
+	EnableMetrics   bool          `yaml:"enable_metrics" json:"enable_metrics" default:"true"`
+	RetentionDays   int           `yaml:"retention_days" json:"retention_days" default:"90"`
+}
+
+// AnalyticsEngineConfig defines engine configuration
+type AnalyticsEngineConfig struct {
+	CacheSize       int           `yaml:"cache_size" json:"cache_size" default:"1000"`
+	CacheTTL        time.Duration `yaml:"cache_ttl" json:"cache_ttl" default:"5m"`
+	BatchProcessing bool          `yaml:"batch_processing" json:"batch_processing" default:"true"`
+	PrecomputeDaily bool          `yaml:"precompute_daily" json:"precompute_daily" default:"true"`
+}
+
+// AnalyticsHooksConfig defines hooks integration configuration
+type AnalyticsHooksConfig struct {
+	Enabled              bool `yaml:"enabled" json:"enabled" default:"true"`
+	CaptureStateChanges  bool `yaml:"capture_state_changes" json:"capture_state_changes" default:"true"`
+	CaptureWorktreeEvents bool `yaml:"capture_worktree_events" json:"capture_worktree_events" default:"true"`
+	CaptureSessionEvents bool `yaml:"capture_session_events" json:"capture_session_events" default:"true"`
+}
+
+// AnalyticsRetentionConfig defines data retention configuration
+type AnalyticsRetentionConfig struct {
+	SessionEventsDays    int           `yaml:"session_events_days" json:"session_events_days" default:"90"`
+	AggregatedDataDays   int           `yaml:"aggregated_data_days" json:"aggregated_data_days" default:"365"`
+	CleanupInterval      time.Duration `yaml:"cleanup_interval" json:"cleanup_interval" default:"24h"`
+	EnableAutoCleanup    bool          `yaml:"enable_auto_cleanup" json:"enable_auto_cleanup" default:"true"`
+}
+
+// AnalyticsPerformanceConfig defines performance configuration
+type AnalyticsPerformanceConfig struct {
+	MaxCPUUsage       float64       `yaml:"max_cpu_usage" json:"max_cpu_usage" default:"5.0"`
+	MaxMemoryUsageMB  int64         `yaml:"max_memory_usage_mb" json:"max_memory_usage_mb" default:"100"`
+	MaxQueryTime      time.Duration `yaml:"max_query_time" json:"max_query_time" default:"100ms"`
+	EnableMonitoring  bool          `yaml:"enable_monitoring" json:"enable_monitoring" default:"true"`
+}
+
 // Validate validates the entire configuration
 func (c *Config) Validate() error {
 	if c.Version == "" {
@@ -183,6 +235,10 @@ func (c *Config) Validate() error {
 
 	if err := c.TUI.Validate(); err != nil {
 		return fmt.Errorf("tui validation failed: %w", err)
+	}
+
+	if err := c.Analytics.Validate(); err != nil {
+		return fmt.Errorf("analytics validation failed: %w", err)
 	}
 
 	// Validate shortcuts
@@ -437,6 +493,9 @@ func (c *Config) SetDefaults() {
 	// Set default TUI config
 	c.TUI.SetDefaults()
 
+	// Set default analytics config
+	c.Analytics.SetDefaults()
+
 	// Set default shortcuts if none provided
 	if len(c.Shortcuts) == 0 {
 		c.Shortcuts = DefaultShortcuts()
@@ -642,4 +701,172 @@ func DefaultShortcuts() map[string]string {
 		"r": "resume_session",
 		"q": "quit",
 	}
+}
+
+// Validate validates analytics configuration
+func (a *AnalyticsConfig) Validate() error {
+	if err := a.Collector.Validate(); err != nil {
+		return fmt.Errorf("collector validation failed: %w", err)
+	}
+	
+	if err := a.Engine.Validate(); err != nil {
+		return fmt.Errorf("engine validation failed: %w", err)
+	}
+	
+	if err := a.Hooks.Validate(); err != nil {
+		return fmt.Errorf("hooks validation failed: %w", err)
+	}
+	
+	if err := a.Retention.Validate(); err != nil {
+		return fmt.Errorf("retention validation failed: %w", err)
+	}
+	
+	if err := a.Performance.Validate(); err != nil {
+		return fmt.Errorf("performance validation failed: %w", err)
+	}
+	
+	return nil
+}
+
+// SetDefaults sets default values for analytics configuration
+func (a *AnalyticsConfig) SetDefaults() {
+	a.Enabled = true
+	a.Collector.SetDefaults()
+	a.Engine.SetDefaults()
+	a.Hooks.SetDefaults()
+	a.Retention.SetDefaults()
+	a.Performance.SetDefaults()
+}
+
+// Validate validates collector configuration
+func (c *AnalyticsCollectorConfig) Validate() error {
+	if c.PollInterval < time.Second {
+		return fmt.Errorf("poll interval must be at least 1 second")
+	}
+	if c.BufferSize <= 0 {
+		return fmt.Errorf("buffer size must be positive")
+	}
+	if c.BatchSize <= 0 {
+		return fmt.Errorf("batch size must be positive")
+	}
+	if c.BatchSize > c.BufferSize {
+		return fmt.Errorf("batch size cannot exceed buffer size")
+	}
+	if c.RetentionDays < 0 {
+		return fmt.Errorf("retention days cannot be negative")
+	}
+	return nil
+}
+
+// SetDefaults sets default values for collector configuration
+func (c *AnalyticsCollectorConfig) SetDefaults() {
+	if c.PollInterval == 0 {
+		c.PollInterval = 30 * time.Second
+	}
+	if c.BufferSize == 0 {
+		c.BufferSize = 1000
+	}
+	if c.BatchSize == 0 {
+		c.BatchSize = 50
+	}
+	if c.RetentionDays == 0 {
+		c.RetentionDays = 90
+	}
+	c.EnableMetrics = true
+}
+
+// Validate validates engine configuration
+func (e *AnalyticsEngineConfig) Validate() error {
+	if e.CacheSize < 0 {
+		return fmt.Errorf("cache size cannot be negative")
+	}
+	if e.CacheTTL < 0 {
+		return fmt.Errorf("cache TTL cannot be negative")
+	}
+	return nil
+}
+
+// SetDefaults sets default values for engine configuration
+func (e *AnalyticsEngineConfig) SetDefaults() {
+	if e.CacheSize == 0 {
+		e.CacheSize = 1000
+	}
+	if e.CacheTTL == 0 {
+		e.CacheTTL = 5 * time.Minute
+	}
+	e.BatchProcessing = true
+	e.PrecomputeDaily = true
+}
+
+// Validate validates hooks configuration
+func (h *AnalyticsHooksConfig) Validate() error {
+	// No specific validation needed
+	return nil
+}
+
+// SetDefaults sets default values for hooks configuration
+func (h *AnalyticsHooksConfig) SetDefaults() {
+	h.Enabled = true
+	h.CaptureStateChanges = true
+	h.CaptureWorktreeEvents = true
+	h.CaptureSessionEvents = true
+}
+
+// Validate validates retention configuration
+func (r *AnalyticsRetentionConfig) Validate() error {
+	if r.SessionEventsDays < 0 {
+		return fmt.Errorf("session events retention days cannot be negative")
+	}
+	if r.AggregatedDataDays < 0 {
+		return fmt.Errorf("aggregated data retention days cannot be negative")
+	}
+	if r.CleanupInterval < 0 {
+		return fmt.Errorf("cleanup interval cannot be negative")
+	}
+	return nil
+}
+
+// SetDefaults sets default values for retention configuration
+func (r *AnalyticsRetentionConfig) SetDefaults() {
+	if r.SessionEventsDays == 0 {
+		r.SessionEventsDays = 90
+	}
+	if r.AggregatedDataDays == 0 {
+		r.AggregatedDataDays = 365
+	}
+	if r.CleanupInterval == 0 {
+		r.CleanupInterval = 24 * time.Hour
+	}
+	r.EnableAutoCleanup = true
+}
+
+// Validate validates performance configuration
+func (p *AnalyticsPerformanceConfig) Validate() error {
+	if p.MaxCPUUsage < 0 {
+		return fmt.Errorf("max CPU usage cannot be negative")
+	}
+	if p.MaxCPUUsage > 100 {
+		return fmt.Errorf("max CPU usage cannot exceed 100%%")
+	}
+	if p.MaxMemoryUsageMB < 0 {
+		return fmt.Errorf("max memory usage cannot be negative")
+	}
+	if p.MaxQueryTime < 0 {
+		return fmt.Errorf("max query time cannot be negative")
+	}
+	return nil
+}
+
+// SetDefaults sets default values for performance configuration
+func (p *AnalyticsPerformanceConfig) SetDefaults() {
+	if p.MaxCPUUsage == 0 {
+		p.MaxCPUUsage = 5.0
+	}
+	if p.MaxMemoryUsageMB == 0 {
+		p.MaxMemoryUsageMB = 100
+	}
+	if p.MaxQueryTime == 0 {
+		p.MaxQueryTime = 100 * time.Millisecond
+	}
+	p.EnableMonitoring = true
 }
