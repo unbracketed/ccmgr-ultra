@@ -1,0 +1,121 @@
+site_name: ccmgr-ultra
+site_description: Comprehensive CLI tool for managing Claude Code sessions across multiple projects
+site_author: Brian
+site_url: https://github.com/bcdekker/ccmgr-ultra
+
+repo_name: ccmgr-ultra
+repo_url: https://github.com/bcdekker/ccmgr-ultra
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+    - content.code.select
+    - content.action.edit
+    - content.action.view
+    - toc.follow
+    - toc.integrate
+
+  icon:
+    logo: material/console
+    repo: fontawesome/brands/github
+
+plugins:
+  - search:
+      separator: '[\s\-\.]+'
+  - minify:
+      minify_html: true
+
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      permalink_title: Anchor link to this section for reference
+      
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.snippets:
+      auto_append:
+        - includes/abbreviations.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/bcdekker
+  version:
+    provider: mike
+    default: stable
+
+# extra_css:
+#   - assets/stylesheets/extra.css
+
+# extra_javascript:
+#   - assets/javascripts/extra.js
+
+nav:
+  - Home: index.md
+  - User Guide:
+    - Configuration: user-guide/configuration.md
+    - Project Initialization: user-guide/init.md
+    - Session Commands: session-commands.md
+    - Worktree Commands: worktree-commands.md

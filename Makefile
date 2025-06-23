@@ -28,7 +28,7 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 # Full build flags with version info
 FULL_LDFLAGS := -ldflags="-s -w -X main.version=$(VERSION) -X main.date=$(BUILD_TIME) -X main.commit=$(GIT_COMMIT)"
 
-.PHONY: all build clean test install uninstall run fmt vet deps tidy help test-env test-env-clean
+.PHONY: all build clean test install uninstall run fmt vet deps tidy help test-env test-env-clean docs-serve docs-build docs-clean docs-install docs-check docs-deploy
 
 # Default target
 all: help
@@ -166,6 +166,59 @@ release: ## Build release binaries for multiple platforms
 	@echo "Release binaries built in $(BUILD_DIR)/releases/"
 	@ls -la $(BUILD_DIR)/releases/
 
+# Documentation targets
+docs-install: ## Install MkDocs and dependencies
+	@echo "Installing MkDocs dependencies..."
+	@if command -v pip >/dev/null 2>&1; then \
+		pip install mkdocs-material mkdocs-minify-plugin; \
+	elif command -v pip3 >/dev/null 2>&1; then \
+		pip3 install mkdocs-material mkdocs-minify-plugin; \
+	else \
+		echo "pip or pip3 not found. Please install Python and pip first."; \
+		exit 1; \
+	fi
+	@echo "MkDocs dependencies installed"
+
+docs-check: ## Check if MkDocs is installed and configured correctly
+	@echo "Checking MkDocs installation..."
+	@if command -v mkdocs >/dev/null 2>&1; then \
+		echo "✓ MkDocs is installed"; \
+		mkdocs --version; \
+		echo "✓ Configuration file found: mkdocs.yml"; \
+		if mkdocs build --strict --quiet --site-dir .mkdocs-check 2>/dev/null; then \
+			echo "✓ Configuration is valid"; \
+			rm -rf .mkdocs-check; \
+		else \
+			echo "✗ Configuration has errors"; \
+			rm -rf .mkdocs-check; \
+			exit 1; \
+		fi; \
+	else \
+		echo "✗ MkDocs not found. Run 'make docs-install' first"; \
+		exit 1; \
+	fi
+
+docs-serve: docs-check ## Serve documentation locally with hot reload
+	@echo "Starting MkDocs development server..."
+	@echo "Open http://127.0.0.1:8000 in your browser"
+	@mkdocs serve --dev-addr=127.0.0.1:8000
+
+docs-build: docs-check ## Build documentation for deployment
+	@echo "Building documentation..."
+	@mkdocs build --strict
+	@echo "Documentation built in site/ directory"
+
+docs-clean: ## Clean documentation build artifacts
+	@echo "Cleaning documentation build artifacts..."
+	@rm -rf site/
+	@rm -rf .mkdocs-check/
+	@echo "Documentation artifacts cleaned"
+
+docs-deploy: docs-check ## Deploy documentation to GitHub Pages (requires proper git setup)
+	@echo "Deploying documentation to GitHub Pages..."
+	@mkdocs gh-deploy --clean --message "Update documentation [skip ci]"
+	@echo "Documentation deployed"
+
 help: ## Show this help
 	@echo "ccmgr-ultra Makefile"
 	@echo ""
@@ -180,3 +233,5 @@ help: ## Show this help
 	@echo "  make test           # Run tests"
 	@echo "  make check          # Run fmt, vet, and lint"
 	@echo "  make release        # Build for multiple platforms"
+	@echo "  make docs-serve     # Serve documentation locally"
+	@echo "  make docs-build     # Build documentation for deployment"
