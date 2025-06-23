@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
 )
 
 // PatternManager handles directory naming patterns

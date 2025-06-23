@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/tui/modals"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/unbracketed/ccmgr-ultra/internal/tui/modals"
 )
 
 // WorktreeCreationWizard implements a step-by-step worktree creation process

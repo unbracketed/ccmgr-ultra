@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/claude"
-	"github.com/bcdekker/ccmgr-ultra/internal/hooks"
+	"github.com/unbracketed/ccmgr-ultra/internal/claude"
+	"github.com/unbracketed/ccmgr-ultra/internal/hooks"
 )
 
 // HooksConfig defines configuration for hook-based analytics collection

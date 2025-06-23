@@ -3,8 +3,8 @@ package tui
 import (
 	"fmt"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/tui/modals"
-	"github.com/bcdekker/ccmgr-ultra/internal/tui/workflows"
+	"github.com/unbracketed/ccmgr-ultra/internal/tui/modals"
+	"github.com/unbracketed/ccmgr-ultra/internal/tui/workflows"
 )
 
 // WorkflowFactory creates and manages workflow wizards

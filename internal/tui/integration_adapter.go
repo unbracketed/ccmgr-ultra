@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
-	"github.com/bcdekker/ccmgr-ultra/internal/tui/workflows"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/tui/workflows"
 )
 
 // IntegrationAdapter adapts the TUI Integration to workflow interfaces

@@ -1,4 +1,4 @@
-module github.com/bcdekker/ccmgr-ultra
+module github.com/unbracketed/ccmgr-ultra
 
 go 1.24.4
 

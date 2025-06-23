@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/storage"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/unbracketed/ccmgr-ultra/internal/storage"
 )
 
 type DB struct {

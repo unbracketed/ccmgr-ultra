@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/storage"
-	"github.com/bcdekker/ccmgr-ultra/internal/storage/sqlite"
 	"github.com/google/uuid"
+	"github.com/unbracketed/ccmgr-ultra/internal/storage"
+	"github.com/unbracketed/ccmgr-ultra/internal/storage/sqlite"
 )
 
 func setupTestStorage(t *testing.T) (storage.Storage, func()) {

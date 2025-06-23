@@ -1,10 +1,10 @@
 site_name: ccmgr-ultra
 site_description: Comprehensive CLI tool for managing Claude Code sessions across multiple projects
 site_author: Brian
-site_url: https://github.com/bcdekker/ccmgr-ultra
+site_url: https://github.com/unbracketed/ccmgr-ultra
 
 repo_name: ccmgr-ultra
-repo_url: https://github.com/bcdekker/ccmgr-ultra
+repo_url: https://github.com/unbracketed/ccmgr-ultra
 edit_uri: edit/main/docs/
 
 theme:
@@ -101,7 +101,7 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/bcdekker
+      link: https://github.com/unbracketed
   version:
     provider: mike
     default: stable

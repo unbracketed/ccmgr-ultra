@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/cli"
-	"github.com/bcdekker/ccmgr-ultra/internal/git"
-	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
 	"github.com/spf13/cobra"
+	"github.com/unbracketed/ccmgr-ultra/internal/cli"
+	"github.com/unbracketed/ccmgr-ultra/internal/git"
+	"github.com/unbracketed/ccmgr-ultra/internal/tmux"
 )
 
 var completionCmd = &cobra.Command{

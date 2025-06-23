@@ -148,7 +148,7 @@ package tui
 import (
     "path/filepath"
     "strings"
-    "github.com/bcdekker/ccmgr-ultra/internal/tui/workflows"
+    "github.com/unbracketed/ccmgr-ultra/internal/tui/workflows"
 )
 
 // IntegrationAdapter adapts the TUI Integration to workflow interfaces
@@ -306,8 +306,8 @@ app.worktreeWizard = app.workflowFactory.CreateWorktreeWizard()
 package tui
 
 import (
-    "github.com/bcdekker/ccmgr-ultra/internal/tui/modals"
-    "github.com/bcdekker/ccmgr-ultra/internal/tui/workflows"
+    "github.com/unbracketed/ccmgr-ultra/internal/tui/modals"
+    "github.com/unbracketed/ccmgr-ultra/internal/tui/workflows"
 )
 
 // WorkflowFactory creates and manages workflow wizards

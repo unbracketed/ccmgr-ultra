@@ -3,8 +3,8 @@ package ccmgr
 import (
 	"context"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
-	"github.com/bcdekker/ccmgr-ultra/internal/tui"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/tui"
 )
 
 // Client provides the main API for ccmgr-ultra library

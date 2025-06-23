@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
 )
 
 // WorktreeSettingsModel represents the worktree settings configuration screen

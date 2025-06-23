@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/storage"
 	"github.com/google/uuid"
+	"github.com/unbracketed/ccmgr-ultra/internal/storage"
 )
 
 func setupTestDB(t *testing.T) (*DB, func()) {

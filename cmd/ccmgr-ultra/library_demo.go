@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bcdekker/ccmgr-ultra/pkg/ccmgr"
 	"github.com/spf13/cobra"
+	"github.com/unbracketed/ccmgr-ultra/pkg/ccmgr"
 )
 
 // libraryDemoCmd demonstrates using the ccmgr library instead of direct internal imports

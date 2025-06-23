@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
 )
 
 // CommandsConfigModel represents the commands configuration screen

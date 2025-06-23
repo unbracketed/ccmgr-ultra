@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
 )
 
 // StatusHooksConfigModel represents the status hooks configuration screen

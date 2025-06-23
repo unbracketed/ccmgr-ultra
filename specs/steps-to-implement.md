@@ -7,7 +7,7 @@ This document outlines the step-by-step implementation plan for ccmgr-ultra, a C
 
 ### 1.1 Initialize Go Project
 ```bash
-go mod init github.com/bcdekker/ccmgr-ultra
+go mod init github.com/unbracketed/ccmgr-ultra
 ```
 
 ### 1.2 Install Dependencies

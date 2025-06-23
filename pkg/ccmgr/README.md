@@ -18,7 +18,7 @@ import (
     "fmt"
     "log"
     
-    "github.com/bcdekker/ccmgr-ultra/pkg/ccmgr"
+    "github.com/unbracketed/ccmgr-ultra/pkg/ccmgr"
 )
 
 func main() {
@@ -189,9 +189,9 @@ ccmgr-ultra library-demo worktrees
 ### Before (Direct Internal Imports)
 ```go
 import (
-    "github.com/bcdekker/ccmgr-ultra/internal/tmux"
-    "github.com/bcdekker/ccmgr-ultra/internal/claude"
-    "github.com/bcdekker/ccmgr-ultra/internal/git"
+    "github.com/unbracketed/ccmgr-ultra/internal/tmux"
+    "github.com/unbracketed/ccmgr-ultra/internal/claude"
+    "github.com/unbracketed/ccmgr-ultra/internal/git"
 )
 
 // Direct usage of internal APIs
@@ -201,7 +201,7 @@ sessions, err := tmuxMgr.ListSessions()
 
 ### After (Library API)
 ```go
-import "github.com/bcdekker/ccmgr-ultra/pkg/ccmgr"
+import "github.com/unbracketed/ccmgr-ultra/pkg/ccmgr"
 
 // Clean library interface
 client, err := ccmgr.NewClient(nil)

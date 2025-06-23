@@ -191,7 +191,7 @@ scripts/hooks/
 
 ### Basic Configuration Loading
 ```go
-import "github.com/bcdekker/ccmgr-ultra/internal/config"
+import "github.com/unbracketed/ccmgr-ultra/internal/config"
 
 // Load global configuration
 config, err := config.LoadOrCreate(config.GetGlobalConfigPath())

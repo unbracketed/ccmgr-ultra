@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
-	"github.com/bcdekker/ccmgr-ultra/internal/tui/components"
-	contextmenu "github.com/bcdekker/ccmgr-ultra/internal/tui/context"
-	"github.com/bcdekker/ccmgr-ultra/internal/tui/modals"
-	"github.com/bcdekker/ccmgr-ultra/internal/tui/workflows"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/tui/components"
+	contextmenu "github.com/unbracketed/ccmgr-ultra/internal/tui/context"
+	"github.com/unbracketed/ccmgr-ultra/internal/tui/modals"
+	"github.com/unbracketed/ccmgr-ultra/internal/tui/workflows"
 )
 
 // AppScreen represents different screens in the TUI

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
 )
 
 func TestProcessManager_Integration(t *testing.T) {

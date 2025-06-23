@@ -7,10 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
-	"github.com/bcdekker/ccmgr-ultra/internal/tui"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/tui"
 )
 
 var (

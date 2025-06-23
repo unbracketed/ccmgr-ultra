@@ -25,7 +25,7 @@ ccmgr-ultra combines the best features of CCManager and Claude Squad to provide:
 ## Installation
 
 ```bash
-go install github.com/bcdekker/ccmgr-ultra/cmd/ccmgr-ultra@latest
+go install github.com/unbracketed/ccmgr-ultra/cmd/ccmgr-ultra@latest
 ```
 
 ## Usage

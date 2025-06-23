@@ -1,7 +1,7 @@
 package ccmgr
 
 import (
-	"github.com/bcdekker/ccmgr-ultra/internal/tui"
+	"github.com/unbracketed/ccmgr-ultra/internal/tui"
 )
 
 // worktreeManager implements the WorktreeManager interface

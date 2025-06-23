@@ -5,11 +5,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/claude"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
-	"github.com/bcdekker/ccmgr-ultra/internal/git"
-	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/unbracketed/ccmgr-ultra/internal/claude"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/git"
+	"github.com/unbracketed/ccmgr-ultra/internal/tmux"
 )
 
 // Integration manages the integration between TUI and backend services

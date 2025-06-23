@@ -5,11 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/cli"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
-	"github.com/bcdekker/ccmgr-ultra/internal/git"
-	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
 	"github.com/spf13/cobra"
+	"github.com/unbracketed/ccmgr-ultra/internal/cli"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/git"
+	"github.com/unbracketed/ccmgr-ultra/internal/tmux"
 )
 
 var continueCmd = &cobra.Command{

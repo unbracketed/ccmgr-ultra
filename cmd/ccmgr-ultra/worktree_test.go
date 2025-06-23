@@ -3,8 +3,8 @@ package main
 import (
 	"testing"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/git"
 	"github.com/stretchr/testify/assert"
+	"github.com/unbracketed/ccmgr-ultra/internal/git"
 )
 
 func TestWorktreeOptions_AutoName(t *testing.T) {

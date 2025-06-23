@@ -204,8 +204,8 @@ for _, session := range sessions {
 ### CLI Integration
 ```go
 // Replace direct internal imports
-// OLD: import "github.com/bcdekker/ccmgr-ultra/internal/tmux"
-// NEW: import "github.com/bcdekker/ccmgr-ultra/pkg/ccmgr"
+// OLD: import "github.com/unbracketed/ccmgr-ultra/internal/tmux"
+// NEW: import "github.com/unbracketed/ccmgr-ultra/pkg/ccmgr"
 
 client, err := ccmgr.NewClient(nil)
 sessions, err := client.Sessions().List()

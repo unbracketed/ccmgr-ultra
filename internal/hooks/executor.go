@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
 )
 
 // DefaultExecutor implements the HookExecutor interface

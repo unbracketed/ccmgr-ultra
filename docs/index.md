@@ -30,7 +30,7 @@ Execute custom scripts on state changes to automate your workflow and integrate 
 ### Installation
 
 ```bash
-go install github.com/bcdekker/ccmgr-ultra/cmd/ccmgr-ultra@latest
+go install github.com/unbracketed/ccmgr-ultra/cmd/ccmgr-ultra@latest
 ```
 
 ### Basic Usage

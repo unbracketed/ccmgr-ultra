@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	// "github.com/bcdekker/ccmgr-ultra/internal/analytics" // Commented out to avoid import cycle
+	// "github.com/unbracketed/ccmgr-ultra/internal/analytics" // Commented out to avoid import cycle
 )
 
 // ProcessManager provides a unified API for Claude Code process management

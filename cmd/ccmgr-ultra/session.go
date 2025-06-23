@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/claude"
-	"github.com/bcdekker/ccmgr-ultra/internal/cli"
-	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
 	"github.com/spf13/cobra"
+	"github.com/unbracketed/ccmgr-ultra/internal/claude"
+	"github.com/unbracketed/ccmgr-ultra/internal/cli"
+	"github.com/unbracketed/ccmgr-ultra/internal/tmux"
 )
 
 // SessionListData represents data for session list output

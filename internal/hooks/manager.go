@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
 )
 
 // Manager is the main hook management system

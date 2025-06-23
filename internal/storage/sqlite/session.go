@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/storage"
+	"github.com/unbracketed/ccmgr-ultra/internal/storage"
 )
 
 type sessionRepository struct {

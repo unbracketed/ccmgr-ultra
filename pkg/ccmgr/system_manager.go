@@ -3,7 +3,7 @@ package ccmgr
 import (
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/tui"
+	"github.com/unbracketed/ccmgr-ultra/internal/tui"
 )
 
 // systemManager implements the SystemManager interface

@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"unicode"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
 )
 
 // Validator handles input validation and safety checks

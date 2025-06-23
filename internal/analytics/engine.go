@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/storage"
+	"github.com/unbracketed/ccmgr-ultra/internal/storage"
 )
 
 // EngineConfig defines configuration for the analytics engine

@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
 )
 
 // Screen interface that all screens must implement

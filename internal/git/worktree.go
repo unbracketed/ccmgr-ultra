@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
 )
 
 // WorktreeManager handles git worktree operations

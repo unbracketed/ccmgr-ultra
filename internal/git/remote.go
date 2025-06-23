@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bcdekker/ccmgr-ultra/internal/analytics"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	"github.com/unbracketed/ccmgr-ultra/internal/analytics"
+	"github.com/unbracketed/ccmgr-ultra/internal/config"
 )
 
 // RemoteManager handles remote repository operations
