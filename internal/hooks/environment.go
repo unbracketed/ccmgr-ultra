@@ -42,19 +42,19 @@ func (eb *EnvironmentBuilder) WithContext(ctx HookContext) *EnvironmentBuilder {
 	if ctx.NewState != "" {
 		eb.variables["CCMGR_NEW_STATE"] = ctx.NewState
 	}
-	
+
 	// Add custom variables
 	for key, value := range ctx.CustomVars {
 		eb.variables[key] = value
 	}
-	
+
 	return eb
 }
 
 // WithStatusHookVars adds status hook specific variables
 func (eb *EnvironmentBuilder) WithStatusHookVars(hookType HookType, ctx HookContext) *EnvironmentBuilder {
 	eb.WithContext(ctx)
-	
+
 	// Legacy environment variables for backward compatibility
 	if ctx.WorktreePath != "" {
 		eb.variables["CCMANAGER_WORKTREE"] = ctx.WorktreePath
@@ -68,39 +68,39 @@ func (eb *EnvironmentBuilder) WithStatusHookVars(hookType HookType, ctx HookCont
 	if ctx.SessionID != "" {
 		eb.variables["CCMANAGER_SESSION_ID"] = ctx.SessionID
 	}
-	
+
 	eb.variables["CCMANAGER_TIMESTAMP"] = time.Now().Format(time.RFC3339)
-	
+
 	return eb
 }
 
 // WithWorktreeCreationVars adds worktree creation specific variables
 func (eb *EnvironmentBuilder) WithWorktreeCreationVars(ctx HookContext) *EnvironmentBuilder {
 	eb.WithContext(ctx)
-	
+
 	eb.variables["CCMGR_WORKTREE_TYPE"] = "new"
-	
+
 	// Add parent path if available
 	if parentPath, exists := ctx.CustomVars["CCMGR_PARENT_PATH"]; exists {
 		eb.variables["CCMGR_PARENT_PATH"] = parentPath
 	}
-	
+
 	return eb
 }
 
 // WithWorktreeActivationVars adds worktree activation specific variables
 func (eb *EnvironmentBuilder) WithWorktreeActivationVars(ctx HookContext) *EnvironmentBuilder {
 	eb.WithContext(ctx)
-	
+
 	if ctx.SessionType == "" {
 		eb.variables["CCMGR_SESSION_TYPE"] = "new"
 	}
-	
+
 	// Add previous state if available
 	if prevState, exists := ctx.CustomVars["CCMGR_PREVIOUS_STATE"]; exists {
 		eb.variables["CCMGR_PREVIOUS_STATE"] = prevState
 	}
-	
+
 	return eb
 }
 
@@ -113,29 +113,29 @@ func (eb *EnvironmentBuilder) WithCustomVar(key, value string) *EnvironmentBuild
 // Build returns the environment variables as a slice of strings
 func (eb *EnvironmentBuilder) Build() []string {
 	env := os.Environ()
-	
+
 	// Add timestamp
 	env = append(env, fmt.Sprintf("CCMGR_TIMESTAMP=%s", time.Now().Format(time.RFC3339)))
-	
+
 	for key, value := range eb.variables {
 		env = append(env, fmt.Sprintf("%s=%s", key, value))
 	}
-	
+
 	return env
 }
 
 // BuildMap returns the environment variables as a map
 func (eb *EnvironmentBuilder) BuildMap() map[string]string {
 	result := make(map[string]string)
-	
+
 	// Add timestamp
 	result["CCMGR_TIMESTAMP"] = time.Now().Format(time.RFC3339)
-	
+
 	// Add custom variables
 	for key, value := range eb.variables {
 		result[key] = value
 	}
-	
+
 	return result
 }
 
@@ -155,33 +155,33 @@ func validateEnvironmentKey(key string) error {
 	if key == "" {
 		return fmt.Errorf("environment variable key cannot be empty")
 	}
-	
+
 	if strings.Contains(key, "=") {
 		return fmt.Errorf("environment variable key '%s' cannot contain '='", key)
 	}
-	
+
 	// Check for valid characters (alphanumeric and underscore)
 	for _, char := range key {
-		if !((char >= 'A' && char <= 'Z') || 
-			 (char >= 'a' && char <= 'z') || 
-			 (char >= '0' && char <= '9') || 
-			 char == '_') {
+		if !((char >= 'A' && char <= 'Z') ||
+			(char >= 'a' && char <= 'z') ||
+			(char >= '0' && char <= '9') ||
+			char == '_') {
 			return fmt.Errorf("environment variable key '%s' contains invalid character '%c'", key, char)
 		}
 	}
-	
+
 	return nil
 }
 
 // mergeEnvironmentMaps merges multiple environment maps, with later maps taking precedence
 func mergeEnvironmentMaps(maps ...map[string]string) map[string]string {
 	result := make(map[string]string)
-	
+
 	for _, m := range maps {
 		for key, value := range m {
 			result[key] = value
 		}
 	}
-	
+
 	return result
 }

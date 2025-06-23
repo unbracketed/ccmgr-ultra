@@ -279,10 +279,10 @@ func (cp *ConfirmationPrompt) parseResponse(response string) bool {
 // ConfirmDestructive provides a specialized confirmation for destructive operations
 func (cp *ConfirmationPrompt) ConfirmDestructive(operation string, targets []string) (bool, error) {
 	impact := &Impact{
-		Destructive:    true,
-		Reversible:     false,
-		Description:    fmt.Sprintf("This will permanently %s the specified items", operation),
-		AffectedItems:  targets,
+		Destructive:   true,
+		Reversible:    false,
+		Description:   fmt.Sprintf("This will permanently %s the specified items", operation),
+		AffectedItems: targets,
 	}
 
 	ctx := ConfirmationContext{
@@ -302,8 +302,8 @@ func (cp *ConfirmationPrompt) ConfirmDestructive(operation string, targets []str
 // ConfirmBatch provides confirmation for batch operations
 func (cp *ConfirmationPrompt) ConfirmBatch(operation string, count int, summary string) (bool, error) {
 	ctx := ConfirmationContext{
-		Message: fmt.Sprintf("About to %s %d items", operation, count),
-		Details: []string{summary},
+		Message:  fmt.Sprintf("About to %s %d items", operation, count),
+		Details:  []string{summary},
 		Severity: SeverityWarning,
 		Recommendations: []string{
 			"Review the operation summary carefully",

@@ -24,15 +24,15 @@ type InputModal struct {
 
 // InputModalConfig configures an input modal
 type InputModalConfig struct {
-	Title       string
-	Prompt      string
-	Placeholder string
+	Title        string
+	Prompt       string
+	Placeholder  string
 	DefaultValue string
-	Validator   func(string) error
-	Multiline   bool
-	MaxLength   int
-	Required    bool
-	Password    bool
+	Validator    func(string) error
+	Multiline    bool
+	MaxLength    int
+	Required     bool
+	Password     bool
 }
 
 // NewInputModal creates a new input modal
@@ -41,13 +41,13 @@ func NewInputModal(config InputModalConfig) *InputModal {
 	if maxLength == 0 {
 		maxLength = 200 // Default max length
 	}
-	
+
 	minWidth := 50
 	minHeight := 8
 	if config.Multiline {
 		minHeight = 12
 	}
-	
+
 	return &InputModal{
 		BaseModal:   NewBaseModal(config.Title, minWidth, minHeight),
 		prompt:      config.Prompt,
@@ -81,7 +81,7 @@ func (m *InputModal) HandleKeyMsg(msg tea.KeyMsg) (Modal, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c", "esc":
 		return m, nil // Let modal manager handle cancellation
-		
+
 	case "enter":
 		if !m.multiline {
 			return m.submit()
@@ -91,52 +91,52 @@ func (m *InputModal) HandleKeyMsg(msg tea.KeyMsg) (Modal, tea.Cmd) {
 			m.value = m.value[:m.cursor] + "\n" + m.value[m.cursor:]
 			m.cursor++
 		}
-		
+
 	case "ctrl+enter":
 		if m.multiline {
 			return m.submit()
 		}
-		
+
 	case "left":
 		if m.cursor > 0 {
 			m.cursor--
 		}
-		
+
 	case "right":
 		if m.cursor < len(m.value) {
 			m.cursor++
 		}
-		
+
 	case "home":
 		m.cursor = 0
-		
+
 	case "end":
 		m.cursor = len(m.value)
-		
+
 	case "backspace":
 		if m.cursor > 0 {
 			m.value = m.value[:m.cursor-1] + m.value[m.cursor:]
 			m.cursor--
 		}
-		
+
 	case "delete":
 		if m.cursor < len(m.value) {
 			m.value = m.value[:m.cursor] + m.value[m.cursor+1:]
 		}
-		
+
 	case "ctrl+a":
 		m.cursor = 0
-		
+
 	case "ctrl+e":
 		m.cursor = len(m.value)
-		
+
 	case "ctrl+k":
 		m.value = m.value[:m.cursor]
-		
+
 	case "ctrl+u":
 		m.value = m.value[m.cursor:]
 		m.cursor = 0
-		
+
 	default:
 		// Handle regular character input
 		if len(msg.Runes) > 0 && len(m.value) < m.maxLength {
@@ -145,7 +145,7 @@ func (m *InputModal) HandleKeyMsg(msg tea.KeyMsg) (Modal, tea.Cmd) {
 			m.cursor++
 		}
 	}
-	
+
 	return m, nil
 }
 
@@ -156,7 +156,7 @@ func (m *InputModal) submit() (Modal, tea.Cmd) {
 		m.MarkError(fmt.Errorf("field is required"))
 		return m, nil
 	}
-	
+
 	// Run validator if provided
 	if m.validator != nil {
 		if err := m.validator(m.value); err != nil {
@@ -164,7 +164,7 @@ func (m *InputModal) submit() (Modal, tea.Cmd) {
 			return m, nil
 		}
 	}
-	
+
 	m.MarkComplete(m.value)
 	return m, nil
 }
@@ -174,38 +174,38 @@ func (m *InputModal) View() string {
 	// Build prompt section
 	promptStyle := m.theme.ContentStyle.Copy().Bold(true)
 	prompt := promptStyle.Render(m.prompt)
-	
+
 	// Build input field
 	displayValue := m.value
 	if m.password {
 		displayValue = strings.Repeat("*", len(m.value))
 	}
-	
+
 	// Add cursor
 	if m.cursor <= len(displayValue) {
 		displayValue = displayValue[:m.cursor] + "│" + displayValue[m.cursor:]
 	}
-	
+
 	// Style input field
 	inputStyle := lipgloss.NewStyle().
-		Width(m.width - 8).
+		Width(m.width-8).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(m.theme.Accent).
 		Padding(0, 1)
-	
+
 	input := inputStyle.Render(displayValue)
-	
+
 	// Add placeholder if value is empty
 	if m.value == "" && m.placeholder != "" {
 		placeholderStyle := lipgloss.NewStyle().
-			Width(m.width - 8).
+			Width(m.width-8).
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(m.theme.Muted).
 			Foreground(m.theme.Muted).
 			Padding(0, 1)
 		input = placeholderStyle.Render(m.placeholder + "│")
 	}
-	
+
 	// Build help text
 	helpLines := []string{}
 	if m.multiline {
@@ -215,12 +215,12 @@ func (m *InputModal) View() string {
 		helpLines = append(helpLines, "Enter: Submit")
 	}
 	helpLines = append(helpLines, "Esc: Cancel")
-	
+
 	helpStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Muted).
 		Italic(true)
 	help := helpStyle.Render(strings.Join(helpLines, " • "))
-	
+
 	// Show validation error if any
 	var errorText string
 	if m.error != nil {
@@ -229,7 +229,7 @@ func (m *InputModal) View() string {
 			Bold(true)
 		errorText = errorStyle.Render("Error: " + m.error.Error())
 	}
-	
+
 	// Combine all elements
 	content := lipgloss.JoinVertical(lipgloss.Left,
 		prompt,
@@ -238,7 +238,7 @@ func (m *InputModal) View() string {
 		"",
 		help,
 	)
-	
+
 	if errorText != "" {
 		content = lipgloss.JoinVertical(lipgloss.Left,
 			content,
@@ -246,6 +246,6 @@ func (m *InputModal) View() string {
 			errorText,
 		)
 	}
-	
+
 	return m.RenderWithBorder(content)
 }

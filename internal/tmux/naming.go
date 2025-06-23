@@ -70,9 +70,9 @@ func SanitizeNameComponent(component string) string {
 	}
 
 	sanitized := invalidChars.ReplaceAllString(component, "_")
-	
+
 	sanitized = strings.Trim(sanitized, "_-")
-	
+
 	if sanitized == "" {
 		return "unnamed"
 	}

@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
 	"github.com/bcdekker/ccmgr-ultra/internal/cli"
 	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	"github.com/bcdekker/ccmgr-ultra/internal/git"
+	"github.com/spf13/cobra"
 )
 
 var initCmd = &cobra.Command{
@@ -140,7 +140,7 @@ func initializeGitRepository(projectDir string) error {
 	// Check if we're already in a git repository
 	gitCmd := git.NewGitCmd()
 	repoManager := git.NewRepositoryManager(gitCmd)
-	
+
 	_, err := repoManager.DetectRepository(projectDir)
 	if err == nil {
 		// Already in a git repository
@@ -212,7 +212,7 @@ func createDefaultConfig(projectName string) *config.Config {
 
 	// Override with user-provided values if there's a project section
 	// For now, just set basic fields that exist in the config
-	
+
 	// Set git configuration
 	if initFlags.branch != "" {
 		cfg.Git.DefaultBranch = initFlags.branch
@@ -235,7 +235,7 @@ func initializeClaudeSession(projectDir string) error {
 
 	// Check if Claude Code is available
 	// This is a simplified check - in practice, you might want to verify Claude Code installation
-	
+
 	if isVerbose() {
 		fmt.Println("Claude Code session initialization would happen here")
 		fmt.Println("Note: This is a placeholder for future Claude Code integration")

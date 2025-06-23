@@ -9,18 +9,18 @@ import (
 
 // Manager is the main hook management system
 type Manager struct {
-	config              *config.Config
-	executor            HookExecutor
-	statusIntegrator    *StatusHookIntegrator
-	worktreeIntegrator  *WorktreeHookIntegrator
-	enabled             bool
-	mu                  sync.RWMutex
+	config             *config.Config
+	executor           HookExecutor
+	statusIntegrator   *StatusHookIntegrator
+	worktreeIntegrator *WorktreeHookIntegrator
+	enabled            bool
+	mu                 sync.RWMutex
 }
 
 // NewManager creates a new hook manager
 func NewManager(cfg *config.Config) *Manager {
 	executor := NewDefaultExecutor(cfg)
-	
+
 	return &Manager{
 		config:             cfg,
 		executor:           executor,
@@ -34,7 +34,7 @@ func NewManager(cfg *config.Config) *Manager {
 func (m *Manager) Enable() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.enabled = true
 	m.statusIntegrator.Enable()
 	m.worktreeIntegrator.Enable()
@@ -44,7 +44,7 @@ func (m *Manager) Enable() {
 func (m *Manager) Disable() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.enabled = false
 	m.statusIntegrator.Disable()
 	m.worktreeIntegrator.Disable()
@@ -76,16 +76,16 @@ func (m *Manager) GetExecutor() HookExecutor {
 func (m *Manager) UpdateConfig(cfg *config.Config) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.config = cfg
-	
+
 	// Create new executor with updated config
 	m.executor = NewDefaultExecutor(cfg)
-	
+
 	// Update integrators
 	m.statusIntegrator = NewStatusHookIntegrator(m.executor)
 	m.worktreeIntegrator = NewWorktreeHookIntegrator(m.executor)
-	
+
 	// Restore enabled state
 	if m.enabled {
 		m.statusIntegrator.Enable()
@@ -107,7 +107,7 @@ func (m *Manager) ExecuteHook(ctx context.Context, hookType HookType, hookCtx Ho
 	if !m.IsEnabled() {
 		return nil
 	}
-	
+
 	return m.executor.Execute(ctx, hookType, hookCtx)
 }
 
@@ -118,7 +118,7 @@ func (m *Manager) ExecuteHookAsync(hookType HookType, hookCtx HookContext) <-cha
 		close(errChan)
 		return errChan
 	}
-	
+
 	return m.executor.ExecuteAsync(hookType, hookCtx)
 }
 
@@ -136,7 +136,7 @@ func (m *Manager) OnWorktreeCreated(worktreePath, branch, parentPath, projectNam
 	if !m.IsEnabled() || !m.worktreeIntegrator.IsEnabled() {
 		return nil
 	}
-	
+
 	return m.worktreeIntegrator.GetManager().OnWorktreeCreated(worktreePath, branch, parentPath, projectName)
 }
 
@@ -145,7 +145,7 @@ func (m *Manager) OnSessionCreated(sessionInfo SessionInfo) error {
 	if !m.IsEnabled() || !m.worktreeIntegrator.IsEnabled() {
 		return nil
 	}
-	
+
 	return m.worktreeIntegrator.GetManager().OnSessionCreated(sessionInfo)
 }
 
@@ -154,7 +154,7 @@ func (m *Manager) OnSessionContinued(sessionInfo SessionInfo) error {
 	if !m.IsEnabled() || !m.worktreeIntegrator.IsEnabled() {
 		return nil
 	}
-	
+
 	return m.worktreeIntegrator.GetManager().OnSessionContinued(sessionInfo)
 }
 
@@ -163,7 +163,7 @@ func (m *Manager) OnSessionResumed(sessionInfo SessionInfo, previousState string
 	if !m.IsEnabled() || !m.worktreeIntegrator.IsEnabled() {
 		return nil
 	}
-	
+
 	return m.worktreeIntegrator.GetManager().OnSessionResumed(sessionInfo, previousState)
 }
 

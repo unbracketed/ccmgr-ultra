@@ -23,9 +23,9 @@ const (
 	EventTypeBranchChange   = "branch_change"
 	EventTypeActivity       = "activity"
 	EventTypeIdle           = "idle_detection"
-	
+
 	// GitHub operations (Phase 5.3)
-	EventTypeGitHubPush     = "github_push"
+	EventTypeGitHubPush      = "github_push"
 	EventTypeGitHubPRCreated = "github_pr_created"
 )
 
@@ -87,64 +87,64 @@ type SessionMetric struct {
 
 // DailyMetric represents daily aggregated metrics
 type DailyMetric struct {
-	Date            time.Time         `json:"date"`
-	TotalSessions   int               `json:"total_sessions"`
-	TotalDuration   time.Duration     `json:"total_duration"`
-	AverageDuration time.Duration     `json:"average_duration"`
-	ActiveTime      time.Duration     `json:"active_time"`
-	IdleTime        time.Duration     `json:"idle_time"`
-	Projects        map[string]int    `json:"projects"`
-	Worktrees       map[string]int    `json:"worktrees"`
+	Date            time.Time      `json:"date"`
+	TotalSessions   int            `json:"total_sessions"`
+	TotalDuration   time.Duration  `json:"total_duration"`
+	AverageDuration time.Duration  `json:"average_duration"`
+	ActiveTime      time.Duration  `json:"active_time"`
+	IdleTime        time.Duration  `json:"idle_time"`
+	Projects        map[string]int `json:"projects"`
+	Worktrees       map[string]int `json:"worktrees"`
 }
 
 // WeeklyMetric represents weekly aggregated metrics
 type WeeklyMetric struct {
-	WeekStart       time.Time         `json:"week_start"`
-	WeekEnd         time.Time         `json:"week_end"`
-	TotalSessions   int               `json:"total_sessions"`
-	TotalDuration   time.Duration     `json:"total_duration"`
-	AverageDuration time.Duration     `json:"average_duration"`
-	ActiveTime      time.Duration     `json:"active_time"`
-	IdleTime        time.Duration     `json:"idle_time"`
-	DailyBreakdown  []DailyMetric     `json:"daily_breakdown"`
-	TopProjects     map[string]int    `json:"top_projects"`
-	TopWorktrees    map[string]int    `json:"top_worktrees"`
+	WeekStart       time.Time      `json:"week_start"`
+	WeekEnd         time.Time      `json:"week_end"`
+	TotalSessions   int            `json:"total_sessions"`
+	TotalDuration   time.Duration  `json:"total_duration"`
+	AverageDuration time.Duration  `json:"average_duration"`
+	ActiveTime      time.Duration  `json:"active_time"`
+	IdleTime        time.Duration  `json:"idle_time"`
+	DailyBreakdown  []DailyMetric  `json:"daily_breakdown"`
+	TopProjects     map[string]int `json:"top_projects"`
+	TopWorktrees    map[string]int `json:"top_worktrees"`
 }
 
 // ProductivityMetric represents productivity analysis
 type ProductivityMetric struct {
-	Date                time.Time     `json:"date"`
-	ProductivityRatio   float64       `json:"productivity_ratio"`
-	FocusTime           time.Duration `json:"focus_time"`
-	DistractionTime     time.Duration `json:"distraction_time"`
-	SessionsPerDay      float64       `json:"sessions_per_day"`
-	AverageSessionGap   time.Duration `json:"average_session_gap"`
-	PeakProductiveHour  int           `json:"peak_productive_hour"`
+	Date               time.Time     `json:"date"`
+	ProductivityRatio  float64       `json:"productivity_ratio"`
+	FocusTime          time.Duration `json:"focus_time"`
+	DistractionTime    time.Duration `json:"distraction_time"`
+	SessionsPerDay     float64       `json:"sessions_per_day"`
+	AverageSessionGap  time.Duration `json:"average_session_gap"`
+	PeakProductiveHour int           `json:"peak_productive_hour"`
 }
 
 // Metrics represents comprehensive analytics metrics
 type Metrics struct {
 	// Session Metrics
-	TotalSessions       int64         `json:"total_sessions"`
-	AverageSessionTime  time.Duration `json:"average_session_time"`
-	SessionFrequency    float64       `json:"sessions_per_day"`
-	
+	TotalSessions      int64         `json:"total_sessions"`
+	AverageSessionTime time.Duration `json:"average_session_time"`
+	SessionFrequency   float64       `json:"sessions_per_day"`
+
 	// Productivity Metrics
-	ActiveTime          time.Duration `json:"active_time"`
-	IdleTime            time.Duration `json:"idle_time"`
-	ProductivityRatio   float64       `json:"productivity_ratio"`
-	
+	ActiveTime        time.Duration `json:"active_time"`
+	IdleTime          time.Duration `json:"idle_time"`
+	ProductivityRatio float64       `json:"productivity_ratio"`
+
 	// Project Metrics
 	ProjectDistribution map[string]int `json:"project_distribution"`
 	WorktreeUsage       map[string]int `json:"worktree_usage"`
-	
+
 	// Trends
-	DailyTrends         []DailyMetric  `json:"daily_trends"`
-	WeeklyTrends        []WeeklyMetric `json:"weekly_trends"`
-	
+	DailyTrends  []DailyMetric  `json:"daily_trends"`
+	WeeklyTrends []WeeklyMetric `json:"weekly_trends"`
+
 	// Computed at
-	ComputedAt          time.Time      `json:"computed_at"`
-	TimeRange           TimeRange      `json:"time_range"`
+	ComputedAt time.Time `json:"computed_at"`
+	TimeRange  TimeRange `json:"time_range"`
 }
 
 // EventData convenience functions for creating common event data

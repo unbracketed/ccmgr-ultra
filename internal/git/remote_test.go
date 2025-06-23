@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 func createTestGitConfig() *config.GitConfig {
@@ -109,7 +109,7 @@ func TestDetectHostingService(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			service, err := rm.DetectHostingService(tc.remoteURL)
-			
+
 			if tc.expectError {
 				assert.Error(t, err)
 			} else {
@@ -198,7 +198,7 @@ func TestGetHostingClient_Success(t *testing.T) {
 	for _, service := range testCases {
 		t.Run(service, func(t *testing.T) {
 			client, err := rm.GetHostingClient(service)
-			
+
 			assert.NoError(t, err)
 			assert.NotNil(t, client)
 			assert.Equal(t, service, client.GetHostingService())
@@ -538,7 +538,7 @@ func TestBuildAuthHeaders(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.service, func(t *testing.T) {
 			headers := buildAuthHeaders(tc.service, tc.token)
-			
+
 			for key, expectedValue := range tc.expects {
 				assert.Equal(t, expectedValue, headers[key])
 			}
@@ -567,20 +567,20 @@ func TestRemoteInfo_Fields(t *testing.T) {
 
 func TestPullRequest_Fields(t *testing.T) {
 	now := time.Now()
-	
+
 	pr := PullRequest{
-		ID:          123,
-		Number:      1,
-		Title:       "Test PR",
-		URL:         "https://github.com/user/repo/pull/1",
-		State:       "open",
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		Author:      "testuser",
+		ID:           123,
+		Number:       1,
+		Title:        "Test PR",
+		URL:          "https://github.com/user/repo/pull/1",
+		State:        "open",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+		Author:       "testuser",
 		SourceBranch: "feature",
 		TargetBranch: "main",
-		Draft:       false,
-		Labels:      []string{"enhancement", "feature"},
+		Draft:        false,
+		Labels:       []string{"enhancement", "feature"},
 	}
 
 	assert.Equal(t, 123, pr.ID)

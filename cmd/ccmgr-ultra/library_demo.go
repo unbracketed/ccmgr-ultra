@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/bcdekker/ccmgr-ultra/pkg/ccmgr"
+	"github.com/spf13/cobra"
 )
 
 // libraryDemoCmd demonstrates using the ccmgr library instead of direct internal imports
@@ -40,7 +40,7 @@ var statusLibraryCmd = &cobra.Command{
 		fmt.Printf("Active Processes: %d\n", status.ActiveProcesses)
 		fmt.Printf("Tracked Worktrees: %d\n", status.TrackedWorktrees)
 		fmt.Printf("Last Update: %s\n", status.LastUpdate.Format("2006-01-02 15:04:05"))
-		
+
 		if len(status.Errors) > 0 {
 			fmt.Printf("\nErrors:\n")
 			for _, err := range status.Errors {
@@ -130,7 +130,7 @@ var worktreesLibraryCmd = &cobra.Command{
 			fmt.Printf("  Claude Status: %s\n", wt.ClaudeStatus.State)
 			fmt.Printf("  Has Changes: %t\n", wt.HasChanges)
 			fmt.Printf("  Last Access: %s\n", wt.LastAccess.Format("2006-01-02 15:04:05"))
-			
+
 			if len(wt.ActiveSessions) > 0 {
 				fmt.Printf("  Active Sessions:\n")
 				for _, session := range wt.ActiveSessions {
@@ -152,7 +152,7 @@ func runLibraryDemo(cmd *cobra.Command, args []string) {
 	fmt.Println("  worktrees  - List worktrees")
 	fmt.Println()
 	fmt.Println("Usage: ccmgr-ultra library-demo <subcommand>")
-	
+
 	// Demonstrate JSON output capability
 	client, err := ccmgr.NewClient(nil)
 	if err != nil {
@@ -171,7 +171,7 @@ func init() {
 	libraryDemoCmd.AddCommand(statusLibraryCmd)
 	libraryDemoCmd.AddCommand(sessionsLibraryCmd)
 	libraryDemoCmd.AddCommand(worktreesLibraryCmd)
-	
+
 	// Add to root command
 	rootCmd.AddCommand(libraryDemoCmd)
 }

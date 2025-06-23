@@ -15,9 +15,9 @@ import (
 
 // DefaultDetector implements ProcessDetector interface
 type DefaultDetector struct {
-	config       *ProcessConfig
-	claudeRegex  *regexp.Regexp
-	knownPaths   []string
+	config      *ProcessConfig
+	claudeRegex *regexp.Regexp
+	knownPaths  []string
 }
 
 // NewDefaultDetector creates a new process detector
@@ -91,9 +91,9 @@ func (d *DefaultDetector) IsClaudeProcess(pid int) (bool, error) {
 			return true, nil
 		}
 		// Also check for common Claude Code execution patterns
-		if strings.Contains(arg, "anthropic") || 
-		   strings.Contains(arg, "claude") ||
-		   strings.Contains(strings.ToLower(arg), "claude") {
+		if strings.Contains(arg, "anthropic") ||
+			strings.Contains(arg, "claude") ||
+			strings.Contains(strings.ToLower(arg), "claude") {
 			return true, nil
 		}
 	}
@@ -181,7 +181,7 @@ func (d *DefaultDetector) getAllProcessPIDs(ctx context.Context) ([]int, error) 
 		if line == "" {
 			continue
 		}
-		
+
 		pid, err := strconv.Atoi(line)
 		if err != nil {
 			continue // Skip invalid PIDs

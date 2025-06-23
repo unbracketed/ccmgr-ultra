@@ -24,13 +24,13 @@ type SelectorOptions struct {
 
 // Theme defines the visual styling for interactive elements
 type Theme struct {
-	Primary    string
-	Secondary  string
-	Success    string
-	Warning    string
-	Error      string
-	Info       string
-	Muted      string
+	Primary   string
+	Secondary string
+	Success   string
+	Warning   string
+	Error     string
+	Info      string
+	Muted     string
 }
 
 // DefaultTheme returns the default color theme
@@ -96,7 +96,7 @@ func (s *InteractiveSelector) SelectMultiple(header string, options []string) ([
 // ConfirmOperation asks for user confirmation with impact assessment
 func (s *InteractiveSelector) ConfirmOperation(operation string, impact Impact) (bool, error) {
 	message := fmt.Sprintf("Confirm %s?", operation)
-	
+
 	if impact.Destructive {
 		message = fmt.Sprintf("⚠️  %s (DESTRUCTIVE OPERATION)", message)
 	}
@@ -124,20 +124,20 @@ func (s *InteractiveSelector) selectFromOptions(header string, options []string)
 	}
 
 	args := []string{"choose"}
-	
+
 	if header != "" {
 		args = append(args, "--header", header)
 	}
-	
+
 	if s.options.Height > 0 {
 		args = append(args, "--height", fmt.Sprintf("%d", s.options.Height))
 	}
-	
+
 	args = append(args, options...)
 
 	cmd := exec.Command("gum", args...)
 	cmd.Stderr = os.Stderr
-	
+
 	output, err := cmd.Output()
 	if err != nil {
 		return s.fallbackSelect(header, options)
@@ -159,20 +159,20 @@ func (s *InteractiveSelector) selectMultipleFromOptions(header string, options [
 	}
 
 	args := []string{"choose", "--no-limit"}
-	
+
 	if header != "" {
 		args = append(args, "--header", header)
 	}
-	
+
 	if s.options.Height > 0 {
 		args = append(args, "--height", fmt.Sprintf("%d", s.options.Height))
 	}
-	
+
 	args = append(args, options...)
 
 	cmd := exec.Command("gum", args...)
 	cmd.Stderr = os.Stderr
-	
+
 	output, err := cmd.Output()
 	if err != nil {
 		return s.fallbackSelectMultiple(header, options)
@@ -195,7 +195,7 @@ func (s *InteractiveSelector) confirm(message string) (bool, error) {
 
 	cmd := exec.Command("gum", "confirm", message)
 	err := cmd.Run()
-	
+
 	// gum confirm returns exit code 0 for "yes", 1 for "no"
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
@@ -221,23 +221,23 @@ func (s *InteractiveSelector) fallbackSelect(header string, options []string) (s
 	if header != "" {
 		fmt.Println(header)
 	}
-	
+
 	fmt.Println("\nOptions:")
 	for i, option := range options {
 		fmt.Printf("%d) %s\n", i+1, option)
 	}
-	
+
 	fmt.Print("\nEnter selection number: ")
 	var selection int
 	_, err := fmt.Scanln(&selection)
 	if err != nil {
 		return "", NewErrorWithCause("failed to read selection", err)
 	}
-	
+
 	if selection < 1 || selection > len(options) {
 		return "", NewError("invalid selection")
 	}
-	
+
 	return options[selection-1], nil
 }
 
@@ -246,38 +246,38 @@ func (s *InteractiveSelector) fallbackSelectMultiple(header string, options []st
 	if header != "" {
 		fmt.Println(header)
 	}
-	
+
 	fmt.Println("\nOptions:")
 	for i, option := range options {
 		fmt.Printf("%d) %s\n", i+1, option)
 	}
-	
+
 	fmt.Print("\nEnter selection numbers (comma-separated): ")
 	var input string
 	_, err := fmt.Scanln(&input)
 	if err != nil {
 		return nil, NewErrorWithCause("failed to read selections", err)
 	}
-	
+
 	if input == "" {
 		return []string{}, nil
 	}
-	
+
 	parts := strings.Split(input, ",")
 	var selected []string
-	
+
 	for _, part := range parts {
 		var num int
 		_, err := fmt.Sscanf(strings.TrimSpace(part), "%d", &num)
 		if err != nil {
 			continue
 		}
-		
+
 		if num >= 1 && num <= len(options) {
 			selected = append(selected, options[num-1])
 		}
 	}
-	
+
 	return selected, nil
 }
 
@@ -289,7 +289,7 @@ func (s *InteractiveSelector) fallbackConfirm(message string) (bool, error) {
 	if err != nil {
 		return false, NewErrorWithCause("failed to read response", err)
 	}
-	
+
 	response = strings.ToLower(strings.TrimSpace(response))
 	return response == "y" || response == "yes", nil
 }
@@ -298,18 +298,18 @@ func (s *InteractiveSelector) fallbackConfirm(message string) (bool, error) {
 func (s *InteractiveSelector) Input(prompt string, placeholder string) (string, error) {
 	if s.isGumAvailable() {
 		args := []string{"input"}
-		
+
 		if prompt != "" {
 			args = append(args, "--prompt", prompt)
 		}
-		
+
 		if placeholder != "" {
 			args = append(args, "--placeholder", placeholder)
 		}
 
 		cmd := exec.Command("gum", args...)
 		cmd.Stderr = os.Stderr
-		
+
 		output, err := cmd.Output()
 		if err != nil {
 			return s.fallbackInput(prompt)
@@ -326,13 +326,13 @@ func (s *InteractiveSelector) fallbackInput(prompt string) (string, error) {
 	if prompt != "" {
 		fmt.Print(prompt)
 	}
-	
+
 	var input string
 	_, err := fmt.Scanln(&input)
 	if err != nil {
 		return "", NewErrorWithCause("failed to read input", err)
 	}
-	
+
 	return strings.TrimSpace(input), nil
 }
 
@@ -340,14 +340,14 @@ func (s *InteractiveSelector) fallbackInput(prompt string) (string, error) {
 func (s *InteractiveSelector) Password(prompt string) (string, error) {
 	if s.isGumAvailable() {
 		args := []string{"input", "--password"}
-		
+
 		if prompt != "" {
 			args = append(args, "--prompt", prompt)
 		}
 
 		cmd := exec.Command("gum", args...)
 		cmd.Stderr = os.Stderr
-		
+
 		output, err := cmd.Output()
 		if err != nil {
 			return "", NewErrorWithCause("failed to read password", err)

@@ -22,28 +22,28 @@ type ContextMenu struct {
 
 // ContextMenuItem represents an item in a context menu
 type ContextMenuItem struct {
-	Label     string
-	Key       string
-	Action    string
-	Enabled   bool
-	Divider   bool
-	Icon      string
-	Shortcut  string
-	Submenu   *ContextMenu
+	Label    string
+	Key      string
+	Action   string
+	Enabled  bool
+	Divider  bool
+	Icon     string
+	Shortcut string
+	Submenu  *ContextMenu
 }
 
 // Theme defines the styling for context menus
 type Theme struct {
-	Primary      lipgloss.Color
-	Secondary    lipgloss.Color
-	Accent       lipgloss.Color
-	Background   lipgloss.Color
-	Text         lipgloss.Color
-	Muted        lipgloss.Color
-	Success      lipgloss.Color
-	Warning      lipgloss.Color
-	Error        lipgloss.Color
-	BorderStyle  lipgloss.Border
+	Primary     lipgloss.Color
+	Secondary   lipgloss.Color
+	Accent      lipgloss.Color
+	Background  lipgloss.Color
+	Text        lipgloss.Color
+	Muted       lipgloss.Color
+	Success     lipgloss.Color
+	Warning     lipgloss.Color
+	Error       lipgloss.Color
+	BorderStyle lipgloss.Border
 }
 
 // ContextMenuConfig configures a context menu
@@ -75,7 +75,7 @@ func calculateMenuWidth(items []ContextMenuItem) int {
 		if item.Divider {
 			continue
 		}
-		
+
 		itemWidth := len(item.Label)
 		if item.Icon != "" {
 			itemWidth += 2
@@ -83,12 +83,12 @@ func calculateMenuWidth(items []ContextMenuItem) int {
 		if item.Shortcut != "" {
 			itemWidth += len(item.Shortcut) + 2
 		}
-		
+
 		if itemWidth > maxWidth {
 			maxWidth = itemWidth
 		}
 	}
-	
+
 	return maxWidth + 4 // Add padding
 }
 
@@ -103,7 +103,7 @@ func (m *ContextMenu) Show(x, y int) {
 	m.y = y
 	m.visible = true
 	m.selectedIndex = 0
-	
+
 	// Find first enabled item
 	for i, item := range m.items {
 		if item.Enabled && !item.Divider {
@@ -138,12 +138,12 @@ func (m *ContextMenu) Update(msg tea.Msg) (*ContextMenu, tea.Cmd) {
 	if !m.visible {
 		return m, nil
 	}
-	
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		return m.handleKeyMsg(msg)
 	}
-	
+
 	return m, nil
 }
 
@@ -153,16 +153,16 @@ func (m *ContextMenu) handleKeyMsg(msg tea.KeyMsg) (*ContextMenu, tea.Cmd) {
 	case "esc":
 		m.Hide()
 		return m, nil
-		
+
 	case "up", "k":
 		m.movePrevious()
-		
+
 	case "down", "j":
 		m.moveNext()
-		
+
 	case "enter", " ":
 		return m.activateSelected()
-		
+
 	case "left", "h":
 		// Handle submenu navigation
 		if m.hasSelectedSubmenu() {
@@ -171,14 +171,14 @@ func (m *ContextMenu) handleKeyMsg(msg tea.KeyMsg) (*ContextMenu, tea.Cmd) {
 		}
 		m.Hide()
 		return m, nil
-		
+
 	case "right", "l":
 		// Handle submenu navigation
 		if m.hasSelectedSubmenu() {
 			// Open submenu
 			return m, m.openSubmenu()
 		}
-		
+
 	default:
 		// Handle shortcut keys
 		for i, item := range m.items {
@@ -188,7 +188,7 @@ func (m *ContextMenu) handleKeyMsg(msg tea.KeyMsg) (*ContextMenu, tea.Cmd) {
 			}
 		}
 	}
-	
+
 	return m, nil
 }
 
@@ -197,18 +197,18 @@ func (m *ContextMenu) movePrevious() {
 	if len(m.items) == 0 {
 		return
 	}
-	
+
 	start := m.selectedIndex
 	for {
 		m.selectedIndex--
 		if m.selectedIndex < 0 {
 			m.selectedIndex = len(m.items) - 1
 		}
-		
+
 		if m.selectedIndex == start {
 			break // Avoid infinite loop
 		}
-		
+
 		if m.items[m.selectedIndex].Enabled && !m.items[m.selectedIndex].Divider {
 			break
 		}
@@ -220,18 +220,18 @@ func (m *ContextMenu) moveNext() {
 	if len(m.items) == 0 {
 		return
 	}
-	
+
 	start := m.selectedIndex
 	for {
 		m.selectedIndex++
 		if m.selectedIndex >= len(m.items) {
 			m.selectedIndex = 0
 		}
-		
+
 		if m.selectedIndex == start {
 			break // Avoid infinite loop
 		}
-		
+
 		if m.items[m.selectedIndex].Enabled && !m.items[m.selectedIndex].Divider {
 			break
 		}
@@ -243,14 +243,14 @@ func (m *ContextMenu) activateSelected() (*ContextMenu, tea.Cmd) {
 	if m.selectedIndex < 0 || m.selectedIndex >= len(m.items) {
 		return m, nil
 	}
-	
+
 	item := m.items[m.selectedIndex]
 	if !item.Enabled || item.Divider {
 		return m, nil
 	}
-	
+
 	m.Hide()
-	
+
 	// Return a command that indicates the selected action
 	return m, func() tea.Msg {
 		return ContextMenuActionMsg{
@@ -273,10 +273,10 @@ func (m *ContextMenu) openSubmenu() tea.Cmd {
 	if !m.hasSelectedSubmenu() {
 		return nil
 	}
-	
+
 	submenu := m.items[m.selectedIndex].Submenu
 	submenu.Show(m.x+m.width, m.y+m.selectedIndex)
-	
+
 	return func() tea.Msg {
 		return ContextMenuSubmenuMsg{
 			Submenu: submenu,
@@ -289,25 +289,25 @@ func (m *ContextMenu) View() string {
 	if !m.visible {
 		return ""
 	}
-	
+
 	var elements []string
-	
+
 	// Title (if present)
 	if m.title != "" {
 		titleStyle := lipgloss.NewStyle().
 			Foreground(m.theme.Accent).
 			Bold(true).
-			Width(m.width-2).
+			Width(m.width - 2).
 			Align(lipgloss.Center)
 		elements = append(elements, titleStyle.Render(m.title))
-		
+
 		// Title separator
 		separatorStyle := lipgloss.NewStyle().
 			Foreground(m.theme.Muted).
-			Width(m.width-2)
+			Width(m.width - 2)
 		elements = append(elements, separatorStyle.Render(strings.Repeat("─", m.width-2)))
 	}
-	
+
 	// Menu items
 	for i, item := range m.items {
 		if item.Divider {
@@ -316,10 +316,10 @@ func (m *ContextMenu) View() string {
 			elements = append(elements, m.renderItem(item, i == m.selectedIndex))
 		}
 	}
-	
+
 	// Combine content
 	content := strings.Join(elements, "\n")
-	
+
 	// Apply border and styling
 	menuStyle := lipgloss.NewStyle().
 		Border(m.theme.BorderStyle).
@@ -328,14 +328,14 @@ func (m *ContextMenu) View() string {
 		Foreground(m.theme.Text).
 		Width(m.width).
 		Padding(0, 1)
-	
+
 	return menuStyle.Render(content)
 }
 
 // renderItem renders a single menu item
 func (m *ContextMenu) renderItem(item ContextMenuItem, selected bool) string {
 	var parts []string
-	
+
 	// Icon
 	if item.Icon != "" {
 		iconStyle := lipgloss.NewStyle().Width(2)
@@ -348,7 +348,7 @@ func (m *ContextMenu) renderItem(item ContextMenuItem, selected bool) string {
 	} else {
 		parts = append(parts, "  ")
 	}
-	
+
 	// Label
 	labelStyle := lipgloss.NewStyle()
 	if !item.Enabled {
@@ -361,7 +361,7 @@ func (m *ContextMenu) renderItem(item ContextMenuItem, selected bool) string {
 	} else {
 		labelStyle = labelStyle.Foreground(m.theme.Text)
 	}
-	
+
 	labelWidth := m.width - 4 // Account for icon and padding
 	if item.Shortcut != "" {
 		labelWidth -= len(item.Shortcut) + 2
@@ -369,10 +369,10 @@ func (m *ContextMenu) renderItem(item ContextMenuItem, selected bool) string {
 	if item.Submenu != nil {
 		labelWidth -= 2 // Account for submenu arrow
 	}
-	
+
 	label := labelStyle.Width(labelWidth).Render(item.Label)
 	parts = append(parts, label)
-	
+
 	// Shortcut
 	if item.Shortcut != "" {
 		shortcutStyle := lipgloss.NewStyle().
@@ -380,7 +380,7 @@ func (m *ContextMenu) renderItem(item ContextMenuItem, selected bool) string {
 			Width(len(item.Shortcut))
 		parts = append(parts, shortcutStyle.Render(item.Shortcut))
 	}
-	
+
 	// Submenu indicator
 	if item.Submenu != nil {
 		arrowStyle := lipgloss.NewStyle().
@@ -391,7 +391,7 @@ func (m *ContextMenu) renderItem(item ContextMenuItem, selected bool) string {
 		}
 		parts = append(parts, arrowStyle.Render("▶"))
 	}
-	
+
 	return strings.Join(parts, "")
 }
 
@@ -399,7 +399,7 @@ func (m *ContextMenu) renderItem(item ContextMenuItem, selected bool) string {
 func (m *ContextMenu) renderDivider() string {
 	style := lipgloss.NewStyle().
 		Foreground(m.theme.Muted).
-		Width(m.width-2)
+		Width(m.width - 2)
 	return style.Render(strings.Repeat("─", m.width-2))
 }
 

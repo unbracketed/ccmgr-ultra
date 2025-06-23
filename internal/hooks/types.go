@@ -80,7 +80,7 @@ type Environment struct {
 	WorktreeBranch string
 	ProjectName    string
 	SessionID      string
-	
+
 	// Hook-specific variables
 	Variables map[string]string
 }
@@ -88,7 +88,7 @@ type Environment struct {
 // ToMap converts the environment to a map of environment variables
 func (e *Environment) ToMap() map[string]string {
 	env := make(map[string]string)
-	
+
 	// Set standard variables
 	if e.WorktreePath != "" {
 		env["CCMGR_WORKTREE_PATH"] = e.WorktreePath
@@ -102,15 +102,15 @@ func (e *Environment) ToMap() map[string]string {
 	if e.SessionID != "" {
 		env["CCMGR_SESSION_ID"] = e.SessionID
 	}
-	
+
 	// Add timestamp
 	env["CCMGR_TIMESTAMP"] = time.Now().Format(time.RFC3339)
-	
+
 	// Add custom variables
 	for key, value := range e.Variables {
 		env[key] = value
 	}
-	
+
 	return env
 }
 

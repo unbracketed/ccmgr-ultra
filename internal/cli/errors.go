@@ -19,23 +19,23 @@ const (
 
 // CLIError represents a CLI-specific error with additional context
 type CLIError struct {
-	Message     string
-	Suggestion  string
-	ExitCode    ExitCode
-	Cause       error
+	Message    string
+	Suggestion string
+	ExitCode   ExitCode
+	Cause      error
 }
 
 func (e *CLIError) Error() string {
 	var parts []string
-	
+
 	if e.Message != "" {
 		parts = append(parts, e.Message)
 	}
-	
+
 	if e.Cause != nil {
 		parts = append(parts, fmt.Sprintf("cause: %v", e.Cause))
 	}
-	
+
 	return strings.Join(parts, ": ")
 }
 
@@ -93,11 +93,11 @@ func HandleCLIError(err error) error {
 
 	// Print error message to stderr
 	fmt.Fprintf(os.Stderr, "Error: %s\n", cliErr.Message)
-	
+
 	if cliErr.Cause != nil && cliErr.Cause.Error() != cliErr.Message {
 		fmt.Fprintf(os.Stderr, "Cause: %v\n", cliErr.Cause)
 	}
-	
+
 	if cliErr.Suggestion != "" {
 		fmt.Fprintf(os.Stderr, "Suggestion: %s\n", cliErr.Suggestion)
 	}
@@ -113,11 +113,11 @@ func ExitWithError(err error) {
 	}
 
 	HandleCLIError(err)
-	
+
 	if cliErr, ok := err.(*CLIError); ok {
 		os.Exit(int(cliErr.ExitCode))
 	}
-	
+
 	os.Exit(int(ExitError))
 }
 

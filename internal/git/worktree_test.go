@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 func createTestConfig() *config.Config {
@@ -173,7 +173,7 @@ func TestCreateWorktree_AutoName(t *testing.T) {
 	// This test would require more complex mocking of file system operations
 	// For now, we'll test that the function attempts to generate a path
 	_, err := wm.CreateWorktree("feature", opts)
-	
+
 	// We expect this to fail during path validation since we're not mocking the filesystem
 	assert.Error(t, err)
 }
@@ -189,7 +189,7 @@ func TestListWorktrees(t *testing.T) {
 	mockGit.SetCommand("symbolic-ref refs/remotes/origin/HEAD", "refs/remotes/origin/main")
 	mockGit.SetCommand("status --porcelain", "")
 	mockGit.SetCommand("remote -v", "origin\tgit@github.com:user/test-repo.git (fetch)")
-	
+
 	worktreeOutput := `worktree /test/repo
 HEAD abc123def
 branch refs/heads/main
@@ -388,7 +388,7 @@ func TestMoveWorktree(t *testing.T) {
 	tempDir := filepath.Join(os.TempDir(), "worktree-move-test")
 	oldPath := filepath.Join(tempDir, "old")
 	newPath := filepath.Join(tempDir, "new")
-	
+
 	os.MkdirAll(tempDir, 0755)
 	defer os.RemoveAll(tempDir)
 
@@ -515,7 +515,7 @@ func TestGetTmuxSessionName(t *testing.T) {
 	cfg.Tmux.SessionPrefix = "ccmgr"
 	cfg.Tmux.NamingPattern = "{{.prefix}}-{{.project}}-{{.branch}}"
 	cfg.Tmux.MaxSessionName = 30
-	
+
 	mockGit := NewMockGitCmd()
 	wm := NewWorktreeManager(repo, cfg, mockGit)
 
@@ -533,7 +533,7 @@ func TestGetTmuxSessionName_NoPrefix(t *testing.T) {
 	repo := createTestRepository()
 	cfg := createTestConfig()
 	cfg.Tmux.SessionPrefix = "" // No prefix
-	
+
 	mockGit := NewMockGitCmd()
 	wm := NewWorktreeManager(repo, cfg, mockGit)
 
@@ -553,7 +553,7 @@ func TestGetTmuxSessionName_Truncation(t *testing.T) {
 	cfg.Tmux.SessionPrefix = "very-long-prefix"
 	cfg.Tmux.NamingPattern = "{{.prefix}}-{{.project}}-{{.branch}}"
 	cfg.Tmux.MaxSessionName = 20 // Very short limit
-	
+
 	mockGit := NewMockGitCmd()
 	wm := NewWorktreeManager(repo, cfg, mockGit)
 
@@ -578,7 +578,7 @@ func TestGetWorktreeStats(t *testing.T) {
 	mockGit.SetCommand("symbolic-ref refs/remotes/origin/HEAD", "refs/remotes/origin/main")
 	mockGit.SetCommand("status --porcelain", "")
 	mockGit.SetCommand("remote -v", "origin\tgit@github.com:user/test-repo.git (fetch)")
-	
+
 	// Setup mock worktrees
 	worktreeOutput := `worktree /test/clean
 HEAD abc123def
@@ -589,11 +589,11 @@ HEAD def456ghi
 branch refs/heads/dirty`
 
 	mockGit.SetCommand("worktree list --porcelain", worktreeOutput)
-	
+
 	// Mock first worktree as clean
 	mockGit.SetCommand("show --no-patch --pretty=format:%H%n%an%n%at%n%s abc123def", "abc123def\nTest User\n1640995200\nClean commit")
 	mockGit.SetCommand("show --name-only --pretty=format: abc123def", "clean.txt")
-	
+
 	// Mock second worktree as dirty
 	mockGit.SetCommand("show --no-patch --pretty=format:%H%n%an%n%at%n%s def456ghi", "def456ghi\nTest User\n1640995300\nDirty commit")
 	mockGit.SetCommand("show --name-only --pretty=format: def456ghi", "dirty.txt")
@@ -613,7 +613,7 @@ func TestCleanupOldWorktrees_Disabled(t *testing.T) {
 	repo := createTestRepository()
 	cfg := createTestConfig()
 	cfg.Tmux.AutoCleanup = false // Disabled
-	
+
 	mockGit := NewMockGitCmd()
 	wm := NewWorktreeManager(repo, cfg, mockGit)
 

@@ -4,14 +4,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 func TestIntegration_NewIntegration(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
 	assert.NotNil(t, integration)
@@ -22,10 +22,10 @@ func TestIntegration_NewIntegration(t *testing.T) {
 
 func TestIntegration_GetSystemStatus(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	status := integration.GetSystemStatus()
 	assert.NotNil(t, status)
 	assert.False(t, status.LastUpdate.IsZero())
@@ -34,10 +34,10 @@ func TestIntegration_GetSystemStatus(t *testing.T) {
 
 func TestIntegration_GetActiveSessions(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	sessions := integration.GetActiveSessions()
 	assert.NotNil(t, sessions)
 	// Should be empty initially
@@ -46,10 +46,10 @@ func TestIntegration_GetActiveSessions(t *testing.T) {
 
 func TestIntegration_GetAllSessions(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	sessions := integration.GetAllSessions()
 	assert.NotNil(t, sessions)
 	// Should be empty initially
@@ -58,10 +58,10 @@ func TestIntegration_GetAllSessions(t *testing.T) {
 
 func TestIntegration_GetRecentWorktrees(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	worktrees := integration.GetRecentWorktrees()
 	assert.NotNil(t, worktrees)
 	// Should have some placeholder data
@@ -70,10 +70,10 @@ func TestIntegration_GetRecentWorktrees(t *testing.T) {
 
 func TestIntegration_GetAllWorktrees(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	worktrees := integration.GetAllWorktrees()
 	assert.NotNil(t, worktrees)
 	// Should have some placeholder data
@@ -82,23 +82,23 @@ func TestIntegration_GetAllWorktrees(t *testing.T) {
 
 func TestIntegration_StartPeriodicRefresh(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	cmd := integration.StartPeriodicRefresh()
 	assert.NotNil(t, cmd)
 }
 
 func TestIntegration_AttachSession(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	cmd := integration.AttachSession("test-session")
 	assert.NotNil(t, cmd)
-	
+
 	// Execute the command to test the message
 	msg := cmd()
 	switch msg := msg.(type) {
@@ -114,13 +114,13 @@ func TestIntegration_AttachSession(t *testing.T) {
 
 func TestIntegration_OpenWorktree(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	cmd := integration.OpenWorktree("/test/path")
 	assert.NotNil(t, cmd)
-	
+
 	// Execute the command to test the message
 	msg := cmd()
 	worktreeMsg, ok := msg.(WorktreeOpenedMsg)
@@ -130,13 +130,13 @@ func TestIntegration_OpenWorktree(t *testing.T) {
 
 func TestIntegration_CreateSession(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	cmd := integration.CreateSession("test-session", "/test/dir")
 	assert.NotNil(t, cmd)
-	
+
 	// Execute the command to test the message
 	msg := cmd()
 	switch msg := msg.(type) {
@@ -152,13 +152,13 @@ func TestIntegration_CreateSession(t *testing.T) {
 
 func TestIntegration_CreateWorktree(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	cmd := integration.CreateWorktree("/test/path", "test-branch")
 	assert.NotNil(t, cmd)
-	
+
 	// Execute the command to test the message
 	msg := cmd()
 	worktreeMsg, ok := msg.(WorktreeCreatedMsg)
@@ -169,13 +169,13 @@ func TestIntegration_CreateWorktree(t *testing.T) {
 
 func TestIntegration_RefreshData(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	cmd := integration.RefreshData()
 	assert.NotNil(t, cmd)
-	
+
 	// Execute the command to test the message
 	msg := cmd()
 	_, ok := msg.(RefreshDataMsg)
@@ -184,30 +184,30 @@ func TestIntegration_RefreshData(t *testing.T) {
 
 func TestIntegration_Shutdown(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	// Should not panic
 	integration.Shutdown()
 }
 
 func TestIntegration_RefreshAllData(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	// Test refreshing data
 	integration.refreshAllData()
-	
+
 	// Check that last refresh time was updated
 	assert.False(t, integration.lastRefresh.IsZero())
 }
 
 func TestDefaultSystemStatus(t *testing.T) {
 	status := DefaultSystemStatus()
-	
+
 	assert.Equal(t, 0, status.ActiveProcesses)
 	assert.Equal(t, 0, status.ActiveSessions)
 	assert.Equal(t, 0, status.TrackedWorktrees)
@@ -218,10 +218,10 @@ func TestDefaultSystemStatus(t *testing.T) {
 
 func TestIntegration_GetMemoryStats(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	stats := integration.getMemoryStats()
 	assert.GreaterOrEqual(t, stats.UsedMB, 0)
 	assert.GreaterOrEqual(t, stats.TotalMB, 0)
@@ -230,10 +230,10 @@ func TestIntegration_GetMemoryStats(t *testing.T) {
 
 func TestIntegration_GetPerformanceStats(t *testing.T) {
 	cfg := config.DefaultConfig()
-	
+
 	integration, err := NewIntegration(cfg)
 	require.NoError(t, err)
-	
+
 	stats := integration.getPerformanceStats()
 	assert.GreaterOrEqual(t, stats.CPUPercent, 0.0)
 	assert.GreaterOrEqual(t, stats.LoadAverage, 0.0)
@@ -263,7 +263,7 @@ func TestExtractProjectFromSessionName(t *testing.T) {
 			expected:    "",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := extractProjectFromSessionName(tt.sessionName)
@@ -285,7 +285,7 @@ func TestSessionInfo_Struct(t *testing.T) {
 		PID:        12345,
 		Status:     "active",
 	}
-	
+
 	assert.Equal(t, "test-id", session.ID)
 	assert.Equal(t, "test-name", session.Name)
 	assert.Equal(t, "test-project", session.Project)
@@ -306,7 +306,7 @@ func TestWorktreeInfo_Struct(t *testing.T) {
 		HasChanges: true,
 		Status:     "modified",
 	}
-	
+
 	assert.Equal(t, "/test/path", worktree.Path)
 	assert.Equal(t, "feature-branch", worktree.Branch)
 	assert.Equal(t, "test-repo", worktree.Repository)

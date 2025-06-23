@@ -21,7 +21,7 @@ func DefaultConfig() *Config {
 	}
 
 	configDir := filepath.Join(homeDir, ".config", "ccmgr-ultra")
-	
+
 	return &Config{
 		DatabasePath:   filepath.Join(configDir, "data.db"),
 		EnableWALMode:  true,
@@ -35,10 +35,10 @@ func (c *Config) Validate() error {
 	if c.DatabasePath == "" {
 		return fmt.Errorf("database_path cannot be empty")
 	}
-	
+
 	if c.MaxConnections <= 0 {
 		c.MaxConnections = 25
 	}
-	
+
 	return nil
 }

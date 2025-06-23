@@ -129,9 +129,10 @@ test-env: ## Create a temporary git repo for testing
 	git add README.md && \
 	git commit -q -m "Initial commit" && \
 	echo "" && \
-	echo "Test environment created! To use it, run:" && \
-	echo "  cd $$TESTDIR" && \
-	echo ""
+	echo "Test environment created at: $$TESTDIR" && \
+	echo "Entering test environment shell (type 'exit' to return)..." && \
+	echo "" && \
+	exec $${SHELL:-bash} -i
 
 test-env-clean: ## Clean up all test environments
 	@echo "Cleaning test environments..."

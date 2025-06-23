@@ -95,14 +95,14 @@ func TestMigrationRegistry(t *testing.T) {
 
 	t.Run("registers custom migration", func(t *testing.T) {
 		registry := &MigrationRegistry{}
-		
+
 		migration := MigrationFunc{
 			version: "1.1.0",
 			migrate: func(config map[string]interface{}) (map[string]interface{}, error) {
 				return config, nil
 			},
 		}
-		
+
 		registry.Register(migration)
 		assert.Len(t, registry.migrations, 1)
 		assert.Equal(t, "1.1.0", registry.migrations[0].Version())
@@ -110,7 +110,7 @@ func TestMigrationRegistry(t *testing.T) {
 
 	t.Run("getMigrationsToApply returns correct migrations", func(t *testing.T) {
 		registry := &MigrationRegistry{}
-		
+
 		// Add test migrations
 		registry.Register(MigrationFunc{
 			version: "1.0.0",
@@ -198,7 +198,7 @@ func TestMigrateV090ToV100(t *testing.T) {
 func TestMigrationRegistryIntegration(t *testing.T) {
 	t.Run("applies migration chain", func(t *testing.T) {
 		registry := NewMigrationRegistry()
-		
+
 		// Create old-style config
 		oldConfigData := `
 version: "0.9.0"
@@ -226,12 +226,12 @@ claude_command: "claude-old"
 
 	t.Run("no migration needed returns original", func(t *testing.T) {
 		registry := NewMigrationRegistry()
-		
+
 		configData := `version: "1.0.0"`
-		
+
 		migratedData, err := registry.Migrate([]byte(configData), "1.0.0", "1.0.0")
 		require.NoError(t, err)
-		
+
 		// Should return original data unchanged
 		var config map[string]interface{}
 		err = yaml.Unmarshal(migratedData, &config)
@@ -273,12 +273,12 @@ claude_command: "claude-old"
 		// Verify backup was created
 		files, err := os.ReadDir(tmpDir)
 		require.NoError(t, err)
-		
+
 		var backupFound bool
 		for _, file := range files {
-			if filepath.Ext(file.Name()) == ".backup" || 
-			   (len(file.Name()) > len("config.yaml.backup.") && 
-			    file.Name()[:len("config.yaml.backup.")] == "config.yaml.backup.") {
+			if filepath.Ext(file.Name()) == ".backup" ||
+				(len(file.Name()) > len("config.yaml.backup.") &&
+					file.Name()[:len("config.yaml.backup.")] == "config.yaml.backup.") {
 				backupFound = true
 				break
 			}
@@ -330,7 +330,7 @@ func TestExportImportForMigration(t *testing.T) {
 
 	t.Run("import invalid migration data fails", func(t *testing.T) {
 		invalidData := map[string]interface{}{
-			"version": "",  // Invalid: empty version
+			"version": "", // Invalid: empty version
 			"worktree": map[string]interface{}{
 				"default_branch": "", // Invalid: empty default branch
 			},

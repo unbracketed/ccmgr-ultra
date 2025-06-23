@@ -52,10 +52,10 @@ func TestModalManager(t *testing.T) {
 
 	t.Run("Update with window size", func(t *testing.T) {
 		manager.SetSize(80, 24)
-		
+
 		msg := tea.WindowSizeMsg{Width: 100, Height: 30}
 		cmd := manager.Update(msg)
-		
+
 		if cmd != nil {
 			t.Error("Window size update should not return command")
 		}
@@ -181,7 +181,7 @@ func TestProgressModal(t *testing.T) {
 
 		updatedModal, _ := modal.Update(updateMsg)
 		modal = updatedModal.(*ProgressModal)
-		
+
 		// Progress should be updated internally
 	})
 

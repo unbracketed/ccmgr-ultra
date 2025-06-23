@@ -48,7 +48,7 @@ func (f *WorkflowFactory) CreateSingleWorktreeSessionWizard(worktree WorktreeInf
 // CreateBulkWorktreeSessionWizard creates bulk session wizard
 func (f *WorkflowFactory) CreateBulkWorktreeSessionWizard(worktrees []WorktreeInfo) *modals.MultiStepModal {
 	integration := workflows.NewWorktreeSessionIntegration(f.integration, f.theme)
-	
+
 	var workflowWorktrees []workflows.WorktreeInfo
 	for _, wt := range worktrees {
 		workflowWorktrees = append(workflowWorktrees, workflows.WorktreeInfo{
@@ -59,7 +59,7 @@ func (f *WorkflowFactory) CreateBulkWorktreeSessionWizard(worktrees []WorktreeIn
 			HasChanges:  wt.HasChanges,
 		})
 	}
-	
+
 	return integration.CreateBulkSessionsForWorktrees(workflowWorktrees)
 }
 
@@ -72,7 +72,7 @@ func (f *WorkflowFactory) CreateGeneralSessionWizard() *modals.MultiStepModal {
 // HandleContinueOperation handles continue session operations
 func (f *WorkflowFactory) HandleContinueOperation(worktrees []WorktreeInfo) error {
 	integration := workflows.NewWorktreeSessionIntegration(f.integration, f.theme)
-	
+
 	// Find and continue sessions for each worktree
 	for _, wt := range worktrees {
 		workflowWorktree := workflows.WorktreeInfo{
@@ -82,7 +82,7 @@ func (f *WorkflowFactory) HandleContinueOperation(worktrees []WorktreeInfo) erro
 			LastAccess:  wt.LastAccess.Format("2006-01-02 15:04"),
 			HasChanges:  wt.HasChanges,
 		}
-		
+
 		// Execute continue operation
 		cmd := integration.ContinueSessionInWorktree(workflowWorktree)
 		if cmd != nil {
@@ -90,14 +90,14 @@ func (f *WorkflowFactory) HandleContinueOperation(worktrees []WorktreeInfo) erro
 			// For now, we'll assume success
 		}
 	}
-	
+
 	return nil
 }
 
 // HandleResumeOperation handles resume session operations
 func (f *WorkflowFactory) HandleResumeOperation(worktrees []WorktreeInfo) error {
 	integration := workflows.NewWorktreeSessionIntegration(f.integration, f.theme)
-	
+
 	// Find and resume sessions for each worktree
 	for _, wt := range worktrees {
 		workflowWorktree := workflows.WorktreeInfo{
@@ -107,7 +107,7 @@ func (f *WorkflowFactory) HandleResumeOperation(worktrees []WorktreeInfo) error 
 			LastAccess:  wt.LastAccess.Format("2006-01-02 15:04"),
 			HasChanges:  wt.HasChanges,
 		}
-		
+
 		// Execute resume operation
 		cmd := integration.ResumeSessionInWorktree(workflowWorktree)
 		if cmd != nil {
@@ -115,7 +115,7 @@ func (f *WorkflowFactory) HandleResumeOperation(worktrees []WorktreeInfo) error 
 			// For now, we'll assume success
 		}
 	}
-	
+
 	return nil
 }
 
@@ -125,14 +125,14 @@ func (f *WorkflowFactory) ValidateWorktreeForOperation(worktree WorktreeInfo, op
 	case "new":
 		// Any worktree can have a new session
 		return nil
-		
+
 	case "continue":
 		// Check if worktree has existing sessions
 		if len(worktree.ActiveSessions) == 0 {
 			return fmt.Errorf("no existing sessions found for worktree %s", worktree.Path)
 		}
 		return nil
-		
+
 	case "resume":
 		// Check if worktree has paused sessions
 		hasPausedSession := false
@@ -146,7 +146,7 @@ func (f *WorkflowFactory) ValidateWorktreeForOperation(worktree WorktreeInfo, op
 			return fmt.Errorf("no paused sessions found for worktree %s", worktree.Path)
 		}
 		return nil
-		
+
 	default:
 		return fmt.Errorf("unknown operation: %s", operation)
 	}
@@ -160,7 +160,7 @@ func (f *WorkflowFactory) GetOperationSummary(worktrees []WorktreeInfo, operatio
 			return fmt.Sprintf("Create new session for %s (%s)", worktrees[0].Path, worktrees[0].Branch)
 		}
 		return fmt.Sprintf("Create new sessions for %d worktrees", len(worktrees))
-		
+
 	case "continue":
 		if len(worktrees) == 1 {
 			sessionCount := len(worktrees[0].ActiveSessions)
@@ -171,7 +171,7 @@ func (f *WorkflowFactory) GetOperationSummary(worktrees []WorktreeInfo, operatio
 			totalSessions += len(wt.ActiveSessions)
 		}
 		return fmt.Sprintf("Continue %d existing sessions across %d worktrees", totalSessions, len(worktrees))
-		
+
 	case "resume":
 		if len(worktrees) == 1 {
 			pausedCount := 0
@@ -191,7 +191,7 @@ func (f *WorkflowFactory) GetOperationSummary(worktrees []WorktreeInfo, operatio
 			}
 		}
 		return fmt.Sprintf("Resume %d paused sessions across %d worktrees", totalPaused, len(worktrees))
-		
+
 	default:
 		return fmt.Sprintf("Unknown operation: %s", operation)
 	}

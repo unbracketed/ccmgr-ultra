@@ -65,34 +65,34 @@ func (v *Validator) ValidateBranchName(name string) *ValidationResult {
 	}{
 		// Cannot start with a dot
 		{strings.HasPrefix(name, "."), "branch name cannot start with a dot"},
-		
+
 		// Cannot start with a hyphen
 		{strings.HasPrefix(name, "-"), "branch name cannot start with a hyphen"},
-		
+
 		// Cannot end with a dot
 		{strings.HasSuffix(name, "."), "branch name cannot end with a dot"},
-		
+
 		// Cannot end with .lock
 		{strings.HasSuffix(name, ".lock"), "branch name cannot end with .lock"},
-		
+
 		// Cannot contain consecutive dots
 		{strings.Contains(name, ".."), "branch name cannot contain consecutive dots"},
-		
+
 		// Cannot contain space
 		{strings.Contains(name, " "), "branch name cannot contain spaces"},
-		
+
 		// Cannot contain control characters
 		{v.containsControlChars(name), "branch name cannot contain control characters"},
-		
+
 		// Cannot contain certain special characters
 		{v.containsInvalidChars(name), "branch name cannot contain invalid characters (~, ^, :, ?, *, [, \\)"},
-		
+
 		// Cannot be just @ or contain @{
 		{name == "@" || strings.Contains(name, "@{"), "branch name cannot be '@' or contain '@{'"},
-		
+
 		// Cannot start with refs/
 		{strings.HasPrefix(name, "refs/"), "branch name cannot start with 'refs/'"},
-		
+
 		// Cannot be HEAD
 		{strings.ToUpper(name) == "HEAD", "branch name cannot be 'HEAD'"},
 	}
@@ -140,19 +140,19 @@ func (v *Validator) ValidateWorktreePath(path string) *ValidationResult {
 	}{
 		// Must be absolute path
 		{!filepath.IsAbs(path), "worktree path must be absolute"},
-		
+
 		// Cannot contain null bytes
 		{strings.Contains(path, "\x00"), "path cannot contain null bytes"},
-		
+
 		// Cannot be root directory
 		{filepath.Clean(path) == "/", "cannot create worktree in root directory"},
-		
+
 		// Cannot contain parent directory traversal after cleaning
 		{strings.Contains(filepath.Clean(path), ".."), "path cannot contain parent directory traversal"},
-		
+
 		// Cannot be a reserved name on Windows
 		{v.isWindowsReservedPath(path), "path uses Windows reserved name"},
-		
+
 		// Path length check
 		{len(path) > 260, "path is too long (>260 characters)"},
 	}
@@ -224,7 +224,7 @@ func (v *Validator) SanitizeInput(input string) string {
 
 	// Remove null bytes
 	sanitized := strings.ReplaceAll(input, "\x00", "")
-	
+
 	// Remove other control characters except newline and tab
 	var result strings.Builder
 	for _, r := range sanitized {
@@ -237,7 +237,7 @@ func (v *Validator) SanitizeInput(input string) string {
 
 	// Trim excessive whitespace
 	sanitized = strings.TrimSpace(sanitized)
-	
+
 	// Replace multiple consecutive spaces with single space
 	spaceRegex := regexp.MustCompile(`\s+`)
 	sanitized = spaceRegex.ReplaceAllString(sanitized, " ")
@@ -283,7 +283,7 @@ func (v *Validator) CheckPathSafety(path string) bool {
 				break
 			}
 		}
-		
+
 		if !allowed {
 			return false
 		}
@@ -392,7 +392,7 @@ func (v *Validator) isReservedName(name string) bool {
 // isWindowsReservedPath checks for Windows reserved paths
 func (v *Validator) isWindowsReservedPath(path string) bool {
 	base := strings.ToUpper(filepath.Base(path))
-	
+
 	// Remove extension
 	if idx := strings.LastIndex(base, "."); idx != -1 {
 		base = base[:idx]
@@ -416,7 +416,7 @@ func (v *Validator) isWindowsReservedPath(path string) bool {
 // validatePathComponents validates individual path components
 func (v *Validator) validatePathComponents(path string) error {
 	components := strings.Split(path, string(filepath.Separator))
-	
+
 	for _, component := range components {
 		if component == "" {
 			continue
@@ -438,7 +438,7 @@ func (v *Validator) validatePathComponents(path string) error {
 			// Allow single dot, but warn about hidden files
 			continue
 		}
-		
+
 		if strings.HasSuffix(component, ".") || strings.HasSuffix(component, " ") {
 			return fmt.Errorf("path component '%s' cannot end with dot or space", component)
 		}
@@ -463,7 +463,7 @@ func (v *Validator) checkDiskSpace(path string) bool {
 
 	// Calculate available space in bytes
 	availableSpace := stat.Bavail * uint64(stat.Bsize)
-	
+
 	// Consider low if less than 1GB available
 	return availableSpace < 1024*1024*1024
 }
@@ -606,7 +606,7 @@ func (v *Validator) ValidateCommitMessage(message string) *ValidationResult {
 
 	// Basic commit message validation
 	lines := strings.Split(message, "\n")
-	
+
 	// Check first line (subject)
 	subject := strings.TrimSpace(lines[0])
 	if len(subject) > 72 {

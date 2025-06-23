@@ -43,10 +43,10 @@ func NewMigrationRegistry() *MigrationRegistry {
 	registry := &MigrationRegistry{
 		migrations: make([]Migration, 0),
 	}
-	
+
 	// Register all migrations
 	registry.registerMigrations()
-	
+
 	return registry
 }
 
@@ -62,6 +62,12 @@ func (r *MigrationRegistry) registerMigrations() {
 		version: "1.0.0",
 		migrate: migrateV090ToV100,
 	})
+
+	// Migration from 1.0.0 to 2.0.0 - Worktree base directory changes
+	r.Register(MigrationFunc{
+		version: "2.0.0",
+		migrate: migrateV100ToV200,
+	})
 }
 
 // Migrate applies all necessary migrations to reach target version
@@ -74,7 +80,7 @@ func (r *MigrationRegistry) Migrate(configData []byte, currentVersion, targetVer
 
 	// Get migrations to apply
 	migrations := r.getMigrationsToApply(currentVersion, targetVersion)
-	
+
 	// Apply migrations in order
 	for _, migration := range migrations {
 		newConfig, err := migration.Migrate(config)
@@ -82,7 +88,7 @@ func (r *MigrationRegistry) Migrate(configData []byte, currentVersion, targetVer
 			return nil, fmt.Errorf("migration to version %s failed: %w", migration.Version(), err)
 		}
 		config = newConfig
-		
+
 		// Update version in config
 		config["version"] = migration.Version()
 	}
@@ -99,7 +105,7 @@ func (r *MigrationRegistry) Migrate(configData []byte, currentVersion, targetVer
 // getMigrationsToApply returns migrations needed to reach target version
 func (r *MigrationRegistry) getMigrationsToApply(currentVersion, targetVersion string) []Migration {
 	var toApply []Migration
-	
+
 	// Sort migrations by version
 	sorted := make([]Migration, len(r.migrations))
 	copy(sorted, r.migrations)
@@ -123,7 +129,7 @@ func DetectConfigVersion(data []byte) (string, error) {
 	var config struct {
 		Version string `yaml:"version"`
 	}
-	
+
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return "", fmt.Errorf("failed to parse config: %w", err)
 	}
@@ -159,7 +165,7 @@ func compareVersions(v1, v2 string) int {
 	for i := 0; i < 3; i++ {
 		n1, _ := strconv.Atoi(parts1[i])
 		n2, _ := strconv.Atoi(parts2[i])
-		
+
 		if n1 < n2 {
 			return -1
 		}
@@ -174,7 +180,7 @@ func compareVersions(v1, v2 string) int {
 // migrateV090ToV100 migrates from version 0.9.0 to 1.0.0
 func migrateV090ToV100(oldConfig map[string]interface{}) (map[string]interface{}, error) {
 	newConfig := make(map[string]interface{})
-	
+
 	// Copy existing values
 	for k, v := range oldConfig {
 		newConfig[k] = v
@@ -182,7 +188,7 @@ func migrateV090ToV100(oldConfig map[string]interface{}) (map[string]interface{}
 
 	// Migrate old structure to new structure
 	// Example: rename fields, restructure nested configs, etc.
-	
+
 	// If old config had 'hooks' instead of 'status_hooks'
 	if hooks, ok := oldConfig["hooks"]; ok {
 		newConfig["status_hooks"] = hooks
@@ -198,22 +204,22 @@ func migrateV090ToV100(oldConfig map[string]interface{}) (map[string]interface{}
 	// If old config had flat structure for commands
 	if _, ok := oldConfig["commands"]; !ok {
 		commands := make(map[string]interface{})
-		
+
 		if claude, ok := oldConfig["claude_command"]; ok {
 			commands["claude_command"] = claude
 			delete(newConfig, "claude_command")
 		}
-		
+
 		if git, ok := oldConfig["git_command"]; ok {
 			commands["git_command"] = git
 			delete(newConfig, "git_command")
 		}
-		
+
 		if tmux, ok := oldConfig["tmux_prefix"]; ok {
 			commands["tmux_prefix"] = tmux
 			delete(newConfig, "tmux_prefix")
 		}
-		
+
 		if len(commands) > 0 {
 			newConfig["commands"] = commands
 		}
@@ -306,4 +312,64 @@ func ImportFromMigration(data map[string]interface{}) (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+// migrateV100ToV200 migrates from version 1.0.0 to 2.0.0
+// Changes:
+// - Add BaseDirectory field to worktree configuration with default sibling pattern
+// - Update DirectoryPattern from "{{.Project}}-{{.Branch}}" to "{{.Branch}}" for simplified naming
+func migrateV100ToV200(oldConfig map[string]interface{}) (map[string]interface{}, error) {
+	newConfig := make(map[string]interface{})
+
+	// Copy existing values
+	for k, v := range oldConfig {
+		newConfig[k] = v
+	}
+
+	// Migrate worktree configuration
+	if worktreeConfig, ok := oldConfig["worktree"]; ok {
+		if worktreeMap, ok := worktreeConfig.(map[string]interface{}); ok {
+			// Add BaseDirectory if not present
+			if _, hasBaseDir := worktreeMap["base_directory"]; !hasBaseDir {
+				worktreeMap["base_directory"] = "../.worktrees/{{.Project}}"
+			}
+
+			// Update DirectoryPattern if it's still the old default
+			if dirPattern, ok := worktreeMap["directory_pattern"].(string); ok {
+				if dirPattern == "{{.Project}}-{{.Branch}}" {
+					worktreeMap["directory_pattern"] = "{{.Branch}}"
+				}
+			}
+
+			newConfig["worktree"] = worktreeMap
+		}
+	} else {
+		// Create default worktree config if none exists
+		newConfig["worktree"] = map[string]interface{}{
+			"auto_directory":    true,
+			"directory_pattern": "{{.Branch}}",
+			"default_branch":    "main",
+			"cleanup_on_merge":  false,
+			"base_directory":    "../.worktrees/{{.Project}}",
+		}
+	}
+
+	// Also update git configuration for backward compatibility
+	if gitConfig, ok := oldConfig["git"]; ok {
+		if gitMap, ok := gitConfig.(map[string]interface{}); ok {
+			// Update DirectoryPattern if it's still the old default
+			if dirPattern, ok := gitMap["directory_pattern"].(string); ok {
+				if dirPattern == "{{.Project}}-{{.Branch}}" {
+					gitMap["directory_pattern"] = "{{.Branch}}"
+				}
+			}
+
+			newConfig["git"] = gitMap
+		}
+	}
+
+	// Ensure version is set
+	newConfig["version"] = "2.0.0"
+
+	return newConfig, nil
 }

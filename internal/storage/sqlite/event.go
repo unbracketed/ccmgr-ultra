@@ -36,14 +36,14 @@ func (r *eventRepository) Create(ctx context.Context, event *storage.SessionEven
 		INSERT INTO session_events (session_id, event_type, timestamp, data)
 		VALUES (?, ?, ?, ?)
 	`
-	
+
 	result, err := r.exec().ExecContext(ctx, query,
 		event.SessionID,
 		event.EventType,
 		event.Timestamp,
 		string(dataJSON),
 	)
-	
+
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (r *eventRepository) CreateBatch(ctx context.Context, events []*storage.Ses
 
 	var tx *sql.Tx
 	var err error
-	
+
 	if r.tx != nil {
 		tx = r.tx
 	} else {
@@ -121,7 +121,7 @@ func (r *eventRepository) GetBySessionID(ctx context.Context, sessionID string, 
 		WHERE session_id = ?
 		ORDER BY timestamp DESC
 	`
-	
+
 	args := []interface{}{sessionID}
 	if limit > 0 {
 		query += " LIMIT ?"
@@ -148,7 +148,7 @@ func (r *eventRepository) GetBySessionID(ctx context.Context, sessionID string, 
 
 func (r *eventRepository) GetByFilter(ctx context.Context, filter storage.EventFilter) ([]*storage.SessionEvent, error) {
 	query, args := r.buildFilterQuery(filter)
-	
+
 	rows, err := r.exec().QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err

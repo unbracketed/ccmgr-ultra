@@ -96,7 +96,7 @@ func init() {
 
 func NewProcessMonitor(config *config.Config) *ProcessMonitor {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	pollInterval := 2 * time.Second
 	if config != nil && config.Tmux.MonitorInterval > 0 {
 		pollInterval = config.Tmux.MonitorInterval
@@ -244,7 +244,7 @@ func (pm *ProcessMonitor) updateSessionState(sessionID string, newState ProcessS
 	}
 
 	oldState := session.CurrentState
-	
+
 	stateChange := StateChange{
 		From:      oldState,
 		To:        newState,
@@ -293,7 +293,7 @@ func (pm *ProcessMonitor) detectStateCombined(sessionID string) (ProcessState, e
 	if outputErr == nil {
 		return outputState, nil
 	}
-	
+
 	if processErr == nil {
 		return processState, nil
 	}
@@ -350,7 +350,7 @@ func (pm *ProcessMonitor) detectStateByOutput(sessionID string) (ProcessState, e
 
 func (pm *ProcessMonitor) analyzeOutput(output string) ProcessState {
 	lines := strings.Split(output, "\n")
-	
+
 	recentLines := lines
 	if len(lines) > 20 {
 		recentLines = lines[len(lines)-20:]

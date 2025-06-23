@@ -44,18 +44,18 @@ func (s ProcessState) String() string {
 
 // ProcessInfo holds information about a Claude Code process
 type ProcessInfo struct {
-	PID         int           `json:"pid"`
-	SessionID   string        `json:"session_id"`
-	WorkingDir  string        `json:"working_dir"`
-	Command     []string      `json:"command"`
-	StartTime   time.Time     `json:"start_time"`
-	State       ProcessState  `json:"state"`
-	LastUpdate  time.Time     `json:"last_update"`
-	TmuxSession string        `json:"tmux_session,omitempty"`
-	WorktreeID  string        `json:"worktree_id,omitempty"`
-	CPUPercent  float64       `json:"cpu_percent"`
-	MemoryMB    int64         `json:"memory_mb"`
-	mutex       sync.RWMutex  `json:"-"`
+	PID         int          `json:"pid"`
+	SessionID   string       `json:"session_id"`
+	WorkingDir  string       `json:"working_dir"`
+	Command     []string     `json:"command"`
+	StartTime   time.Time    `json:"start_time"`
+	State       ProcessState `json:"state"`
+	LastUpdate  time.Time    `json:"last_update"`
+	TmuxSession string       `json:"tmux_session,omitempty"`
+	WorktreeID  string       `json:"worktree_id,omitempty"`
+	CPUPercent  float64      `json:"cpu_percent"`
+	MemoryMB    int64        `json:"memory_mb"`
+	mutex       sync.RWMutex `json:"-"`
 }
 
 // GetState safely returns the current state
@@ -84,30 +84,30 @@ func (p *ProcessInfo) UpdateStats(cpu float64, memory int64) {
 
 // StateChangeEvent represents a process state change
 type StateChangeEvent struct {
-	ProcessID   string        `json:"process_id"`
-	PID         int           `json:"pid"`
-	OldState    ProcessState  `json:"old_state"`
-	NewState    ProcessState  `json:"new_state"`
-	Timestamp   time.Time     `json:"timestamp"`
-	SessionID   string        `json:"session_id"`
-	WorktreeID  string        `json:"worktree_id,omitempty"`
-	TmuxSession string        `json:"tmux_session,omitempty"`
-	WorkingDir  string        `json:"working_dir"`
+	ProcessID   string       `json:"process_id"`
+	PID         int          `json:"pid"`
+	OldState    ProcessState `json:"old_state"`
+	NewState    ProcessState `json:"new_state"`
+	Timestamp   time.Time    `json:"timestamp"`
+	SessionID   string       `json:"session_id"`
+	WorktreeID  string       `json:"worktree_id,omitempty"`
+	TmuxSession string       `json:"tmux_session,omitempty"`
+	WorkingDir  string       `json:"working_dir"`
 }
 
 // ProcessConfig holds configuration for process monitoring
 type ProcessConfig struct {
-	PollInterval     time.Duration         `yaml:"poll_interval" json:"poll_interval"`
-	LogPaths         []string              `yaml:"log_paths" json:"log_paths"`
-	StatePatterns    map[string]string     `yaml:"state_patterns" json:"state_patterns"`
-	MaxProcesses     int                   `yaml:"max_processes" json:"max_processes"`
-	CleanupInterval  time.Duration         `yaml:"cleanup_interval" json:"cleanup_interval"`
-	EnableLogParsing bool                  `yaml:"enable_log_parsing" json:"enable_log_parsing"`
-	EnableResourceMonitoring bool         `yaml:"enable_resource_monitoring" json:"enable_resource_monitoring"`
-	StateTimeout     time.Duration         `yaml:"state_timeout" json:"state_timeout"`
-	StartupTimeout   time.Duration         `yaml:"startup_timeout" json:"startup_timeout"`
-	compiledPatterns map[ProcessState]*regexp.Regexp `yaml:"-" json:"-"`
-	mutex           sync.RWMutex                     `yaml:"-" json:"-"`
+	PollInterval             time.Duration                   `yaml:"poll_interval" json:"poll_interval"`
+	LogPaths                 []string                        `yaml:"log_paths" json:"log_paths"`
+	StatePatterns            map[string]string               `yaml:"state_patterns" json:"state_patterns"`
+	MaxProcesses             int                             `yaml:"max_processes" json:"max_processes"`
+	CleanupInterval          time.Duration                   `yaml:"cleanup_interval" json:"cleanup_interval"`
+	EnableLogParsing         bool                            `yaml:"enable_log_parsing" json:"enable_log_parsing"`
+	EnableResourceMonitoring bool                            `yaml:"enable_resource_monitoring" json:"enable_resource_monitoring"`
+	StateTimeout             time.Duration                   `yaml:"state_timeout" json:"state_timeout"`
+	StartupTimeout           time.Duration                   `yaml:"startup_timeout" json:"startup_timeout"`
+	compiledPatterns         map[ProcessState]*regexp.Regexp `yaml:"-" json:"-"`
+	mutex                    sync.RWMutex                    `yaml:"-" json:"-"`
 }
 
 // SetDefaults sets default values for ProcessConfig
@@ -149,18 +149,18 @@ func (c *ProcessConfig) SetDefaults() {
 func (c *ProcessConfig) CompilePatterns() error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	
+
 	if c.compiledPatterns == nil {
 		c.compiledPatterns = make(map[ProcessState]*regexp.Regexp)
 	}
-	
+
 	stateMap := map[string]ProcessState{
 		"busy":    StateBusy,
 		"idle":    StateIdle,
 		"waiting": StateWaiting,
 		"error":   StateError,
 	}
-	
+
 	for patternName, pattern := range c.StatePatterns {
 		if state, exists := stateMap[patternName]; exists {
 			compiled, err := regexp.Compile(pattern)
@@ -170,7 +170,7 @@ func (c *ProcessConfig) CompilePatterns() error {
 			c.compiledPatterns[state] = compiled
 		}
 	}
-	
+
 	return nil
 }
 
@@ -216,12 +216,12 @@ type ProcessTracker interface {
 
 // LogMonitor represents log file monitoring for state detection
 type LogMonitor struct {
-	LogPath     string    `json:"log_path"`
-	LastOffset  int64     `json:"last_offset"`
-	LastCheck   time.Time `json:"last_check"`
-	StateRegex  map[ProcessState]*regexp.Regexp `json:"-"`
-	ProcessID   string    `json:"process_id"`
-	mutex       sync.RWMutex `json:"-"`
+	LogPath    string                          `json:"log_path"`
+	LastOffset int64                           `json:"last_offset"`
+	LastCheck  time.Time                       `json:"last_check"`
+	StateRegex map[ProcessState]*regexp.Regexp `json:"-"`
+	ProcessID  string                          `json:"process_id"`
+	mutex      sync.RWMutex                    `json:"-"`
 }
 
 // GetLastOffset safely returns the last read offset
@@ -241,13 +241,13 @@ func (l *LogMonitor) SetLastOffset(offset int64) {
 
 // ProcessRegistry holds all tracked processes
 type ProcessRegistry struct {
-	processes   map[string]*ProcessInfo     `json:"processes"`
-	subscribers []StateChangeHandler       `json:"-"`
-	config      *ProcessConfig             `json:"-"`
-	mutex       sync.RWMutex               `json:"-"`
-	stopCh      chan struct{}              `json:"-"`
-	ctx         context.Context            `json:"-"`
-	cancel      context.CancelFunc         `json:"-"`
+	processes   map[string]*ProcessInfo `json:"processes"`
+	subscribers []StateChangeHandler    `json:"-"`
+	config      *ProcessConfig          `json:"-"`
+	mutex       sync.RWMutex            `json:"-"`
+	stopCh      chan struct{}           `json:"-"`
+	ctx         context.Context         `json:"-"`
+	cancel      context.CancelFunc      `json:"-"`
 }
 
 // NewProcessRegistry creates a new process registry
@@ -262,33 +262,33 @@ func NewProcessRegistry(config *ProcessConfig) *ProcessRegistry {
 
 // ProcessStats holds statistics about monitored processes
 type ProcessStats struct {
-	TotalProcesses    int                     `json:"total_processes"`
-	StateDistribution map[ProcessState]int    `json:"state_distribution"`
-	AverageUptime     time.Duration           `json:"average_uptime"`
-	LastUpdated       time.Time               `json:"last_updated"`
+	TotalProcesses    int                  `json:"total_processes"`
+	StateDistribution map[ProcessState]int `json:"state_distribution"`
+	AverageUptime     time.Duration        `json:"average_uptime"`
+	LastUpdated       time.Time            `json:"last_updated"`
 }
 
 // GetStats returns current statistics
 func (r *ProcessRegistry) GetStats() ProcessStats {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	stats := ProcessStats{
 		TotalProcesses:    len(r.processes),
 		StateDistribution: make(map[ProcessState]int),
 		LastUpdated:       time.Now(),
 	}
-	
+
 	var totalUptime time.Duration
 	for _, process := range r.processes {
 		state := process.GetState()
 		stats.StateDistribution[state]++
 		totalUptime += time.Since(process.StartTime)
 	}
-	
+
 	if len(r.processes) > 0 {
 		stats.AverageUptime = totalUptime / time.Duration(len(r.processes))
 	}
-	
+
 	return stats
 }

@@ -30,7 +30,7 @@ func (f *StatusTableFormatter) Format(data interface{}) error {
 		}
 		v = v.Elem()
 	}
-	
+
 	if v.Kind() != reflect.Struct {
 		return fmt.Errorf("invalid data type for status formatter: expected struct, got %T", data)
 	}
@@ -87,7 +87,7 @@ func (f *StatusTableFormatter) Format(data interface{}) error {
 // formatSystemStatusReflection formats the system overview using reflection
 func (f *StatusTableFormatter) formatSystemStatusReflection(systemField reflect.Value) error {
 	f.printSectionHeader("System Overview")
-	
+
 	maxKeyWidth := 25
 	data := [][]string{
 		{"Overall Health", formatHealthStatus(getFieldBool(systemField, "Healthy"))},
@@ -109,14 +109,14 @@ func (f *StatusTableFormatter) formatSystemStatusReflection(systemField reflect.
 // formatWorktreesReflection formats worktrees using reflection
 func (f *StatusTableFormatter) formatWorktreesReflection(worktreesField reflect.Value) error {
 	f.printSectionHeader("Worktrees")
-	
+
 	// Define column headers and widths
 	headers := []string{"Path", "Branch", "Head", "Status", "Session", "Procs", "Last Accessed"}
 	widths := []int{30, 20, 10, 10, 15, 6, 15}
-	
+
 	// Print header
 	f.printTableHeader(headers, widths)
-	
+
 	// Print rows
 	for i := 0; i < worktreesField.Len(); i++ {
 		wt := worktreesField.Index(i)
@@ -124,7 +124,7 @@ func (f *StatusTableFormatter) formatWorktreesReflection(worktreesField reflect.
 		if len(head) > 8 {
 			head = head[:8]
 		}
-		
+
 		row := []string{
 			shortenPath(getFieldString(wt, "Path"), 30),
 			getFieldString(wt, "Branch"),
@@ -136,7 +136,7 @@ func (f *StatusTableFormatter) formatWorktreesReflection(worktreesField reflect.
 		}
 		f.printTableRow(row, widths)
 	}
-	
+
 	f.printTableFooter(widths)
 	return nil
 }
@@ -144,14 +144,14 @@ func (f *StatusTableFormatter) formatWorktreesReflection(worktreesField reflect.
 // formatSessionsReflection formats sessions using reflection
 func (f *StatusTableFormatter) formatSessionsReflection(sessionsField reflect.Value) error {
 	f.printSectionHeader("Sessions")
-	
+
 	// Define column headers and widths
 	headers := []string{"Name", "Project", "Branch", "Status", "Created", "Last Access"}
 	widths := []int{20, 15, 15, 8, 12, 12}
-	
+
 	// Print header
 	f.printTableHeader(headers, widths)
-	
+
 	// Print rows
 	for i := 0; i < sessionsField.Len(); i++ {
 		session := sessionsField.Index(i)
@@ -165,7 +165,7 @@ func (f *StatusTableFormatter) formatSessionsReflection(sessionsField reflect.Va
 		}
 		f.printTableRow(row, widths)
 	}
-	
+
 	f.printTableFooter(widths)
 	return nil
 }
@@ -173,14 +173,14 @@ func (f *StatusTableFormatter) formatSessionsReflection(sessionsField reflect.Va
 // formatProcessesReflection formats processes using reflection
 func (f *StatusTableFormatter) formatProcessesReflection(processesField reflect.Value) error {
 	f.printSectionHeader("Claude Processes")
-	
+
 	// Define column headers and widths
 	headers := []string{"PID", "State", "Session", "Uptime", "CPU%", "Memory", "Directory"}
 	widths := []int{8, 10, 15, 10, 8, 10, 25}
-	
+
 	// Print header
 	f.printTableHeader(headers, widths)
-	
+
 	// Print rows
 	for i := 0; i < processesField.Len(); i++ {
 		proc := processesField.Index(i)
@@ -195,7 +195,7 @@ func (f *StatusTableFormatter) formatProcessesReflection(processesField reflect.
 		}
 		f.printTableRow(row, widths)
 	}
-	
+
 	f.printTableFooter(widths)
 	return nil
 }
@@ -203,11 +203,11 @@ func (f *StatusTableFormatter) formatProcessesReflection(processesField reflect.
 // formatHooksStatusReflection formats hooks status using reflection
 func (f *StatusTableFormatter) formatHooksStatusReflection(hooksField reflect.Value) error {
 	f.printSectionHeader("Hooks Status")
-	
+
 	data := [][]string{
 		{"Hooks System", formatBooleanStatus(getFieldBool(hooksField, "Enabled"))},
 	}
-	
+
 	return f.printKeyValueTable(data, 20)
 }
 
@@ -311,7 +311,7 @@ func (f *StatusTableFormatter) printTableHeader(headers []string, widths []int) 
 		}
 	}
 	fmt.Fprintf(f.writer, " │\n")
-	
+
 	// Separator
 	fmt.Fprintf(f.writer, "├")
 	for i, width := range widths {
@@ -401,11 +401,11 @@ func formatDuration(d time.Duration) string {
 	if d == 0 {
 		return "0s"
 	}
-	
+
 	hours := int(d.Hours())
 	minutes := int(d.Minutes()) % 60
 	seconds := int(d.Seconds()) % 60
-	
+
 	if hours > 0 {
 		return fmt.Sprintf("%dh %dm", hours, minutes)
 	}
@@ -420,10 +420,10 @@ func formatTimeAgo(t time.Time) string {
 	if t.IsZero() {
 		return "Never"
 	}
-	
+
 	now := time.Now()
 	diff := now.Sub(t)
-	
+
 	if diff < time.Minute {
 		return "Just now"
 	}
@@ -449,18 +449,18 @@ func shortenPath(path string, maxLen int) string {
 	if len(path) <= maxLen {
 		return path
 	}
-	
+
 	// Try to keep the filename and some parent directories
 	parts := strings.Split(path, "/")
 	if len(parts) <= 1 {
 		return path[:maxLen-3] + "..."
 	}
-	
+
 	filename := parts[len(parts)-1]
 	if len(filename) > maxLen-3 {
 		return filename[:maxLen-3] + "..."
 	}
-	
+
 	// Build path from the end
 	result := filename
 	for i := len(parts) - 2; i >= 0; i-- {
@@ -470,7 +470,7 @@ func shortenPath(path string, maxLen int) string {
 		}
 		result = candidate
 	}
-	
+
 	return result
 }
 

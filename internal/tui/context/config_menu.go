@@ -38,7 +38,7 @@ func (c *ConfigContextMenu) CreateConfigMainMenu() *ContextMenu {
 		NewMenuItemWithIcon("Reset to Defaults", "config_reset", "d", "🔄"),
 		NewMenuItemWithIcon("Backup Config", "config_backup", "b", "💾"),
 	}
-	
+
 	return NewContextMenu(ContextMenuConfig{
 		Title: "Configuration",
 		Items: items,
@@ -48,14 +48,14 @@ func (c *ConfigContextMenu) CreateConfigMainMenu() *ContextMenu {
 // CreateConfigSectionMenu creates a context menu for a specific configuration section
 func (c *ConfigContextMenu) CreateConfigSectionMenu(section ConfigSection) *ContextMenu {
 	var items []ContextMenuItem
-	
+
 	// Basic operations
 	items = append(items,
 		NewMenuItemWithIcon("Edit Section", "config_edit_section", "e", "✏️"),
 		NewMenuItemWithIcon("View Details", "config_view_section", "v", "👁️"),
 		NewMenuDivider(),
 	)
-	
+
 	// Validation status
 	if !section.Valid {
 		items = append(items,
@@ -64,7 +64,7 @@ func (c *ConfigContextMenu) CreateConfigSectionMenu(section ConfigSection) *Cont
 			NewMenuDivider(),
 		)
 	}
-	
+
 	// Reset options
 	if section.Modified {
 		items = append(items,
@@ -73,7 +73,7 @@ func (c *ConfigContextMenu) CreateConfigSectionMenu(section ConfigSection) *Cont
 			NewMenuDivider(),
 		)
 	}
-	
+
 	// Advanced operations based on section type
 	switch section.Type {
 	case "tui":
@@ -85,7 +85,7 @@ func (c *ConfigContextMenu) CreateConfigSectionMenu(section ConfigSection) *Cont
 			Enabled: true,
 			Submenu: tuiSubmenu,
 		})
-		
+
 	case "claude":
 		claudeSubmenu := c.createClaudeSubmenu()
 		items = append(items, ContextMenuItem{
@@ -95,7 +95,7 @@ func (c *ConfigContextMenu) CreateConfigSectionMenu(section ConfigSection) *Cont
 			Enabled: true,
 			Submenu: claudeSubmenu,
 		})
-		
+
 	case "git":
 		gitSubmenu := c.createGitConfigSubmenu()
 		items = append(items, ContextMenuItem{
@@ -105,7 +105,7 @@ func (c *ConfigContextMenu) CreateConfigSectionMenu(section ConfigSection) *Cont
 			Enabled: true,
 			Submenu: gitSubmenu,
 		})
-		
+
 	case "tmux":
 		tmuxSubmenu := c.createTmuxSubmenu()
 		items = append(items, ContextMenuItem{
@@ -116,14 +116,14 @@ func (c *ConfigContextMenu) CreateConfigSectionMenu(section ConfigSection) *Cont
 			Submenu: tmuxSubmenu,
 		})
 	}
-	
+
 	// Help and documentation
 	items = append(items,
 		NewMenuDivider(),
 		NewMenuItemWithIcon("Show Help", "config_help_section", "h", "❓"),
 		NewMenuItemWithIcon("Show Examples", "config_examples", "x", "📖"),
 	)
-	
+
 	return NewContextMenu(ContextMenuConfig{
 		Title: section.Name,
 		Items: items,
@@ -142,7 +142,7 @@ func (c *ConfigContextMenu) createTUISubmenu() *ContextMenu {
 		NewMenuDivider(),
 		NewMenuItemWithIcon("Reset TUI Settings", "config_tui_reset", "x", "🔄"),
 	}
-	
+
 	return &ContextMenu{
 		title: "TUI Settings",
 		items: items,
@@ -163,7 +163,7 @@ func (c *ConfigContextMenu) createClaudeSubmenu() *ContextMenu {
 		NewMenuItemWithIcon("Test Connection", "config_claude_test", "t", "🔍"),
 		NewMenuItemWithIcon("Reset Claude Config", "config_claude_reset", "r", "🔄"),
 	}
-	
+
 	return &ContextMenu{
 		title: "Claude Settings",
 		items: items,
@@ -184,7 +184,7 @@ func (c *ConfigContextMenu) createGitConfigSubmenu() *ContextMenu {
 		NewMenuItemWithIcon("Validate Git Config", "config_git_validate", "v", "✅"),
 		NewMenuItemWithIcon("Reset Git Settings", "config_git_reset", "x", "🔄"),
 	}
-	
+
 	return &ContextMenu{
 		title: "Git Settings",
 		items: items,
@@ -205,7 +205,7 @@ func (c *ConfigContextMenu) createTmuxSubmenu() *ContextMenu {
 		NewMenuItemWithIcon("Test Tmux Config", "config_tmux_test", "e", "🔍"),
 		NewMenuItemWithIcon("Reset Tmux Settings", "config_tmux_reset", "r", "🔄"),
 	}
-	
+
 	return &ContextMenu{
 		title: "Tmux Settings",
 		items: items,
@@ -228,7 +228,7 @@ func (c *ConfigContextMenu) CreateConfigEditorMenu() *ContextMenu {
 		NewMenuItemWithIcon("Show Schema", "config_schema_editor", "h", "📋"),
 		NewMenuItemWithIcon("Insert Template", "config_template", "t", "📄"),
 	}
-	
+
 	return NewContextMenu(ContextMenuConfig{
 		Title: "Editor",
 		Items: items,
@@ -247,7 +247,7 @@ func (c *ConfigContextMenu) CreateConfigValidationMenu() *ContextMenu {
 		NewMenuItemWithIcon("Validate Again", "config_revalidate", "r", "🔄"),
 		NewMenuItemWithIcon("Export Report", "config_export_report", "x", "📤"),
 	}
-	
+
 	return NewContextMenu(ContextMenuConfig{
 		Title: "Validation",
 		Items: items,
@@ -266,7 +266,7 @@ func (c *ConfigContextMenu) CreateConfigBackupMenu() *ContextMenu {
 		NewMenuItemWithIcon("Auto-backup Settings", "config_backup_auto", "a", "⚙️"),
 		NewMenuItemWithIcon("Backup Location", "config_backup_location", "p", "📁"),
 	}
-	
+
 	return NewContextMenu(ContextMenuConfig{
 		Title: "Backup",
 		Items: items,

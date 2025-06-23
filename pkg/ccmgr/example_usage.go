@@ -16,7 +16,7 @@ func ExampleUsage() {
 
 	// Get system status
 	status := client.System().Status()
-	fmt.Printf("System Status: %d active sessions, %d worktrees\n", 
+	fmt.Printf("System Status: %d active sessions, %d worktrees\n",
 		status.ActiveSessions, status.TrackedWorktrees)
 
 	// List all sessions
@@ -25,7 +25,7 @@ func ExampleUsage() {
 		log.Printf("Failed to list sessions: %v", err)
 		return
 	}
-	
+
 	fmt.Printf("Found %d sessions:\n", len(sessions))
 	for _, session := range sessions {
 		fmt.Printf("  - %s (%s) in %s\n", session.Name, session.Status, session.Directory)
@@ -37,7 +37,7 @@ func ExampleUsage() {
 		log.Printf("Failed to list worktrees: %v", err)
 		return
 	}
-	
+
 	fmt.Printf("Recent worktrees (%d):\n", len(worktrees))
 	for _, wt := range worktrees {
 		fmt.Printf("  - %s (%s) - Claude: %s\n", wt.Path, wt.Branch, wt.ClaudeStatus.State)
@@ -49,6 +49,6 @@ func ExampleUsage() {
 		log.Printf("Failed to create session: %v", err)
 		return
 	}
-	
+
 	fmt.Printf("Created session: %s\n", sessionID)
 }

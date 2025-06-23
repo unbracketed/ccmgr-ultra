@@ -27,11 +27,11 @@ func TestValidateBranchName(t *testing.T) {
 	validator := NewValidator(createTestConfig())
 
 	testCases := []struct {
-		name        string
-		branchName  string
-		valid       bool
-		errorCount  int
-		warnCount   int
+		name       string
+		branchName string
+		valid      bool
+		errorCount int
+		warnCount  int
 	}{
 		{
 			name:       "Valid simple branch",
@@ -132,7 +132,7 @@ func TestValidateBranchName(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := validator.ValidateBranchName(tc.branchName)
-			
+
 			assert.Equal(t, tc.valid, result.Valid)
 			if tc.errorCount > 0 {
 				assert.Len(t, result.Errors, tc.errorCount)
@@ -205,7 +205,7 @@ func TestValidateWorktreePath(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := validator.ValidateWorktreePath(tc.path)
-			
+
 			assert.Equal(t, tc.valid, result.Valid)
 			if tc.errorCount > 0 {
 				assert.Len(t, result.Errors, tc.errorCount)
@@ -346,7 +346,7 @@ func TestCheckPathSafety(t *testing.T) {
 
 func TestValidateOperationContext(t *testing.T) {
 	validator := NewValidator(createTestConfig())
-	
+
 	tempDir := filepath.Join(os.TempDir(), "test-repo")
 	os.MkdirAll(tempDir, 0755)
 	defer os.RemoveAll(tempDir)
@@ -596,9 +596,9 @@ func TestValidateCommitMessage(t *testing.T) {
 			valid:   true,
 		},
 		{
-			name: "Valid message with body",
+			name:    "Valid message with body",
 			message: "Fix bug in user authentication\n\nThis commit fixes the issue where users couldn't log in.",
-			valid: true,
+			valid:   true,
 		},
 		{
 			name:    "Empty message",

@@ -27,15 +27,15 @@ func (item *cacheItem) isExpired() bool {
 
 // MemoryCache implements an in-memory cache with TTL support
 type MemoryCache struct {
-	data     map[string]*cacheItem
-	mutex    sync.RWMutex
-	maxSize  int
-	cleanup  time.Duration
-	
+	data    map[string]*cacheItem
+	mutex   sync.RWMutex
+	maxSize int
+	cleanup time.Duration
+
 	// Statistics
 	hits   int64
 	misses int64
-	
+
 	// Background cleanup
 	stopCleanup chan struct{}
 	wg          sync.WaitGroup
@@ -134,7 +134,7 @@ func (c *MemoryCache) GetMisses() int64 {
 func (c *MemoryCache) GetHitRatio() float64 {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
-	
+
 	total := c.hits + c.misses
 	if total == 0 {
 		return 0
@@ -209,11 +209,11 @@ func (c *MemoryCache) GetStats() map[string]interface{} {
 	defer c.mutex.RUnlock()
 
 	return map[string]interface{}{
-		"size":       len(c.data),
-		"max_size":   c.maxSize,
-		"hits":       c.hits,
-		"misses":     c.misses,
-		"hit_ratio":  c.GetHitRatio(),
+		"size":      len(c.data),
+		"max_size":  c.maxSize,
+		"hits":      c.hits,
+		"misses":    c.misses,
+		"hit_ratio": c.GetHitRatio(),
 	}
 }
 
@@ -297,11 +297,11 @@ func (m *MultiLevelCache) Clear() {
 
 // CacheConfig defines configuration for cache behavior
 type CacheConfig struct {
-	MaxSize        int           `yaml:"max_size" json:"max_size" default:"1000"`
-	DefaultTTL     time.Duration `yaml:"default_ttl" json:"default_ttl" default:"5m"`
+	MaxSize         int           `yaml:"max_size" json:"max_size" default:"1000"`
+	DefaultTTL      time.Duration `yaml:"default_ttl" json:"default_ttl" default:"5m"`
 	CleanupInterval time.Duration `yaml:"cleanup_interval" json:"cleanup_interval" default:"15m"`
-	EnableWarmup   bool          `yaml:"enable_warmup" json:"enable_warmup" default:"true"`
-	WarmupDays     int           `yaml:"warmup_days" json:"warmup_days" default:"7"`
+	EnableWarmup    bool          `yaml:"enable_warmup" json:"enable_warmup" default:"true"`
+	WarmupDays      int           `yaml:"warmup_days" json:"warmup_days" default:"7"`
 }
 
 // SetDefaults sets default values for cache configuration

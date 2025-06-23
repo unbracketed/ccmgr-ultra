@@ -5,11 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
 	"github.com/bcdekker/ccmgr-ultra/internal/cli"
 	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	"github.com/bcdekker/ccmgr-ultra/internal/git"
 	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
+	"github.com/spf13/cobra"
 )
 
 var continueCmd = &cobra.Command{
@@ -116,7 +116,7 @@ func runContinueCommand(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return handleCLIError(err)
 		}
-		
+
 		if isVerbose() {
 			fmt.Printf("Created new session: %s\n", session.ID)
 		}
@@ -148,11 +148,11 @@ func runContinueCommand(cmd *cobra.Command, args []string) error {
 		if !isActive {
 			return handleCLIError(cli.NewError("session is not active"))
 		}
-		
+
 		if spinner != nil {
 			spinner.StopWithMessage("Session started in detached mode")
 		}
-		
+
 		if !isQuiet() {
 			fmt.Printf("Session '%s' is running in detached mode\n", session.ID)
 			fmt.Printf("Use 'tmux attach-session -t %s' to attach later\n", session.Name)
@@ -162,7 +162,7 @@ func runContinueCommand(cmd *cobra.Command, args []string) error {
 		if spinner != nil {
 			spinner.StopWithMessage("Attaching to session...")
 		}
-		
+
 		if err := sessionManager.AttachSession(session.ID); err != nil {
 			return handleCLIError(cli.NewErrorWithCause("failed to attach to session", err))
 		}
@@ -189,7 +189,7 @@ func detectWorktreeInfo(path string, cfg *config.Config) (*WorktreeInfo, error) 
 	// Create git repository manager
 	gitCmd := git.NewGitCmd()
 	repoManager := git.NewRepositoryManager(gitCmd)
-	
+
 	// Detect repository
 	repo, err := repoManager.DetectRepository(absPath)
 	if err != nil {
@@ -211,13 +211,13 @@ func detectWorktreeInfo(path string, cfg *config.Config) (*WorktreeInfo, error) 
 
 	// Determine project name (from repository name or directory)
 	projectName := filepath.Base(repo.RootPath)
-	
+
 	// Create worktree name from path relative to repository root
 	relPath, err := filepath.Rel(repo.RootPath, absPath)
 	if err != nil {
 		relPath = filepath.Base(absPath)
 	}
-	
+
 	worktreeName := relPath
 	if worktreeName == "." {
 		worktreeName = "main"
@@ -239,16 +239,16 @@ func findExistingSession(sessionManager *tmux.SessionManager, worktreeInfo *Work
 
 	// Look for sessions matching this worktree
 	for _, session := range sessions {
-		if session.Worktree == worktreeInfo.Name || 
-		   session.Directory == worktreeInfo.Path ||
-		   session.Branch == worktreeInfo.Branch {
-			
+		if session.Worktree == worktreeInfo.Name ||
+			session.Directory == worktreeInfo.Path ||
+			session.Branch == worktreeInfo.Branch {
+
 			// Check if session is still active
 			isActive, err := sessionManager.IsSessionActive(session.ID)
 			if err != nil {
 				continue // Skip sessions we can't verify
 			}
-			
+
 			if isActive {
 				return session, nil
 			}

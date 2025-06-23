@@ -227,16 +227,16 @@ func TestListBranches(t *testing.T) {
   feature-2`
 
 	mockGit.SetCommand("branch", branchOutput)
-	
+
 	// Mock GetBranchInfo calls for each branch
 	mockGit.SetCommand("rev-parse --verify main", "abc123")
 	mockGit.SetCommand("rev-parse main", "abc123")
 	mockGit.SetError("rev-parse --abbrev-ref main@{upstream}", fmt.Errorf("no upstream"))
-	
+
 	mockGit.SetCommand("rev-parse --verify feature-1", "def456")
 	mockGit.SetCommand("rev-parse feature-1", "def456")
 	mockGit.SetError("rev-parse --abbrev-ref feature-1@{upstream}", fmt.Errorf("no upstream"))
-	
+
 	mockGit.SetCommand("rev-parse --verify feature-2", "ghi789")
 	mockGit.SetCommand("rev-parse feature-2", "ghi789")
 	mockGit.SetError("rev-parse --abbrev-ref feature-2@{upstream}", fmt.Errorf("no upstream"))

@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 func TestDefaultExecutor_Execute(t *testing.T) {
@@ -62,7 +62,7 @@ echo "This should not execute"`)
 
 	err := executor.Execute(ctx, HookTypeStatusIdle, hookCtx)
 	assert.Error(t, err)
-	
+
 	var timeoutErr *TimeoutError
 	assert.ErrorAs(t, err, &timeoutErr)
 }
@@ -79,7 +79,7 @@ func TestDefaultExecutor_ExecuteScriptNotFound(t *testing.T) {
 
 	err := executor.Execute(ctx, HookTypeStatusIdle, hookCtx)
 	assert.Error(t, err)
-	
+
 	var notFoundErr *ScriptNotFoundError
 	assert.ErrorAs(t, err, &notFoundErr)
 }
@@ -101,7 +101,7 @@ exit 1`)
 
 	err := executor.Execute(ctx, HookTypeStatusIdle, hookCtx)
 	assert.Error(t, err)
-	
+
 	var execErr *ScriptExecutionError
 	assert.ErrorAs(t, err, &execErr)
 	assert.Equal(t, 1, execErr.ExitCode)
@@ -123,7 +123,7 @@ exit 0`)
 	}
 
 	errChan := executor.ExecuteAsync(HookTypeStatusBusy, hookCtx)
-	
+
 	select {
 	case err := <-errChan:
 		assert.NoError(t, err)
@@ -316,9 +316,9 @@ func createTestConfig() *config.Config {
 func createTestScript(t *testing.T, content string) string {
 	tmpDir := t.TempDir()
 	scriptPath := filepath.Join(tmpDir, "test-hook.sh")
-	
+
 	err := os.WriteFile(scriptPath, []byte(content), 0755)
 	require.NoError(t, err)
-	
+
 	return scriptPath
 }

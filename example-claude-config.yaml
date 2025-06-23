@@ -1,4 +1,4 @@
-version: "1.0.0"
+version: "2.0.0"
 
 # Claude Code Process Monitoring Configuration
 claude:
@@ -44,6 +44,36 @@ claude:
   
   # Enable integration with git worktree management (default: true)
   integrate_worktrees: true
+
+# Git Worktree Configuration
+worktree:
+  # Base directory for worktrees (supports Go template syntax)
+  # Default: "../.worktrees/{{.Project}}" (sibling directory pattern)
+  # This pattern creates worktrees outside the repository to avoid git's constraint
+  # that worktree paths cannot be inside the repository
+  base_directory: "../.worktrees/{{.Project}}"
+  
+  # Directory naming pattern for individual worktrees
+  # Default: "{{.Branch}}" (just the branch name)
+  # Available variables: Project, Branch, Worktree, Timestamp, UserName, Prefix, Suffix
+  directory_pattern: "{{.Branch}}"
+  
+  # Automatically create directories if they don't exist
+  auto_directory: true
+  
+  # Default branch to use when creating new worktrees
+  default_branch: "main"
+
+# Example worktree patterns:
+# For a project "myapp" with branch "feature/auth", these patterns would create:
+# base_directory: "../.worktrees/{{.Project}}" -> ../.worktrees/myapp/
+# directory_pattern: "{{.Branch}}" -> feature-auth
+# Full path: ../.worktrees/myapp/feature-auth
+#
+# Alternative patterns:
+# base_directory: "/tmp/worktrees/{{.Project}}" -> /tmp/worktrees/myapp/
+# directory_pattern: "{{.Project}}-{{.Branch}}" -> myapp-feature-auth
+# Full path: /tmp/worktrees/myapp/myapp-feature-auth
 
 # Status hooks will be triggered based on Claude process states
 status_hooks:

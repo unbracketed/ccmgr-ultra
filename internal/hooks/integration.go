@@ -100,14 +100,14 @@ func NotifySessionResumed(workingDir, branch, sessionID, projectName, previousSt
 
 // ProcessStateChangeEvent represents a process state change event
 type ProcessStateChangeEvent struct {
-	ProcessID    string
-	OldState     string
-	NewState     string
-	WorkingDir   string
-	Branch       string
-	SessionID    string
-	ProjectName  string
-	ProcessInfo  map[string]interface{}
+	ProcessID   string
+	OldState    string
+	NewState    string
+	WorkingDir  string
+	Branch      string
+	SessionID   string
+	ProjectName string
+	ProcessInfo map[string]interface{}
 }
 
 // HandleProcessStateChange handles a process state change event
@@ -157,7 +157,7 @@ func HandleWorktreeCreation(event WorktreeCreationEvent) error {
 
 	// Use the worktree integrator for more advanced bootstrap options
 	integrator := GlobalHookManager.GetWorktreeIntegrator()
-	
+
 	if integrator != nil && integrator.IsEnabled() {
 		ctx := context.Background()
 		options := BootstrapOptions{

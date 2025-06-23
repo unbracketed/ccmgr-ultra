@@ -2,13 +2,15 @@ package git
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 // Integration tests for the git module
@@ -117,8 +119,8 @@ func testCompleteWorktreeWorkflow(t *testing.T, worktreeMgr *WorktreeManager, gi
 
 	// 2. Generate worktree path using pattern
 	context := PatternContext{
-		Project: "test-repo",
-		Branch:  "feature-user-auth",
+		Project:   "test-repo",
+		Branch:    "feature-user-auth",
 		Timestamp: "20240101-120000",
 	}
 	path, err := patternMgr.ApplyPattern("{{.Project}}-{{.Branch}}", context)
@@ -278,7 +280,7 @@ func TestConfigurationIntegration(t *testing.T) {
 func TestErrorHandlingIntegration(t *testing.T) {
 	// Test error propagation through the system
 	mockGit := NewMockGitCmd()
-	
+
 	// Set up error conditions
 	mockGit.SetError("rev-parse --git-dir", fmt.Errorf("not a git repository"))
 
@@ -291,7 +293,7 @@ func TestErrorHandlingIntegration(t *testing.T) {
 
 	// Test validation with invalid input
 	validator := NewValidator(nil)
-	
+
 	result := validator.ValidateBranchName("")
 	assert.False(t, result.Valid)
 	assert.NotEmpty(t, result.Errors)
@@ -332,7 +334,7 @@ func TestPerformanceConsiderations(t *testing.T) {
 	}
 
 	duration := time.Since(start)
-	
+
 	// Should complete 100 operations in less than 1 second
 	assert.Less(t, duration, time.Second)
 }
@@ -469,4 +471,100 @@ func BenchmarkRepositoryDetection(b *testing.B) {
 			b.Fatal(err)
 		}
 	}
+}
+
+// TestWorktreeCreation_SiblingDirectory tests the sibling directory pattern validation
+// and path generation logic (simplified integration test focusing on validation)
+func TestWorktreeCreation_SiblingDirectory(t *testing.T) {
+	// Setup temporary repository structure
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-integration-test-sibling")
+	defer os.RemoveAll(tempDir)
+
+	repoDir := filepath.Join(tempDir, "test-repo")
+	os.MkdirAll(repoDir, 0755)
+
+	// Setup config with sibling worktree directory pattern
+	config := &config.Config{}
+	config.SetDefaults()
+	config.Worktree.BaseDirectory = "../.worktrees/{{.Project}}"
+	config.Worktree.DirectoryPattern = "{{.Project}}-{{.Branch}}"
+	config.Worktree.AutoDirectory = true
+
+	// Change to repo directory for pattern resolution
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	os.Chdir(repoDir)
+
+	// Test pattern generation and validation (core functionality)
+	pm := NewPatternManager(&config.Worktree)
+
+	// Test base directory validation - should pass for sibling directory
+	err := pm.ValidateBaseDirectory(config.Worktree.BaseDirectory, repoDir)
+	assert.NoError(t, err, "Base directory validation should pass for sibling directory")
+
+	// Test path generation
+	generatedPath, err := pm.GenerateWorktreePath("feature-test", "repo")
+	assert.NoError(t, err, "Path generation should succeed")
+
+	// Verify path is outside repository (sibling pattern)
+	expectedPath := filepath.Join(tempDir, ".worktrees", "repo", "repo-feature-test")
+
+	// Resolve symlinks for comparison (handles macOS /var vs /private/var)
+	expectedResolved, _ := filepath.EvalSymlinks(expectedPath)
+	if expectedResolved == "" {
+		expectedResolved = expectedPath
+	}
+	actualResolved, _ := filepath.EvalSymlinks(generatedPath)
+	if actualResolved == "" {
+		actualResolved = generatedPath
+	}
+
+	// Also resolve the parent directories to handle symlinks
+	expectedResolvedParent, _ := filepath.EvalSymlinks(filepath.Dir(expectedPath))
+	actualResolvedParent, _ := filepath.EvalSymlinks(filepath.Dir(generatedPath))
+
+	// Compare paths with resolved symlinks - check that they are the same
+	expectedFinal := filepath.Join(expectedResolvedParent, filepath.Base(expectedPath))
+	actualFinal := filepath.Join(actualResolvedParent, filepath.Base(generatedPath))
+
+	assert.Equal(t, expectedFinal, actualFinal)
+
+	// Verify the path is NOT inside the repository
+	absWorktreePath, _ := filepath.Abs(generatedPath)
+	absRepoPath, _ := filepath.Abs(repoDir)
+	assert.False(t, strings.HasPrefix(absWorktreePath, absRepoPath),
+		"Worktree path %s should not be inside repository %s", absWorktreePath, absRepoPath)
+}
+
+// TestWorktreeCreation_ValidationFailure tests that validation fails
+// when base directory is configured to be inside the repository
+func TestWorktreeCreation_ValidationFailure(t *testing.T) {
+	// Setup temporary repository
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-integration-test-validation")
+	defer os.RemoveAll(tempDir)
+
+	repoDir := filepath.Join(tempDir, "test-repo")
+	os.MkdirAll(repoDir, 0755)
+
+	// Setup config with INVALID base directory (inside repository)
+	config := &config.Config{}
+	config.SetDefaults()
+	config.Worktree.BaseDirectory = ".worktrees" // This should fail validation
+	config.Worktree.DirectoryPattern = "{{.Branch}}"
+	config.Worktree.AutoDirectory = true
+
+	// Change to repo directory for pattern resolution
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	os.Chdir(repoDir)
+
+	// Test pattern manager validation (core functionality)
+	pm := NewPatternManager(&config.Worktree)
+
+	// Test base directory validation - should fail for directory inside repository
+	err := pm.ValidateBaseDirectory(config.Worktree.BaseDirectory, repoDir)
+
+	// Verify failure with appropriate error message
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot be inside repository")
 }

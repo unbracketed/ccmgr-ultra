@@ -169,7 +169,7 @@ func (ss *SessionState) GetSession(sessionID string) (*PersistedSession, error) 
 	}
 
 	sessionCopy := *session
-	
+
 	if sessionCopy.Environment == nil {
 		sessionCopy.Environment = make(map[string]string)
 	}

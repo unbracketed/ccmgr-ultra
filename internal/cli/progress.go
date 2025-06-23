@@ -73,7 +73,7 @@ func (pb *ProgressBar) Increment() {
 func (pb *ProgressBar) Add(amount int) {
 	pb.mutex.Lock()
 	defer pb.mutex.Unlock()
-	
+
 	pb.current += amount
 	if pb.current > pb.total {
 		pb.current = pb.total
@@ -84,7 +84,7 @@ func (pb *ProgressBar) Add(amount int) {
 func (pb *ProgressBar) Set(current int) {
 	pb.mutex.Lock()
 	defer pb.mutex.Unlock()
-	
+
 	pb.current = current
 	if pb.current > pb.total {
 		pb.current = pb.total
@@ -112,31 +112,31 @@ func (pb *ProgressBar) SetSuffix(suffix string) {
 func (pb *ProgressBar) Render() string {
 	pb.mutex.RLock()
 	defer pb.mutex.RUnlock()
-	
+
 	percentage := float64(pb.current) / float64(pb.total) * 100
 	if pb.total == 0 {
 		percentage = 0
 	}
-	
+
 	filled := int(float64(pb.width) * float64(pb.current) / float64(pb.total))
 	if filled > pb.width {
 		filled = pb.width
 	}
-	
+
 	bar := strings.Repeat(pb.fill, filled) + strings.Repeat(pb.empty, pb.width-filled)
-	
+
 	result := ""
-	
+
 	if pb.prefix != "" {
 		result += pb.prefix + " "
 	}
-	
+
 	result += fmt.Sprintf("[%s]", bar)
-	
+
 	if pb.showPercent {
 		result += fmt.Sprintf(" %.1f%%", percentage)
 	}
-	
+
 	if pb.showRate {
 		elapsed := time.Since(pb.startTime)
 		if elapsed > 0 {
@@ -144,13 +144,13 @@ func (pb *ProgressBar) Render() string {
 			result += fmt.Sprintf(" (%.1f/s)", rate)
 		}
 	}
-	
+
 	result += fmt.Sprintf(" %d/%d", pb.current, pb.total)
-	
+
 	if pb.suffix != "" {
 		result += " " + pb.suffix
 	}
-	
+
 	return result
 }
 
@@ -165,7 +165,7 @@ func (pb *ProgressBar) IsComplete() bool {
 func (pb *ProgressBar) GetProgress() float64 {
 	pb.mutex.RLock()
 	defer pb.mutex.RUnlock()
-	
+
 	if pb.total == 0 {
 		return 0
 	}
@@ -174,10 +174,10 @@ func (pb *ProgressBar) GetProgress() float64 {
 
 // MultiProgressBar manages multiple progress bars simultaneously
 type MultiProgressBar struct {
-	bars    map[string]*ProgressBar
-	labels  map[string]string
-	order   []string
-	mutex   sync.RWMutex
+	bars   map[string]*ProgressBar
+	labels map[string]string
+	order  []string
+	mutex  sync.RWMutex
 }
 
 // NewMultiProgressBar creates a new multi-progress bar manager
@@ -193,7 +193,7 @@ func NewMultiProgressBar() *MultiProgressBar {
 func (mpb *MultiProgressBar) AddBar(id string, label string, total int, opts *ProgressBarOptions) {
 	mpb.mutex.Lock()
 	defer mpb.mutex.Unlock()
-	
+
 	mpb.bars[id] = NewProgressBar(total, opts)
 	mpb.labels[id] = label
 	mpb.order = append(mpb.order, id)
@@ -203,7 +203,7 @@ func (mpb *MultiProgressBar) AddBar(id string, label string, total int, opts *Pr
 func (mpb *MultiProgressBar) GetBar(id string) *ProgressBar {
 	mpb.mutex.RLock()
 	defer mpb.mutex.RUnlock()
-	
+
 	return mpb.bars[id]
 }
 
@@ -211,10 +211,10 @@ func (mpb *MultiProgressBar) GetBar(id string) *ProgressBar {
 func (mpb *MultiProgressBar) RemoveBar(id string) {
 	mpb.mutex.Lock()
 	defer mpb.mutex.Unlock()
-	
+
 	delete(mpb.bars, id)
 	delete(mpb.labels, id)
-	
+
 	// Remove from order slice
 	for i, orderID := range mpb.order {
 		if orderID == id {
@@ -228,19 +228,19 @@ func (mpb *MultiProgressBar) RemoveBar(id string) {
 func (mpb *MultiProgressBar) Render() string {
 	mpb.mutex.RLock()
 	defer mpb.mutex.RUnlock()
-	
+
 	var lines []string
-	
+
 	for _, id := range mpb.order {
 		bar := mpb.bars[id]
 		label := mpb.labels[id]
-		
+
 		if bar != nil {
 			line := label + ": " + bar.Render()
 			lines = append(lines, line)
 		}
 	}
-	
+
 	return strings.Join(lines, "\n")
 }
 
@@ -248,13 +248,13 @@ func (mpb *MultiProgressBar) Render() string {
 func (mpb *MultiProgressBar) AllComplete() bool {
 	mpb.mutex.RLock()
 	defer mpb.mutex.RUnlock()
-	
+
 	for _, bar := range mpb.bars {
 		if !bar.IsComplete() {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -300,7 +300,7 @@ func (bpt *BatchProgressTracker) RecordFailure(err error) {
 func (bpt *BatchProgressTracker) GetStats() BatchStats {
 	bpt.mutex.RLock()
 	defer bpt.mutex.RUnlock()
-	
+
 	return BatchStats{
 		Total:     bpt.total,
 		Completed: bpt.completed,
@@ -338,26 +338,26 @@ func (bs *BatchStats) IsComplete() bool {
 // RenderSummary returns a human-readable summary of the batch stats
 func (bs *BatchStats) RenderSummary() string {
 	var parts []string
-	
+
 	parts = append(parts, fmt.Sprintf("Total: %d", bs.Total))
 	parts = append(parts, fmt.Sprintf("Completed: %d", bs.Completed))
-	
+
 	if bs.Failed > 0 {
 		parts = append(parts, fmt.Sprintf("Failed: %d", bs.Failed))
 	}
-	
+
 	if bs.Remaining > 0 {
 		parts = append(parts, fmt.Sprintf("Remaining: %d", bs.Remaining))
 	}
-	
+
 	if bs.Completed+bs.Failed > 0 {
 		parts = append(parts, fmt.Sprintf("Success Rate: %.1f%%", bs.GetSuccessRate()))
 	}
-	
+
 	if bs.Duration > 0 {
 		parts = append(parts, fmt.Sprintf("Duration: %s", bs.Duration.Truncate(time.Second)))
 	}
-	
+
 	return strings.Join(parts, " | ")
 }
 
@@ -389,7 +389,7 @@ func (sp *SteppedProgress) SetStepPrefix(prefix string) {
 func (sp *SteppedProgress) NextStep() bool {
 	sp.mutex.Lock()
 	defer sp.mutex.Unlock()
-	
+
 	if sp.currentStep < len(sp.steps)-1 {
 		sp.currentStep++
 		return true
@@ -401,11 +401,11 @@ func (sp *SteppedProgress) NextStep() bool {
 func (sp *SteppedProgress) GetCurrentStep() (int, string, bool) {
 	sp.mutex.RLock()
 	defer sp.mutex.RUnlock()
-	
+
 	if sp.currentStep >= len(sp.steps) {
 		return sp.currentStep, "", false
 	}
-	
+
 	return sp.currentStep + 1, sp.steps[sp.currentStep], true
 }
 
@@ -413,11 +413,11 @@ func (sp *SteppedProgress) GetCurrentStep() (int, string, bool) {
 func (sp *SteppedProgress) GetProgress() float64 {
 	sp.mutex.RLock()
 	defer sp.mutex.RUnlock()
-	
+
 	if len(sp.steps) == 0 {
 		return 100
 	}
-	
+
 	return float64(sp.currentStep) / float64(len(sp.steps)) * 100
 }
 
@@ -427,9 +427,9 @@ func (sp *SteppedProgress) Render() string {
 	if !valid {
 		return "Completed"
 	}
-	
+
 	progress := sp.GetProgress()
-	return fmt.Sprintf("%s %d/%d (%.1f%%): %s", 
+	return fmt.Sprintf("%s %d/%d (%.1f%%): %s",
 		sp.stepPrefix, stepNum, len(sp.steps), progress, stepDesc)
 }
 
@@ -437,6 +437,6 @@ func (sp *SteppedProgress) Render() string {
 func (sp *SteppedProgress) IsComplete() bool {
 	sp.mutex.RLock()
 	defer sp.mutex.RUnlock()
-	
+
 	return sp.currentStep >= len(sp.steps)
 }

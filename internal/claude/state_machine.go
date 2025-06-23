@@ -154,10 +154,10 @@ func (sm *StateMachine) GetStateMetrics(processID string) *StateMetrics {
 	defer sm.mutex.RUnlock()
 
 	metrics := &StateMetrics{
-		ProcessID:        processID,
-		TotalTransitions: 0,
-		StateDistribution: make(map[ProcessState]int),
-		TransitionCounts:  make(map[string]int),
+		ProcessID:            processID,
+		TotalTransitions:     0,
+		StateDistribution:    make(map[ProcessState]int),
+		TransitionCounts:     make(map[string]int),
 		AverageStateDuration: make(map[ProcessState]time.Duration),
 	}
 
@@ -167,7 +167,7 @@ func (sm *StateMachine) GetStateMetrics(processID string) *StateMetrics {
 	}
 
 	metrics.TotalTransitions = len(transitions)
-	
+
 	// Calculate state distribution and transition counts
 	stateDurations := make(map[ProcessState]time.Duration)
 	stateCount := make(map[ProcessState]int)
@@ -247,7 +247,7 @@ func (sm *StateMachine) checkMinimumDuration(processID string, from, to ProcessS
 	// Check if enough time has passed
 	timeSinceLastTransition := time.Since(lastTransition.Timestamp)
 	if timeSinceLastTransition < rule.MinDuration {
-		return fmt.Errorf("minimum duration not met: %s < %s", 
+		return fmt.Errorf("minimum duration not met: %s < %s",
 			timeSinceLastTransition, rule.MinDuration)
 	}
 
@@ -274,7 +274,7 @@ func (sm *StateMachine) CleanupOldTransitions(maxAge time.Duration) {
 	defer sm.mutex.Unlock()
 
 	cutoff := time.Now().Add(-maxAge)
-	
+
 	for processID, transitions := range sm.transitions {
 		var filtered []StateTransition
 		for _, transition := range transitions {
@@ -282,7 +282,7 @@ func (sm *StateMachine) CleanupOldTransitions(maxAge time.Duration) {
 				filtered = append(filtered, transition)
 			}
 		}
-		
+
 		if len(filtered) == 0 {
 			delete(sm.transitions, processID)
 		} else {
@@ -293,13 +293,13 @@ func (sm *StateMachine) CleanupOldTransitions(maxAge time.Duration) {
 
 // StateMetrics contains metrics about state transitions for a process
 type StateMetrics struct {
-	ProcessID            string                      `json:"process_id"`
-	TotalTransitions     int                         `json:"total_transitions"`
-	StateDistribution    map[ProcessState]int        `json:"state_distribution"`
-	TransitionCounts     map[string]int              `json:"transition_counts"`
+	ProcessID            string                         `json:"process_id"`
+	TotalTransitions     int                            `json:"total_transitions"`
+	StateDistribution    map[ProcessState]int           `json:"state_distribution"`
+	TransitionCounts     map[string]int                 `json:"transition_counts"`
 	AverageStateDuration map[ProcessState]time.Duration `json:"average_state_duration"`
-	FirstTransition      time.Time                   `json:"first_transition"`
-	LastTransition       time.Time                   `json:"last_transition"`
+	FirstTransition      time.Time                      `json:"first_transition"`
+	LastTransition       time.Time                      `json:"last_transition"`
 }
 
 // DefaultStateValidator provides basic state transition validation

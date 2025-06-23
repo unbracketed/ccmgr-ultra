@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/bcdekker/ccmgr-ultra/internal/cli"
 	"github.com/bcdekker/ccmgr-ultra/internal/claude"
+	"github.com/bcdekker/ccmgr-ultra/internal/cli"
 	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	"github.com/bcdekker/ccmgr-ultra/internal/git"
 	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
+	"github.com/spf13/cobra"
 )
 
 // WorktreeListData represents data for worktree list output
@@ -61,11 +61,11 @@ var worktreeListCmd = &cobra.Command{
 }
 
 var worktreeListFlags struct {
-	format       string
-	status       string
-	branch       string
+	format        string
+	status        string
+	branch        string
 	withProcesses bool
-	sort         string
+	sort          string
 }
 
 // Worktree create command
@@ -80,12 +80,12 @@ Optionally starts tmux session and Claude Code process.`,
 }
 
 var worktreeCreateFlags struct {
-	base        string
-	directory   string
+	base         string
+	directory    string
 	startSession bool
-	startClaude bool
-	remote      bool
-	force       bool
+	startClaude  bool
+	remote       bool
+	force        bool
 }
 
 // Worktree delete command
@@ -100,11 +100,11 @@ Optionally cleans up related sessions and processes.`,
 }
 
 var worktreeDeleteFlags struct {
-	force           bool
-	cleanupSessions bool
+	force            bool
+	cleanupSessions  bool
 	cleanupProcesses bool
-	keepBranch      bool
-	pattern         string
+	keepBranch       bool
+	pattern          string
 }
 
 // Worktree merge command
@@ -305,7 +305,7 @@ func runWorktreeListCommand(cmd *cobra.Command, args []string) error {
 		spinner.StopWithMessage(fmt.Sprintf("Found %d worktrees", listData.Total))
 	}
 
-	formatter, err := setupOutputFormatter(worktreeListFlags.format)
+	formatter, err := setupWorktreeOutputFormatter(worktreeListFlags.format)
 	if err != nil {
 		return handleCLIError(err)
 	}
@@ -390,13 +390,13 @@ func runWorktreeCreateCommand(cmd *cobra.Command, args []string) error {
 		}
 
 		sessionManager := tmux.NewSessionManager(cfg)
-		
+
 		// Use actual path for session creation
 		sessionPath := worktreeDir
 		if useAutoName && worktreeInfo != nil {
 			sessionPath = worktreeInfo.Path
 		}
-		
+
 		session, err := sessionManager.CreateSession(
 			getCurrentProjectName(), // project
 			branchName,              // worktree
@@ -581,7 +581,7 @@ func runWorktreeDeleteCommand(cmd *cobra.Command, args []string) error {
 func runWorktreeMergeCommand(cmd *cobra.Command, args []string) error {
 	// Placeholder implementation - this would be quite complex
 	worktreeName := args[0]
-	
+
 	if err := validateWorktreeArg(worktreeName); err != nil {
 		return handleCLIError(err)
 	}
@@ -591,7 +591,7 @@ func runWorktreeMergeCommand(cmd *cobra.Command, args []string) error {
 
 func runWorktreePushCommand(cmd *cobra.Command, args []string) error {
 	worktreeName := args[0]
-	
+
 	if err := validateWorktreeArg(worktreeName); err != nil {
 		return handleCLIError(err)
 	}
@@ -753,9 +753,9 @@ func runWorktreePushCommand(cmd *cobra.Command, args []string) error {
 // Helper functions
 
 func handlePatternError(err error) error {
-	if strings.Contains(err.Error(), "template") || 
-	   strings.Contains(err.Error(), "pattern") ||
-	   strings.Contains(err.Error(), "variable") {
+	if strings.Contains(err.Error(), "template") ||
+		strings.Contains(err.Error(), "pattern") ||
+		strings.Contains(err.Error(), "variable") {
 		return cli.NewErrorWithSuggestion(
 			fmt.Sprintf("Template pattern error: %v", err),
 			"Check your directory_pattern in config. Use Go template syntax like {{.Project}}-{{.Branch}}",

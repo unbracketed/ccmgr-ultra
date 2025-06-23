@@ -12,11 +12,11 @@ import (
 
 // WorktreeManager handles git worktree operations
 type WorktreeManager struct {
-	repo        *Repository
-	patternMgr  *PatternManager
-	gitCmd      GitInterface
-	config      *config.Config
-	repoMgr     *RepositoryManager
+	repo       *Repository
+	patternMgr *PatternManager
+	gitCmd     GitInterface
+	config     *config.Config
+	repoMgr    *RepositoryManager
 }
 
 // WorktreeOptions for worktree creation
@@ -36,9 +36,9 @@ func NewWorktreeManager(repo *Repository, config *config.Config, gitCmd GitInter
 	if gitCmd == nil {
 		gitCmd = NewGitCmd()
 	}
-	
+
 	repoMgr := NewRepositoryManager(gitCmd)
-	
+
 	// Create worktree config that uses Git config values for compatibility
 	worktreeConfig := config.Worktree
 	if config.Git.DirectoryPattern != "" {
@@ -47,15 +47,15 @@ func NewWorktreeManager(repo *Repository, config *config.Config, gitCmd GitInter
 	if config.Git.AutoDirectory != worktreeConfig.AutoDirectory {
 		worktreeConfig.AutoDirectory = config.Git.AutoDirectory
 	}
-	
+
 	patternMgr := NewPatternManager(&worktreeConfig)
 
 	return &WorktreeManager{
-		repo:        repo,
-		patternMgr:  patternMgr,
-		gitCmd:      gitCmd,
-		config:      config,
-		repoMgr:     repoMgr,
+		repo:       repo,
+		patternMgr: patternMgr,
+		gitCmd:     gitCmd,
+		config:     config,
+		repoMgr:    repoMgr,
 	}
 }
 
@@ -68,6 +68,11 @@ func (wm *WorktreeManager) CreateWorktree(branch string, opts WorktreeOptions) (
 	// Validate repository state
 	if err := wm.repoMgr.ValidateRepositoryState(wm.repo); err != nil {
 		return nil, fmt.Errorf("repository validation failed: %w", err)
+	}
+
+	// Validate base directory configuration
+	if err := wm.patternMgr.ValidateBaseDirectory(wm.patternMgr.config.BaseDirectory, wm.repo.RootPath); err != nil {
+		return nil, fmt.Errorf("invalid base directory configuration: %w", err)
 	}
 
 	// Determine target path
@@ -455,7 +460,7 @@ func (wm *WorktreeManager) getTmuxSessionName(wt *WorktreeInfo) string {
 	// Sanitize session name
 	sessionName = strings.ReplaceAll(sessionName, " ", "-")
 	sessionName = strings.ReplaceAll(sessionName, "/", "-")
-	
+
 	// Truncate if too long
 	if len(sessionName) > wm.config.Tmux.MaxSessionName {
 		sessionName = sessionName[:wm.config.Tmux.MaxSessionName]
@@ -473,7 +478,7 @@ func (wm *WorktreeManager) createTmuxSession(wt *WorktreeInfo) error {
 	// Create tmux session
 	// This would integrate with the tmux module - for now just a placeholder
 	fmt.Printf("Creating tmux session: %s for worktree: %s\n", wt.TmuxSession, wt.Path)
-	
+
 	return nil
 }
 
@@ -481,7 +486,7 @@ func (wm *WorktreeManager) createTmuxSession(wt *WorktreeInfo) error {
 func (wm *WorktreeManager) removeTmuxSession(sessionName string) error {
 	// This would integrate with the tmux module - for now just a placeholder
 	fmt.Printf("Removing tmux session: %s\n", sessionName)
-	
+
 	return nil
 }
 
@@ -500,7 +505,7 @@ func (wm *WorktreeManager) backupWorktree(path string) error {
 
 	// For now, just log the backup action
 	fmt.Printf("Backing up worktree %s to %s\n", path, backupPath)
-	
+
 	return nil
 }
 
@@ -553,9 +558,9 @@ func (wm *WorktreeManager) CleanupOldWorktrees() error {
 
 	for _, wt := range worktrees {
 		if wt.LastAccessed.Before(cutoffTime) && wt.IsClean {
-			fmt.Printf("Cleaning up old worktree: %s (last accessed: %s)\n", 
+			fmt.Printf("Cleaning up old worktree: %s (last accessed: %s)\n",
 				wt.Path, wt.LastAccessed.Format("2006-01-02 15:04:05"))
-			
+
 			if err := wm.DeleteWorktree(wt.Path, false); err != nil {
 				fmt.Printf("Warning: failed to cleanup worktree %s: %v\n", wt.Path, err)
 			}

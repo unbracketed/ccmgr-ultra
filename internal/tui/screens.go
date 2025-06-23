@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 // Screen interface that all screens must implement
@@ -73,19 +73,19 @@ func (m *DashboardModel) View() string {
 
 	// Get system status
 	status := m.integration.GetSystemStatus()
-	
+
 	// Create dashboard sections
 	header := m.theme.HeaderStyle.Render("🚀 CCMGR Ultra Dashboard")
-	
+
 	// System overview
 	overview := m.renderSystemOverview(status)
-	
+
 	// Active sessions
 	sessions := m.renderActiveSessions()
-	
+
 	// Recent worktrees
 	worktrees := m.renderRecentWorktrees()
-	
+
 	// Quick actions
 	actions := m.renderQuickActions()
 
@@ -119,18 +119,18 @@ func (m *DashboardModel) Help() []string {
 
 func (m *DashboardModel) renderSystemOverview(status SystemStatus) string {
 	title := m.theme.TitleStyle.Render("📊 System Overview")
-	
+
 	content := fmt.Sprintf(
 		"Claude Processes: %d active\n"+
-		"Tmux Sessions: %d running\n"+
-		"Git Worktrees: %d tracked\n"+
-		"Last Updated: %s",
+			"Tmux Sessions: %d running\n"+
+			"Git Worktrees: %d tracked\n"+
+			"Last Updated: %s",
 		status.ActiveProcesses,
 		status.ActiveSessions,
 		status.TrackedWorktrees,
 		status.LastUpdate.Format("15:04:05"),
 	)
-	
+
 	return lipgloss.JoinVertical(lipgloss.Left,
 		title,
 		m.theme.ContentStyle.Render(content),
@@ -139,7 +139,7 @@ func (m *DashboardModel) renderSystemOverview(status SystemStatus) string {
 
 func (m *DashboardModel) renderActiveSessions() string {
 	title := m.theme.TitleStyle.Render("🖥️  Active Sessions")
-	
+
 	sessions := m.integration.GetActiveSessions()
 	if len(sessions) == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left,
@@ -147,7 +147,7 @@ func (m *DashboardModel) renderActiveSessions() string {
 			m.theme.ContentStyle.Render("No active sessions"),
 		)
 	}
-	
+
 	var sessionLines []string
 	for _, session := range sessions {
 		line := fmt.Sprintf("• %s (%s) - %s",
@@ -157,9 +157,9 @@ func (m *DashboardModel) renderActiveSessions() string {
 		)
 		sessionLines = append(sessionLines, line)
 	}
-	
+
 	content := strings.Join(sessionLines, "\n")
-	
+
 	return lipgloss.JoinVertical(lipgloss.Left,
 		title,
 		m.theme.ContentStyle.Render(content),
@@ -168,7 +168,7 @@ func (m *DashboardModel) renderActiveSessions() string {
 
 func (m *DashboardModel) renderRecentWorktrees() string {
 	title := m.theme.TitleStyle.Render("🌳 Recent Worktrees")
-	
+
 	worktrees := m.integration.GetRecentWorktrees()
 	if len(worktrees) == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left,
@@ -176,7 +176,7 @@ func (m *DashboardModel) renderRecentWorktrees() string {
 			m.theme.ContentStyle.Render("No recent worktrees"),
 		)
 	}
-	
+
 	var worktreeLines []string
 	for _, wt := range worktrees {
 		line := fmt.Sprintf("• %s (%s) - %s",
@@ -186,9 +186,9 @@ func (m *DashboardModel) renderRecentWorktrees() string {
 		)
 		worktreeLines = append(worktreeLines, line)
 	}
-	
+
 	content := strings.Join(worktreeLines, "\n")
-	
+
 	return lipgloss.JoinVertical(lipgloss.Left,
 		title,
 		m.theme.ContentStyle.Render(content),
@@ -197,16 +197,16 @@ func (m *DashboardModel) renderRecentWorktrees() string {
 
 func (m *DashboardModel) renderQuickActions() string {
 	title := m.theme.TitleStyle.Render("⚡ Quick Actions")
-	
+
 	actions := []string{
 		"n: New session",
-		"w: New worktree",  
+		"w: New worktree",
 		"r: Refresh data",
 		"c: Configuration",
 	}
-	
+
 	content := strings.Join(actions, "\n")
-	
+
 	return lipgloss.JoinVertical(lipgloss.Left,
 		title,
 		m.theme.ContentStyle.Render(content),
@@ -268,7 +268,7 @@ func (m *SessionsModel) View() string {
 	}
 
 	header := m.theme.HeaderStyle.Render("🖥️  Session Management")
-	
+
 	if len(m.sessions) == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left,
 			header,
@@ -283,14 +283,14 @@ func (m *SessionsModel) View() string {
 		if i == m.cursor {
 			cursor = ">"
 		}
-		
+
 		status := "●"
 		statusColor := m.theme.Success
 		if !session.Active {
 			status = "○"
 			statusColor = m.theme.Muted
 		}
-		
+
 		line := fmt.Sprintf("%s %s %s (%s) - %s - %s",
 			cursor,
 			lipgloss.NewStyle().Foreground(statusColor).Render(status),
@@ -301,9 +301,9 @@ func (m *SessionsModel) View() string {
 		)
 		sessionLines = append(sessionLines, line)
 	}
-	
+
 	content := strings.Join(sessionLines, "\n")
-	
+
 	return lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		"",
@@ -326,19 +326,19 @@ func (m *SessionsModel) Help() []string {
 
 // WorktreesModel represents the worktrees management screen
 type WorktreesModel struct {
-	integration    *Integration
-	theme          Theme
-	width          int
-	height         int
-	cursor         int
-	worktrees      []WorktreeInfo
-	selectedItems  map[int]bool        // New: multi-selection state
-	selectionMode  bool                // New: toggle selection mode
-	filterText     string              // New: search filter
-	sortMode       WorktreeSortMode    // New: sorting mode
-	claudeStatuses map[string]ClaudeStatus // New: status tracking
-	filteredIndices []int              // New: indices after filtering
-	searchMode     bool                // New: search input mode
+	integration     *Integration
+	theme           Theme
+	width           int
+	height          int
+	cursor          int
+	worktrees       []WorktreeInfo
+	selectedItems   map[int]bool            // New: multi-selection state
+	selectionMode   bool                    // New: toggle selection mode
+	filterText      string                  // New: search filter
+	sortMode        WorktreeSortMode        // New: sorting mode
+	claudeStatuses  map[string]ClaudeStatus // New: status tracking
+	filteredIndices []int                   // New: indices after filtering
+	searchMode      bool                    // New: search input mode
 }
 
 func NewWorktreesModel(integration *Integration, theme Theme) *WorktreesModel {
@@ -378,7 +378,7 @@ func (m *WorktreesModel) toggleItemSelection(index int) {
 	if !m.selectionMode {
 		return
 	}
-	
+
 	if len(m.filteredIndices) > 0 && index < len(m.filteredIndices) {
 		realIndex := m.filteredIndices[index]
 		m.selectedItems[realIndex] = !m.selectedItems[realIndex]
@@ -392,18 +392,18 @@ func (m *WorktreesModel) toggleSelectAll() {
 	if !m.selectionMode {
 		return
 	}
-	
+
 	// Check if all visible items are selected
 	allSelected := true
 	indices := m.getVisibleIndices()
-	
+
 	for _, idx := range indices {
 		if !m.selectedItems[idx] {
 			allSelected = false
 			break
 		}
 	}
-	
+
 	// Toggle: if all selected, deselect all; otherwise select all
 	for _, idx := range indices {
 		m.selectedItems[idx] = !allSelected
@@ -438,7 +438,7 @@ func (m *WorktreesModel) getVisibleIndices() []int {
 	if len(m.filteredIndices) > 0 {
 		return m.filteredIndices
 	}
-	
+
 	indices := make([]int, len(m.worktrees))
 	for i := range indices {
 		indices[i] = i
@@ -449,22 +449,22 @@ func (m *WorktreesModel) getVisibleIndices() []int {
 // applyFilter filters worktrees based on current filter text
 func (m *WorktreesModel) applyFilter() {
 	m.filteredIndices = []int{}
-	
+
 	if m.filterText == "" {
 		// No filter, show all
 		return
 	}
-	
+
 	filterLower := strings.ToLower(m.filterText)
 	for i, wt := range m.worktrees {
 		// Search in path, branch name, and repository
 		if strings.Contains(strings.ToLower(wt.Path), filterLower) ||
-		   strings.Contains(strings.ToLower(wt.Branch), filterLower) ||
-		   strings.Contains(strings.ToLower(wt.Repository), filterLower) {
+			strings.Contains(strings.ToLower(wt.Branch), filterLower) ||
+			strings.Contains(strings.ToLower(wt.Repository), filterLower) {
 			m.filteredIndices = append(m.filteredIndices, i)
 		}
 	}
-	
+
 	// Reset cursor if it's out of bounds
 	if m.cursor >= len(m.filteredIndices) {
 		m.cursor = len(m.filteredIndices) - 1
@@ -511,16 +511,20 @@ func (m *WorktreesModel) sortWorktrees() {
 				// Primary sort: Claude status (busy > idle > error)
 				statusPriority := func(status string) int {
 					switch status {
-					case "busy": return 3
-					case "idle": return 2
-					case "waiting": return 1
-					default: return 0
+					case "busy":
+						return 3
+					case "idle":
+						return 2
+					case "waiting":
+						return 1
+					default:
+						return 0
 					}
 				}
-				
+
 				iPriority := statusPriority(m.worktrees[i].ClaudeStatus.State)
 				jPriority := statusPriority(m.worktrees[j].ClaudeStatus.State)
-				
+
 				if iPriority < jPriority {
 					m.worktrees[i], m.worktrees[j] = m.worktrees[j], m.worktrees[i]
 				}
@@ -614,7 +618,7 @@ func (m *WorktreesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
-		
+
 		// Normal mode keyboard handling
 		switch msg.String() {
 		case "up", "k":
@@ -635,7 +639,7 @@ func (m *WorktreesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// New session for current/selected worktrees
 			return m, m.createNewSessionForSelection()
 		case "c":
-			// Continue session for current/selected worktrees  
+			// Continue session for current/selected worktrees
 			return m, m.continueSessionForSelection()
 		case "r":
 			// Resume session for current/selected worktrees
@@ -688,7 +692,7 @@ func (m *WorktreesModel) createNewSessionForSelection() tea.Cmd {
 				worktrees = []WorktreeInfo{*wt}
 			}
 		}
-		
+
 		// For now, just return a placeholder message
 		// This will be properly implemented in step 3
 		return NewSessionRequestedMsg{Worktrees: worktrees}
@@ -704,7 +708,7 @@ func (m *WorktreesModel) continueSessionForSelection() tea.Cmd {
 				worktrees = []WorktreeInfo{*wt}
 			}
 		}
-		
+
 		// For now, just return a placeholder message
 		return ContinueSessionRequestedMsg{Worktrees: worktrees}
 	}
@@ -719,7 +723,7 @@ func (m *WorktreesModel) resumeSessionForSelection() tea.Cmd {
 				worktrees = []WorktreeInfo{*wt}
 			}
 		}
-		
+
 		// For now, just return a placeholder message
 		return ResumeSessionRequestedMsg{Worktrees: worktrees}
 	}
@@ -739,13 +743,13 @@ func (m *WorktreesModel) View() string {
 	if m.filterText != "" {
 		headerText += fmt.Sprintf(" [FILTER: %s]", m.filterText)
 	}
-	
+
 	// Add sort mode indicator
 	sortNames := []string{"Name", "Last Access", "Branch", "Status"}
 	headerText += fmt.Sprintf(" [SORT: %s]", sortNames[m.sortMode])
-	
+
 	header := m.theme.HeaderStyle.Render(headerText)
-	
+
 	// Get visible worktrees
 	indices := m.getVisibleIndices()
 	if len(indices) == 0 {
@@ -763,13 +767,13 @@ func (m *WorktreesModel) View() string {
 	var worktreeLines []string
 	for i, idx := range indices {
 		wt := m.worktrees[idx]
-		
+
 		// Cursor indicator
 		cursor := " "
 		if i == m.cursor {
 			cursor = ">"
 		}
-		
+
 		// Selection indicator (checkbox style)
 		selection := " "
 		if m.selectionMode {
@@ -779,7 +783,7 @@ func (m *WorktreesModel) View() string {
 				selection = "☐"
 			}
 		}
-		
+
 		// Claude status indicator
 		statusIcon := "○"
 		statusColor := m.theme.Muted
@@ -797,14 +801,14 @@ func (m *WorktreesModel) View() string {
 			statusIcon = "✗"
 			statusColor = m.theme.Error
 		}
-		
+
 		// Session count indicator
 		sessionCount := len(wt.ActiveSessions)
 		sessionIndicator := ""
 		if sessionCount > 0 {
 			sessionIndicator = fmt.Sprintf(" [%d]", sessionCount)
 		}
-		
+
 		// Git status indicator
 		gitIndicator := ""
 		if !wt.GitStatus.IsClean {
@@ -816,7 +820,7 @@ func (m *WorktreesModel) View() string {
 		if wt.GitStatus.Ahead > 0 || wt.GitStatus.Behind > 0 {
 			gitIndicator += fmt.Sprintf(" ↑%d↓%d", wt.GitStatus.Ahead, wt.GitStatus.Behind)
 		}
-		
+
 		// Format the line
 		line := fmt.Sprintf("%s%s %s %s (%s)%s%s - %s",
 			cursor,
@@ -828,20 +832,20 @@ func (m *WorktreesModel) View() string {
 			gitIndicator,
 			wt.LastAccess.Format("Jan 2 15:04"),
 		)
-		
+
 		// Apply highlighting for current item
 		if i == m.cursor {
 			line = m.theme.SelectedStyle.Render(line)
 		}
-		
+
 		worktreeLines = append(worktreeLines, line)
 	}
-	
+
 	content := strings.Join(worktreeLines, "\n")
-	
+
 	// Build status/help bar
 	var statusParts []string
-	
+
 	if m.searchMode {
 		statusParts = append(statusParts, fmt.Sprintf("Search: %s|", m.filterText))
 		statusParts = append(statusParts, "Enter/Esc: Exit search")
@@ -850,7 +854,7 @@ func (m *WorktreesModel) View() string {
 		if m.selectionMode {
 			statusParts = append(statusParts, "Multi-select mode")
 		}
-		
+
 		// Key shortcuts
 		shortcuts := []string{
 			"n:New", "c:Continue", "r:Resume",
@@ -859,12 +863,12 @@ func (m *WorktreesModel) View() string {
 			shortcuts = append(shortcuts, "Space:Select", "Tab:Multi-mode")
 		}
 		shortcuts = append(shortcuts, "/:Search", "s:Sort")
-		
+
 		statusParts = append(statusParts, strings.Join(shortcuts, " "))
 	}
-	
+
 	statusBar := m.theme.StatusStyle.Render(strings.Join(statusParts, " | "))
-	
+
 	return lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		"",
@@ -887,7 +891,7 @@ func (m *WorktreesModel) Help() []string {
 			"Ctrl+C: Clear and exit",
 		}
 	}
-	
+
 	helpItems := []string{
 		"↑/k, ↓/j: Navigate",
 		"Enter: Open worktree",
@@ -895,7 +899,7 @@ func (m *WorktreesModel) Help() []string {
 		"c: Continue session",
 		"r: Resume session",
 	}
-	
+
 	if m.selectionMode {
 		helpItems = append(helpItems, []string{
 			"Space: Toggle selection",
@@ -908,13 +912,13 @@ func (m *WorktreesModel) Help() []string {
 			"Space: Quick select",
 		}...)
 	}
-	
+
 	helpItems = append(helpItems, []string{
 		"/: Search/filter",
 		"s: Cycle sort mode",
 		"Esc: Clear filter/exit mode",
 	}...)
-	
+
 	return helpItems
 }
 
@@ -952,20 +956,20 @@ func (m *ConfigModel) View() string {
 	}
 
 	header := m.theme.HeaderStyle.Render("⚙️  Configuration")
-	
+
 	content := fmt.Sprintf(
 		"Config File: %s\n"+
-		"Log Level: %s\n"+
-		"Claude Enabled: %t\n"+
-		"TUI Theme: %s\n"+
-		"Auto Refresh: %ds",
+			"Log Level: %s\n"+
+			"Claude Enabled: %t\n"+
+			"TUI Theme: %s\n"+
+			"Auto Refresh: %ds",
 		m.config.ConfigFile,
 		m.config.LogLevel,
 		m.config.Claude.Enabled,
 		m.config.TUI.Theme,
 		m.config.RefreshInterval,
 	)
-	
+
 	return lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		"",
@@ -1016,12 +1020,12 @@ func (m *HelpModel) View() string {
 	}
 
 	header := m.theme.HeaderStyle.Render("❓ Help & Keyboard Shortcuts")
-	
+
 	sections := []string{
 		m.theme.TitleStyle.Render("Global Navigation:"),
 		"1: Dashboard",
 		"2: Sessions",
-		"3: Worktrees", 
+		"3: Worktrees",
 		"4: Configuration",
 		"?: Help (this screen)",
 		"q, Ctrl+C: Quit",
@@ -1035,7 +1039,7 @@ func (m *HelpModel) View() string {
 		"↑/k, ↓/j: Navigate",
 		"Enter: Attach to session",
 		"n: Create new session",
-		"d: Delete session", 
+		"d: Delete session",
 		"",
 		m.theme.TitleStyle.Render("Worktrees:"),
 		"↑/k, ↓/j: Navigate",
@@ -1043,9 +1047,9 @@ func (m *HelpModel) View() string {
 		"n: Create new worktree",
 		"d: Delete worktree",
 	}
-	
+
 	content := strings.Join(sections, "\n")
-	
+
 	return lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		"",

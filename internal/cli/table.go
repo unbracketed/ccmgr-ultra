@@ -11,26 +11,26 @@ import (
 
 // TableFormatter provides enhanced table formatting with styling and layout options
 type TableFormatter struct {
-	columns     []TableColumn
-	rows        [][]string
-	theme       TableTheme
-	options     TableOptions
-	maxWidth    int
+	columns      []TableColumn
+	rows         [][]string
+	theme        TableTheme
+	options      TableOptions
+	maxWidth     int
 	colorEnabled bool
 }
 
 // TableColumn defines a table column with formatting options
 type TableColumn struct {
-	Header      string
-	Field       string
-	Width       int
-	MinWidth    int
-	MaxWidth    int
-	Alignment   ColumnAlignment
-	Format      ColumnFormat
-	Visible     bool
-	Sortable    bool
-	Resizable   bool
+	Header    string
+	Field     string
+	Width     int
+	MinWidth  int
+	MaxWidth  int
+	Alignment ColumnAlignment
+	Format    ColumnFormat
+	Visible   bool
+	Sortable  bool
+	Resizable bool
 }
 
 // ColumnAlignment defines text alignment within columns
@@ -57,16 +57,16 @@ const (
 
 // TableTheme defines the visual styling for tables
 type TableTheme struct {
-	BorderStyle     BorderStyle
-	HeaderStyle     CellStyle
-	RowStyle        CellStyle
-	AlternateStyle  CellStyle
-	SelectedStyle   CellStyle
-	BorderColor     string
-	HeaderColor     string
-	DataColor       string
-	AlternateColor  string
-	SelectedColor   string
+	BorderStyle    BorderStyle
+	HeaderStyle    CellStyle
+	RowStyle       CellStyle
+	AlternateStyle CellStyle
+	SelectedStyle  CellStyle
+	BorderColor    string
+	HeaderColor    string
+	DataColor      string
+	AlternateColor string
+	SelectedColor  string
 }
 
 // BorderStyle defines table border appearance
@@ -95,19 +95,19 @@ type CellStyle struct {
 
 // TableOptions configures table behavior and appearance
 type TableOptions struct {
-	ShowHeader      bool
-	ShowBorder      bool
-	ShowRowNumbers  bool
-	AlternateRows   bool
-	CompactMode     bool
-	WrapText        bool
-	TruncateData    bool
-	MaxCellWidth    int
-	Padding         int
-	SortColumn      string
-	SortDescending  bool
-	FilterColumn    string
-	FilterValue     string
+	ShowHeader     bool
+	ShowBorder     bool
+	ShowRowNumbers bool
+	AlternateRows  bool
+	CompactMode    bool
+	WrapText       bool
+	TruncateData   bool
+	MaxCellWidth   int
+	Padding        int
+	SortColumn     string
+	SortDescending bool
+	FilterColumn   string
+	FilterValue    string
 }
 
 // DefaultTableTheme returns a default table theme
@@ -155,11 +155,11 @@ func CompactTableTheme() TableTheme {
 func NewTableFormatter(opts *TableOptions) *TableFormatter {
 	if opts == nil {
 		opts = &TableOptions{
-			ShowHeader:   true,
-			ShowBorder:   true,
+			ShowHeader:    true,
+			ShowBorder:    true,
 			AlternateRows: false,
-			Padding:      1,
-			MaxCellWidth: 50,
+			Padding:       1,
+			MaxCellWidth:  50,
 		}
 	}
 
@@ -344,10 +344,10 @@ func (tf *TableFormatter) Render() string {
 func (tf *TableFormatter) calculateColumnWidths() {
 	for i := range tf.columns {
 		column := &tf.columns[i]
-		
+
 		// Start with header width
 		maxWidth := utf8.RuneCountInString(column.Header)
-		
+
 		// Check data width
 		for _, row := range tf.rows {
 			if i < len(row) {
@@ -357,7 +357,7 @@ func (tf *TableFormatter) calculateColumnWidths() {
 				}
 			}
 		}
-		
+
 		// Apply constraints
 		if column.MinWidth > 0 && maxWidth < column.MinWidth {
 			maxWidth = column.MinWidth
@@ -365,7 +365,7 @@ func (tf *TableFormatter) calculateColumnWidths() {
 		if column.MaxWidth > 0 && maxWidth > column.MaxWidth {
 			maxWidth = column.MaxWidth
 		}
-		
+
 		column.Width = maxWidth
 	}
 }
@@ -380,19 +380,19 @@ func (tf *TableFormatter) renderTopBorder() string {
 	}
 
 	result.WriteString(border.TopLeft)
-	
+
 	for i, column := range tf.columns {
 		if !column.Visible {
 			continue
 		}
-		
+
 		result.WriteString(strings.Repeat(border.Horizontal, column.Width+2*tf.options.Padding))
-		
+
 		if i < len(tf.columns)-1 {
 			result.WriteString(border.TopTee)
 		}
 	}
-	
+
 	result.WriteString(border.TopRight)
 
 	if tf.colorEnabled {
@@ -412,19 +412,19 @@ func (tf *TableFormatter) renderBottomBorder() string {
 	}
 
 	result.WriteString(border.BottomLeft)
-	
+
 	for i, column := range tf.columns {
 		if !column.Visible {
 			continue
 		}
-		
+
 		result.WriteString(strings.Repeat(border.Horizontal, column.Width+2*tf.options.Padding))
-		
+
 		if i < len(tf.columns)-1 {
 			result.WriteString(border.BottomTee)
 		}
 	}
-	
+
 	result.WriteString(border.BottomRight)
 
 	if tf.colorEnabled {
@@ -444,19 +444,19 @@ func (tf *TableFormatter) renderSeparatorBorder() string {
 	}
 
 	result.WriteString(border.LeftTee)
-	
+
 	for i, column := range tf.columns {
 		if !column.Visible {
 			continue
 		}
-		
+
 		result.WriteString(strings.Repeat(border.Horizontal, column.Width+2*tf.options.Padding))
-		
+
 		if i < len(tf.columns)-1 {
 			result.WriteString(border.Cross)
 		}
 	}
-	
+
 	result.WriteString(border.RightTee)
 
 	if tf.colorEnabled {
@@ -496,11 +496,11 @@ func (tf *TableFormatter) renderHeaderRow() string {
 
 		padding := strings.Repeat(" ", tf.options.Padding)
 		result.WriteString(padding)
-		
+
 		// Format header text
 		headerText := tf.alignText(column.Header, column.Width, column.Alignment)
 		result.WriteString(headerText)
-		
+
 		result.WriteString(padding)
 
 		if tf.colorEnabled {
@@ -558,17 +558,17 @@ func (tf *TableFormatter) renderDataRow(row []string, rowIndex int) string {
 
 		padding := strings.Repeat(" ", tf.options.Padding)
 		result.WriteString(padding)
-		
+
 		// Get cell value
 		cellValue := ""
 		if i < len(row) {
 			cellValue = row[i]
 		}
-		
+
 		// Format cell text
 		cellText := tf.alignText(cellValue, column.Width, column.Alignment)
 		result.WriteString(cellText)
-		
+
 		result.WriteString(padding)
 
 		if tf.colorEnabled {
@@ -593,7 +593,7 @@ func (tf *TableFormatter) renderDataRow(row []string, rowIndex int) string {
 // alignText aligns text within a specified width
 func (tf *TableFormatter) alignText(text string, width int, alignment ColumnAlignment) string {
 	textLen := utf8.RuneCountInString(text)
-	
+
 	// Truncate if necessary
 	if textLen > width {
 		if tf.options.TruncateData {
@@ -609,13 +609,13 @@ func (tf *TableFormatter) alignText(text string, width int, alignment ColumnAlig
 			// Keep original text (will overflow)
 		}
 	}
-	
+
 	if textLen >= width {
 		return text
 	}
-	
+
 	padding := width - textLen
-	
+
 	switch alignment {
 	case AlignLeft:
 		return text + strings.Repeat(" ", padding)
@@ -651,13 +651,13 @@ func formatFileSize(bytes int64) string {
 	if bytes < unit {
 		return fmt.Sprintf("%d B", bytes)
 	}
-	
+
 	div, exp := int64(unit), 0
 	for n := bytes / unit; n >= unit; n /= unit {
 		div *= unit
 		exp++
 	}
-	
+
 	units := []string{"KB", "MB", "GB", "TB", "PB"}
 	return fmt.Sprintf("%.1f %s", float64(bytes)/float64(div), units[exp])
 }
@@ -666,14 +666,14 @@ func formatFileSize(bytes int64) string {
 func (tf *TableFormatter) RenderCompact() string {
 	originalShowBorder := tf.options.ShowBorder
 	originalTheme := tf.theme
-	
+
 	tf.options.ShowBorder = false
 	tf.theme = CompactTableTheme()
-	
+
 	defer func() {
 		tf.options.ShowBorder = originalShowBorder
 		tf.theme = originalTheme
 	}()
-	
+
 	return tf.Render()
 }

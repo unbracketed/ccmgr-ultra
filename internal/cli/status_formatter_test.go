@@ -9,12 +9,12 @@ import (
 
 // Mock status data structures for testing
 type MockStatusData struct {
-	System    MockSystemStatus    `json:"system" yaml:"system"`
+	System    MockSystemStatus     `json:"system" yaml:"system"`
 	Worktrees []MockWorktreeStatus `json:"worktrees" yaml:"worktrees"`
 	Sessions  []MockSessionStatus  `json:"sessions" yaml:"sessions"`
 	Processes []MockProcessStatus  `json:"processes" yaml:"processes"`
-	Hooks     MockHookStatus      `json:"hooks" yaml:"hooks"`
-	Timestamp time.Time           `json:"timestamp" yaml:"timestamp"`
+	Hooks     MockHookStatus       `json:"hooks" yaml:"hooks"`
+	Timestamp time.Time            `json:"timestamp" yaml:"timestamp"`
 }
 
 type MockSystemStatus struct {
@@ -285,10 +285,10 @@ func TestFormatHelpers(t *testing.T) {
 
 func TestShortenPath(t *testing.T) {
 	tests := []struct {
-		name    string
-		path    string
-		maxLen  int
-		want    string
+		name   string
+		path   string
+		maxLen int
+		want   string
 	}{
 		{
 			name:   "short path",

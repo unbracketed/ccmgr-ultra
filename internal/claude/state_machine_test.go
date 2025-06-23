@@ -66,11 +66,11 @@ func TestStateMachine_ValidateTransition(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			err := sm.ValidateTransition(ctx, process.SessionID, test.from, test.to, process)
-			
+
 			if test.shouldError && err == nil {
 				t.Errorf("Expected error for transition %s -> %s, got nil", test.from, test.to)
 			}
-			
+
 			if !test.shouldError && err != nil {
 				t.Errorf("Unexpected error for transition %s -> %s: %v", test.from, test.to, err)
 			}
@@ -184,7 +184,7 @@ func TestStateMachine_GetRecentTransitions(t *testing.T) {
 	processID := "test-process"
 
 	now := time.Now()
-	
+
 	// Record transitions with specific timestamps (simulate by adding to history directly)
 	sm.transitions[processID] = []StateTransition{
 		{From: StateIdle, To: StateBusy, Timestamp: now.Add(-time.Hour), Trigger: "old"},
@@ -193,7 +193,7 @@ func TestStateMachine_GetRecentTransitions(t *testing.T) {
 
 	// Get recent transitions (within 30 minutes)
 	recent := sm.GetRecentTransitions(processID, now.Add(-30*time.Minute))
-	
+
 	if len(recent) != 1 {
 		t.Errorf("Expected 1 recent transition, got %d", len(recent))
 	}
@@ -220,12 +220,12 @@ func TestStateMachine_GetStateMetrics(t *testing.T) {
 	now := time.Now()
 	sm.transitions[processID] = []StateTransition{
 		{From: StateStarting, To: StateIdle, Timestamp: now.Add(-time.Hour), Trigger: "init"},
-		{From: StateIdle, To: StateBusy, Timestamp: now.Add(-30*time.Minute), Trigger: "work"},
+		{From: StateIdle, To: StateBusy, Timestamp: now.Add(-30 * time.Minute), Trigger: "work"},
 		{From: StateBusy, To: StateIdle, Timestamp: now, Trigger: "done"},
 	}
 
 	metrics = sm.GetStateMetrics(processID)
-	
+
 	if metrics.TotalTransitions != 3 {
 		t.Errorf("TotalTransitions = %v, want 3", metrics.TotalTransitions)
 	}
@@ -251,7 +251,7 @@ func TestStateMachine_CleanupOldTransitions(t *testing.T) {
 	processID := "test-process"
 
 	now := time.Now()
-	
+
 	// Add old and new transitions
 	sm.transitions[processID] = []StateTransition{
 		{From: StateIdle, To: StateBusy, Timestamp: now.Add(-2 * time.Hour), Trigger: "old"},
@@ -323,11 +323,11 @@ func TestDefaultStateValidator_ValidateTransition(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			err := validator.ValidateTransition(ctx, test.from, test.to, test.process)
-			
+
 			if test.shouldError && err == nil {
 				t.Error("Expected error, got nil")
 			}
-			
+
 			if !test.shouldError && err != nil {
 				t.Errorf("Unexpected error: %v", err)
 			}
@@ -357,7 +357,7 @@ func TestStateMachine_isTransitionAllowed(t *testing.T) {
 	for _, test := range tests {
 		result := sm.isTransitionAllowed(test.from, test.to)
 		if result != test.expected {
-			t.Errorf("isTransitionAllowed(%s, %s) = %v, want %v", 
+			t.Errorf("isTransitionAllowed(%s, %s) = %v, want %v",
 				test.from, test.to, result, test.expected)
 		}
 	}

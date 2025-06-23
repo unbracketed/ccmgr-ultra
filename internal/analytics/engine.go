@@ -42,17 +42,17 @@ func (e *EngineConfig) Validate() error {
 
 // Engine implements analytics processing and aggregation
 type Engine struct {
-	storage     storage.Storage
-	cache       Cache
-	config      *EngineConfig
-	calculator  MetricCalculator
-	mutex       sync.RWMutex
-	
+	storage    storage.Storage
+	cache      Cache
+	config     *EngineConfig
+	calculator MetricCalculator
+	mutex      sync.RWMutex
+
 	// Background processing
-	ctx         context.Context
-	cancel      context.CancelFunc
-	wg          sync.WaitGroup
-	running     bool
+	ctx     context.Context
+	cancel  context.CancelFunc
+	wg      sync.WaitGroup
+	running bool
 }
 
 // NewEngine creates a new analytics engine
@@ -143,7 +143,7 @@ func (e *Engine) GetMetricsForWorktree(ctx context.Context, worktree string, tim
 // GetDailyMetrics gets daily metrics for a specific date range
 func (e *Engine) GetDailyMetrics(ctx context.Context, start, end time.Time) ([]DailyMetric, error) {
 	cacheKey := fmt.Sprintf("daily_metrics_%s_%s", start.Format("2006-01-02"), end.Format("2006-01-02"))
-	
+
 	// Try cache first
 	if cached, found := e.cache.Get(cacheKey); found {
 		if metrics, ok := cached.([]DailyMetric); ok {
@@ -154,31 +154,31 @@ func (e *Engine) GetDailyMetrics(ctx context.Context, start, end time.Time) ([]D
 	// Calculate if not cached
 	metrics := []DailyMetric{}
 	current := start
-	
+
 	for current.Before(end) || current.Equal(end) {
 		dailyStart := time.Date(current.Year(), current.Month(), current.Day(), 0, 0, 0, 0, current.Location())
 		dailyEnd := dailyStart.Add(24 * time.Hour).Add(-time.Nanosecond)
-		
+
 		timeRange := TimeRange{Start: dailyStart, End: dailyEnd}
 		dayMetrics, err := e.calculateDailyMetric(ctx, current, timeRange)
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate metrics for %s: %w", current.Format("2006-01-02"), err)
 		}
-		
+
 		metrics = append(metrics, *dayMetrics)
 		current = current.AddDate(0, 0, 1)
 	}
 
 	// Cache the result
 	e.cache.Set(cacheKey, metrics, e.config.CacheTTL)
-	
+
 	return metrics, nil
 }
 
 // GetWeeklyMetrics gets weekly metrics for a specific date range
 func (e *Engine) GetWeeklyMetrics(ctx context.Context, start, end time.Time) ([]WeeklyMetric, error) {
 	cacheKey := fmt.Sprintf("weekly_metrics_%s_%s", start.Format("2006-01-02"), end.Format("2006-01-02"))
-	
+
 	// Try cache first
 	if cached, found := e.cache.Get(cacheKey); found {
 		if metrics, ok := cached.([]WeeklyMetric); ok {
@@ -189,37 +189,37 @@ func (e *Engine) GetWeeklyMetrics(ctx context.Context, start, end time.Time) ([]
 	// Calculate if not cached
 	metrics := []WeeklyMetric{}
 	current := start
-	
+
 	// Align to start of week (Monday)
 	for current.Weekday() != time.Monday {
 		current = current.AddDate(0, 0, -1)
 	}
-	
+
 	for current.Before(end) {
 		weekEnd := current.AddDate(0, 0, 6)
 		if weekEnd.After(end) {
 			weekEnd = end
 		}
-		
+
 		weekMetrics, err := e.calculateWeeklyMetric(ctx, current, weekEnd)
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate weekly metrics for %s: %w", current.Format("2006-01-02"), err)
 		}
-		
+
 		metrics = append(metrics, *weekMetrics)
 		current = current.AddDate(0, 0, 7)
 	}
 
 	// Cache the result
 	e.cache.Set(cacheKey, metrics, e.config.CacheTTL)
-	
+
 	return metrics, nil
 }
 
 // GetProductivityMetrics calculates productivity metrics
 func (e *Engine) GetProductivityMetrics(ctx context.Context, timeRange TimeRange) ([]ProductivityMetric, error) {
 	cacheKey := fmt.Sprintf("productivity_%s_%s", timeRange.Start.Format("2006-01-02"), timeRange.End.Format("2006-01-02"))
-	
+
 	// Try cache first
 	if cached, found := e.cache.Get(cacheKey); found {
 		if metrics, ok := cached.([]ProductivityMetric); ok {
@@ -241,7 +241,7 @@ func (e *Engine) GetProductivityMetrics(ctx context.Context, timeRange TimeRange
 
 	// Cache the result
 	e.cache.Set(cacheKey, productivityMetrics, e.config.CacheTTL)
-	
+
 	return productivityMetrics, nil
 }
 
@@ -258,11 +258,11 @@ func (e *Engine) GetStats() map[string]interface{} {
 	defer e.mutex.RUnlock()
 
 	stats := map[string]interface{}{
-		"running":           e.running,
-		"cache_size":        e.config.CacheSize,
-		"cache_ttl":         e.config.CacheTTL.String(),
-		"batch_processing":  e.config.BatchProcessing,
-		"precompute_daily":  e.config.PrecomputeDaily,
+		"running":          e.running,
+		"cache_size":       e.config.CacheSize,
+		"cache_ttl":        e.config.CacheTTL.String(),
+		"batch_processing": e.config.BatchProcessing,
+		"precompute_daily": e.config.PrecomputeDaily,
 	}
 
 	// Add cache statistics if available
@@ -289,7 +289,7 @@ func (e *Engine) dailyPrecomputeLoop() {
 	if now.After(next2AM) {
 		next2AM = next2AM.AddDate(0, 0, 1)
 	}
-	
+
 	initialDelay := next2AM.Sub(now)
 	initialTimer := time.NewTimer(initialDelay)
 	defer initialTimer.Stop()
@@ -417,11 +417,11 @@ func (e *Engine) calculateWeeklyMetric(ctx context.Context, weekStart, weekEnd t
 	}
 
 	metric := &WeeklyMetric{
-		WeekStart:       weekStart,
-		WeekEnd:         weekEnd,
-		DailyBreakdown:  dailyMetrics,
-		TopProjects:     make(map[string]int),
-		TopWorktrees:    make(map[string]int),
+		WeekStart:      weekStart,
+		WeekEnd:        weekEnd,
+		DailyBreakdown: dailyMetrics,
+		TopProjects:    make(map[string]int),
+		TopWorktrees:   make(map[string]int),
 	}
 
 	// Aggregate from daily metrics

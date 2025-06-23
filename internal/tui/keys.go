@@ -43,7 +43,7 @@ type KeyContext int
 const (
 	ContextGlobal KeyContext = iota
 	ContextDashboard
-	ContextSessions  
+	ContextSessions
 	ContextWorktrees
 	ContextConfig
 	ContextHelp
@@ -55,7 +55,7 @@ func NewKeyHandler() *KeyHandler {
 	handler := &KeyHandler{
 		bindings: make(map[string]KeyBinding),
 	}
-	
+
 	handler.initializeDefaultBindings()
 	return handler
 }
@@ -68,13 +68,13 @@ func (h *KeyHandler) initializeDefaultBindings() {
 	h.addBinding("?", "Help", ActionHelp, ContextGlobal)
 	h.addBinding("h", "Help", ActionHelp, ContextGlobal)
 	h.addBinding("r", "Refresh", ActionRefresh, ContextGlobal)
-	
+
 	// Navigation bindings
 	h.addBinding("1", "Dashboard", ActionNavigate, ContextGlobal)
 	h.addBinding("2", "Sessions", ActionNavigate, ContextGlobal)
 	h.addBinding("3", "Worktrees", ActionNavigate, ContextGlobal)
 	h.addBinding("4", "Configuration", ActionNavigate, ContextGlobal)
-	
+
 	// Movement bindings (vi-style)
 	h.addBinding("up", "Move up", ActionMove, ContextGlobal)
 	h.addBinding("down", "Move down", ActionMove, ContextGlobal)
@@ -84,7 +84,7 @@ func (h *KeyHandler) initializeDefaultBindings() {
 	h.addBinding("j", "Move down", ActionMove, ContextGlobal)
 	h.addBinding("h", "Move left", ActionMove, ContextGlobal)
 	h.addBinding("l", "Move right", ActionMove, ContextGlobal)
-	
+
 	// Action bindings
 	h.addBinding("enter", "Select/Confirm", ActionSelect, ContextGlobal)
 	h.addBinding(" ", "Select/Toggle", ActionToggle, ContextGlobal)
@@ -93,23 +93,23 @@ func (h *KeyHandler) initializeDefaultBindings() {
 	h.addBinding("e", "Edit", ActionEdit, ContextGlobal)
 	h.addBinding("/", "Search", ActionSearch, ContextGlobal)
 	h.addBinding("f", "Filter", ActionFilter, ContextGlobal)
-	
+
 	// Context-specific bindings
-	
+
 	// Dashboard context
 	h.addBinding("s", "New Session", ActionCreate, ContextDashboard)
 	h.addBinding("w", "New Worktree", ActionCreate, ContextDashboard)
-	
+
 	// Sessions context
 	h.addBinding("a", "Attach Session", ActionSelect, ContextSessions)
 	h.addBinding("k", "Kill Session", ActionDelete, ContextSessions)
 	h.addBinding("r", "Rename Session", ActionEdit, ContextSessions)
-	
+
 	// Worktrees context
 	h.addBinding("o", "Open Worktree", ActionSelect, ContextWorktrees)
 	h.addBinding("p", "Prune Worktrees", ActionDelete, ContextWorktrees)
 	h.addBinding("b", "Change Branch", ActionEdit, ContextWorktrees)
-	
+
 	// Config context
 	h.addBinding("e", "Edit Config", ActionEdit, ContextConfig)
 	h.addBinding("r", "Reload Config", ActionRefresh, ContextConfig)
@@ -135,27 +135,27 @@ func (h *KeyHandler) GetBinding(key string) (KeyBinding, bool) {
 // GetBindingsForContext returns all key bindings for a specific context
 func (h *KeyHandler) GetBindingsForContext(context KeyContext) []KeyBinding {
 	var bindings []KeyBinding
-	
+
 	for _, binding := range h.bindings {
 		if binding.Context == context || binding.Context == ContextGlobal {
 			bindings = append(bindings, binding)
 		}
 	}
-	
+
 	return bindings
 }
 
 // HandleKeyPress processes a key press and returns the appropriate action
 func (h *KeyHandler) HandleKeyPress(msg tea.KeyMsg, context KeyContext) (KeyAction, bool) {
 	key := msg.String()
-	
+
 	// Check for context-specific binding first
 	if binding, exists := h.bindings[key]; exists {
 		if binding.Context == context || binding.Context == ContextGlobal {
 			return binding.Action, true
 		}
 	}
-	
+
 	return ActionQuit, false // Default action if no binding found
 }
 
@@ -163,13 +163,13 @@ func (h *KeyHandler) HandleKeyPress(msg tea.KeyMsg, context KeyContext) (KeyActi
 func (h *KeyHandler) GetHelpText(context KeyContext) []string {
 	bindings := h.GetBindingsForContext(context)
 	var helpLines []string
-	
+
 	// Group bindings by action type
 	actionGroups := make(map[KeyAction][]KeyBinding)
 	for _, binding := range bindings {
 		actionGroups[binding.Action] = append(actionGroups[binding.Action], binding)
 	}
-	
+
 	// Format help text by action groups
 	if navBindings, exists := actionGroups[ActionNavigate]; exists {
 		helpLines = append(helpLines, "Navigation:")
@@ -178,7 +178,7 @@ func (h *KeyHandler) GetHelpText(context KeyContext) []string {
 		}
 		helpLines = append(helpLines, "")
 	}
-	
+
 	if moveBindings, exists := actionGroups[ActionMove]; exists {
 		helpLines = append(helpLines, "Movement:")
 		for _, binding := range moveBindings {
@@ -186,7 +186,7 @@ func (h *KeyHandler) GetHelpText(context KeyContext) []string {
 		}
 		helpLines = append(helpLines, "")
 	}
-	
+
 	if actionBindings, exists := actionGroups[ActionSelect]; exists {
 		helpLines = append(helpLines, "Actions:")
 		for _, binding := range actionBindings {
@@ -194,7 +194,7 @@ func (h *KeyHandler) GetHelpText(context KeyContext) []string {
 		}
 		helpLines = append(helpLines, "")
 	}
-	
+
 	return helpLines
 }
 

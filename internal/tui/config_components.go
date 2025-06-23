@@ -12,15 +12,15 @@ import (
 
 // ConfigTextInput represents a text input field for configuration
 type ConfigTextInput struct {
-	label       string
-	value       string
-	placeholder string
-	validator   func(string) error
-	multiline   bool
-	focused     bool
-	err         error
-	textInput   textinput.Model
-	theme       Theme
+	label         string
+	value         string
+	placeholder   string
+	validator     func(string) error
+	multiline     bool
+	focused       bool
+	err           error
+	textInput     textinput.Model
+	theme         Theme
 	originalValue string
 }
 
@@ -80,9 +80,9 @@ func (c *ConfigTextInput) View() string {
 	}
 
 	label := labelStyle.Render(c.label + ":")
-	
+
 	inputView := c.textInput.View()
-	
+
 	// Show error if present
 	if c.err != nil {
 		errorMsg := c.theme.ErrorStyle.Render("  " + c.err.Error())
@@ -180,7 +180,7 @@ func (c *ConfigToggle) View() string {
 	if c.value {
 		indicator = "[✓]"
 	}
-	
+
 	if c.focused {
 		indicator = c.theme.FocusedStyle.Render(indicator)
 	} else if !c.enabled {
@@ -188,7 +188,7 @@ func (c *ConfigToggle) View() string {
 	}
 
 	label := labelStyle.Render(c.label)
-	
+
 	// Show if modified
 	modified := ""
 	if c.value != c.originalValue {
@@ -306,7 +306,7 @@ func (c *ConfigNumberInput) Update(msg tea.Msg) (*ConfigNumberInput, tea.Cmd) {
 	}
 
 	c.textInput, cmd = c.textInput.Update(msg)
-	
+
 	// Validate and parse
 	if val, err := strconv.Atoi(c.textInput.Value()); err == nil {
 		if val < c.min {
@@ -332,7 +332,7 @@ func (c *ConfigNumberInput) View() string {
 	}
 
 	label := labelStyle.Render(fmt.Sprintf("%s (%d-%d):", c.label, c.min, c.max))
-	
+
 	inputView := c.textInput.View()
 
 	// Show if modified
@@ -423,7 +423,7 @@ func (c *ConfigListInput) Update(msg tea.Msg) (*ConfigListInput, tea.Cmd) {
 	if c.editing {
 		var cmd tea.Cmd
 		c.textInput, cmd = c.textInput.Update(msg)
-		
+
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch msg.String() {
@@ -498,7 +498,7 @@ func (c *ConfigListInput) View() string {
 	}
 
 	label := labelStyle.Render(c.label + ":")
-	
+
 	// Show if modified
 	if c.HasChanged() {
 		label += c.theme.WarningStyle.Render(" *")
@@ -515,17 +515,17 @@ func (c *ConfigListInput) View() string {
 			if c.focused && i == c.cursor {
 				prefix = "▶ "
 			}
-			
+
 			itemText := item
 			if c.editing && i == c.editIndex {
 				itemText = c.textInput.View()
 			}
-			
+
 			line := prefix + itemText
 			if c.focused && i == c.cursor && !c.editing {
 				line = c.theme.SelectedStyle.Render(line)
 			}
-			
+
 			lines = append(lines, line)
 		}
 	}

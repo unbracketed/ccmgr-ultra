@@ -36,7 +36,7 @@ func (r *sessionRepository) Create(ctx context.Context, session *storage.Session
 		INSERT INTO sessions (id, name, project, worktree, branch, directory, created_at, updated_at, last_access, metadata)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	
+
 	_, err = r.exec().ExecContext(ctx, query,
 		session.ID,
 		session.Name,
@@ -49,7 +49,7 @@ func (r *sessionRepository) Create(ctx context.Context, session *storage.Session
 		session.LastAccess,
 		string(metadataJSON),
 	)
-	
+
 	return err
 }
 
@@ -79,7 +79,7 @@ func (r *sessionRepository) Update(ctx context.Context, id string, updates map[s
 
 	args = append(args, id)
 	query := fmt.Sprintf("UPDATE sessions SET %s WHERE id = ?", strings.Join(setParts, ", "))
-	
+
 	_, err := r.exec().ExecContext(ctx, query, args...)
 	return err
 }
@@ -95,7 +95,7 @@ func (r *sessionRepository) GetByID(ctx context.Context, id string) (*storage.Se
 		SELECT id, name, project, worktree, branch, directory, created_at, updated_at, last_access, metadata
 		FROM sessions WHERE id = ?
 	`
-	
+
 	return r.scanSession(r.exec().QueryRowContext(ctx, query, id))
 }
 
@@ -104,13 +104,13 @@ func (r *sessionRepository) GetByName(ctx context.Context, name string) (*storag
 		SELECT id, name, project, worktree, branch, directory, created_at, updated_at, last_access, metadata
 		FROM sessions WHERE name = ?
 	`
-	
+
 	return r.scanSession(r.exec().QueryRowContext(ctx, query, name))
 }
 
 func (r *sessionRepository) List(ctx context.Context, filter storage.SessionFilter) ([]*storage.Session, error) {
 	query, args := r.buildListQuery(filter)
-	
+
 	rows, err := r.exec().QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -131,7 +131,7 @@ func (r *sessionRepository) List(ctx context.Context, filter storage.SessionFilt
 
 func (r *sessionRepository) Search(ctx context.Context, query string, filter storage.SessionFilter) ([]*storage.Session, error) {
 	searchQuery, args := r.buildSearchQuery(query, filter)
-	
+
 	rows, err := r.exec().QueryContext(ctx, searchQuery, args...)
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (r *sessionRepository) Search(ctx context.Context, query string, filter sto
 
 func (r *sessionRepository) Count(ctx context.Context, filter storage.SessionFilter) (int64, error) {
 	query, args := r.buildCountQuery(filter)
-	
+
 	var count int64
 	err := r.exec().QueryRowContext(ctx, query, args...).Scan(&count)
 	return count, err

@@ -29,17 +29,17 @@ func NewViperManager() *ViperManager {
 func (vm *ViperManager) InitGlobalViper() error {
 	vm.global.SetConfigName("config")
 	vm.global.SetConfigType("yaml")
-	
+
 	// Add config paths
 	configPath := GetConfigPath()
 	vm.global.AddConfigPath(configPath)
-	
+
 	// Set defaults
 	vm.setDefaults(vm.global)
-	
+
 	// Bind environment variables
 	vm.bindEnvironment(vm.global)
-	
+
 	// Try to read config
 	if err := vm.global.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -57,7 +57,7 @@ func (vm *ViperManager) InitGlobalViper() error {
 			return fmt.Errorf("failed to read global config: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -65,20 +65,20 @@ func (vm *ViperManager) InitGlobalViper() error {
 func (vm *ViperManager) InitProjectViper(projectPath string) error {
 	vm.project.SetConfigName("config")
 	vm.project.SetConfigType("yaml")
-	
+
 	// Add project config path
 	projectConfigPath := filepath.Join(projectPath, ".ccmgr-ultra")
 	vm.project.AddConfigPath(projectConfigPath)
-	
+
 	// Set defaults (not needed for project config as we merge with global)
 	// vm.setDefaults(vm.project)
-	
+
 	// Bind environment variables with higher precedence prefix
 	vm.bindProjectEnvironment(vm.project)
-	
+
 	// Try to read config (it's ok if it doesn't exist)
 	vm.project.ReadInConfig()
-	
+
 	return nil
 }
 
@@ -89,10 +89,10 @@ func (vm *ViperManager) GetMergedConfig() (*Config, error) {
 	if err := vm.global.Unmarshal(&globalConfig); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal global config: %w", err)
 	}
-	
+
 	// Set defaults for global config
 	globalConfig.SetDefaults()
-	
+
 	// Get project config if available
 	var projectConfig *Config
 	if vm.project.ConfigFileUsed() != "" {
@@ -101,18 +101,18 @@ func (vm *ViperManager) GetMergedConfig() (*Config, error) {
 			projectConfig = &pc
 		}
 	}
-	
+
 	// Merge configs
 	merged := MergeConfigs(&globalConfig, projectConfig)
-	
+
 	// Apply environment variable overrides
 	vm.applyEnvironmentOverrides(merged)
-	
+
 	// Validate merged config
 	if err := merged.Validate(); err != nil {
 		return nil, fmt.Errorf("merged config validation failed: %w", err)
 	}
-	
+
 	vm.merged = merged
 	return merged, nil
 }
@@ -126,7 +126,7 @@ func (vm *ViperManager) WatchConfigs(onChange func(*Config)) {
 			onChange(config)
 		}
 	})
-	
+
 	// Watch project config if available
 	if vm.project.ConfigFileUsed() != "" {
 		vm.project.WatchConfig()
@@ -142,7 +142,7 @@ func (vm *ViperManager) WatchConfigs(onChange func(*Config)) {
 func (vm *ViperManager) setDefaults(v *viper.Viper) {
 	// Version
 	v.SetDefault("version", "1.0.0")
-	
+
 	// Status hooks
 	v.SetDefault("status_hooks.enabled", true)
 	v.SetDefault("status_hooks.idle.enabled", true)
@@ -157,18 +157,18 @@ func (vm *ViperManager) setDefaults(v *viper.Viper) {
 	v.SetDefault("status_hooks.waiting.script", "~/.config/ccmgr-ultra/hooks/waiting.sh")
 	v.SetDefault("status_hooks.waiting.timeout", 30)
 	v.SetDefault("status_hooks.waiting.async", true)
-	
+
 	// Worktree
 	v.SetDefault("worktree.auto_directory", true)
 	v.SetDefault("worktree.directory_pattern", "{{.Project}}-{{.Branch}}")
 	v.SetDefault("worktree.default_branch", "main")
 	v.SetDefault("worktree.cleanup_on_merge", false)
-	
+
 	// Commands
 	v.SetDefault("commands.claude_command", "claude")
 	v.SetDefault("commands.git_command", "git")
 	v.SetDefault("commands.tmux_prefix", "ccmgr")
-	
+
 	// Shortcuts
 	shortcuts := DefaultShortcuts()
 	for key, action := range shortcuts {
@@ -181,7 +181,7 @@ func (vm *ViperManager) bindEnvironment(v *viper.Viper) {
 	v.SetEnvPrefix("CCMGR")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
-	
+
 	// Specific bindings for nested configs
 	v.BindEnv("status_hooks.enabled")
 	v.BindEnv("status_hooks.idle.enabled")
@@ -196,12 +196,12 @@ func (vm *ViperManager) bindEnvironment(v *viper.Viper) {
 	v.BindEnv("status_hooks.waiting.script")
 	v.BindEnv("status_hooks.waiting.timeout")
 	v.BindEnv("status_hooks.waiting.async")
-	
+
 	v.BindEnv("worktree.auto_directory")
 	v.BindEnv("worktree.directory_pattern")
 	v.BindEnv("worktree.default_branch")
 	v.BindEnv("worktree.cleanup_on_merge")
-	
+
 	v.BindEnv("commands.claude_command")
 	v.BindEnv("commands.git_command")
 	v.BindEnv("commands.tmux_prefix")
@@ -218,12 +218,12 @@ func (vm *ViperManager) bindProjectEnvironment(v *viper.Viper) {
 func (vm *ViperManager) applyEnvironmentOverrides(config *Config) {
 	// Check for specific environment variable overrides
 	// This ensures environment variables take precedence over all config files
-	
+
 	// Status hooks
 	if val := os.Getenv("CCMGR_STATUS_HOOKS_ENABLED"); val != "" {
 		config.StatusHooks.Enabled = val == "true"
 	}
-	
+
 	// Worktree
 	if val := os.Getenv("CCMGR_WORKTREE_AUTO_DIRECTORY"); val != "" {
 		config.Worktree.AutoDirectory = val == "true"
@@ -237,7 +237,7 @@ func (vm *ViperManager) applyEnvironmentOverrides(config *Config) {
 	if val := os.Getenv("CCMGR_WORKTREE_CLEANUP_ON_MERGE"); val != "" {
 		config.Worktree.CleanupOnMerge = val == "true"
 	}
-	
+
 	// Commands
 	if val := os.Getenv("CCMGR_COMMANDS_CLAUDE_COMMAND"); val != "" {
 		config.Commands.ClaudeCommand = val
@@ -280,13 +280,13 @@ func (vm *ViperManager) SaveProjectConfig() error {
 		// Need to set config file path
 		projectPath, _ := os.Getwd()
 		configPath := GetProjectConfigPath(projectPath)
-		
+
 		// Ensure directory exists
 		dir := filepath.Dir(configPath)
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return fmt.Errorf("failed to create project config directory: %w", err)
 		}
-		
+
 		vm.project.SetConfigFile(configPath)
 	}
 	return vm.project.WriteConfig()
@@ -295,19 +295,19 @@ func (vm *ViperManager) SaveProjectConfig() error {
 // InitViper initializes a standalone Viper instance with defaults
 func InitViper() *viper.Viper {
 	v := viper.New()
-	
+
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
 	v.AddConfigPath("$HOME/.config/ccmgr-ultra")
 	v.AddConfigPath(".")
-	
+
 	// Set all defaults
 	manager := &ViperManager{}
 	manager.setDefaults(v)
-	
+
 	// Bind environment variables
 	manager.bindEnvironment(v)
-	
+
 	return v
 }
 
@@ -323,18 +323,18 @@ func LoadConfigWithViper(v *viper.Viper) (*Config, error) {
 		}
 		// File not found is ok, continue with defaults
 	}
-	
+
 	// Unmarshal to config struct
 	var config Config
 	if err := v.Unmarshal(&config); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
-	
+
 	// Set defaults and validate
 	config.SetDefaults()
 	if err := config.Validate(); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
-	
+
 	return &config, nil
 }

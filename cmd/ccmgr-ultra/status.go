@@ -4,49 +4,49 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/bcdekker/ccmgr-ultra/internal/cli"
 	"github.com/bcdekker/ccmgr-ultra/internal/claude"
+	"github.com/bcdekker/ccmgr-ultra/internal/cli"
 	"github.com/bcdekker/ccmgr-ultra/internal/git"
 	"github.com/bcdekker/ccmgr-ultra/internal/hooks"
 	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
+	"github.com/spf13/cobra"
 )
 
 // StatusData represents the complete status information
 type StatusData struct {
-	System    SystemStatus    `json:"system" yaml:"system"`
+	System    SystemStatus     `json:"system" yaml:"system"`
 	Worktrees []WorktreeStatus `json:"worktrees" yaml:"worktrees"`
 	Sessions  []SessionStatus  `json:"sessions" yaml:"sessions"`
 	Processes []ProcessStatus  `json:"processes" yaml:"processes"`
-	Hooks     HookStatus      `json:"hooks" yaml:"hooks"`
-	Timestamp time.Time       `json:"timestamp" yaml:"timestamp"`
+	Hooks     HookStatus       `json:"hooks" yaml:"hooks"`
+	Timestamp time.Time        `json:"timestamp" yaml:"timestamp"`
 }
 
 // SystemStatus represents overall system health
 type SystemStatus struct {
-	Healthy            bool          `json:"healthy" yaml:"healthy"`
-	TotalWorktrees     int           `json:"total_worktrees" yaml:"total_worktrees"`
-	CleanWorktrees     int           `json:"clean_worktrees" yaml:"clean_worktrees"`
-	DirtyWorktrees     int           `json:"dirty_worktrees" yaml:"dirty_worktrees"`
-	ActiveSessions     int           `json:"active_sessions" yaml:"active_sessions"`
-	TotalProcesses     int           `json:"total_processes" yaml:"total_processes"`
-	HealthyProcesses   int           `json:"healthy_processes" yaml:"healthy_processes"`
-	UnhealthyProcesses int           `json:"unhealthy_processes" yaml:"unhealthy_processes"`
-	ProcessManagerRunning bool       `json:"process_manager_running" yaml:"process_manager_running"`
-	HooksEnabled       bool          `json:"hooks_enabled" yaml:"hooks_enabled"`
-	AverageUptime      time.Duration `json:"average_uptime" yaml:"average_uptime"`
+	Healthy               bool          `json:"healthy" yaml:"healthy"`
+	TotalWorktrees        int           `json:"total_worktrees" yaml:"total_worktrees"`
+	CleanWorktrees        int           `json:"clean_worktrees" yaml:"clean_worktrees"`
+	DirtyWorktrees        int           `json:"dirty_worktrees" yaml:"dirty_worktrees"`
+	ActiveSessions        int           `json:"active_sessions" yaml:"active_sessions"`
+	TotalProcesses        int           `json:"total_processes" yaml:"total_processes"`
+	HealthyProcesses      int           `json:"healthy_processes" yaml:"healthy_processes"`
+	UnhealthyProcesses    int           `json:"unhealthy_processes" yaml:"unhealthy_processes"`
+	ProcessManagerRunning bool          `json:"process_manager_running" yaml:"process_manager_running"`
+	HooksEnabled          bool          `json:"hooks_enabled" yaml:"hooks_enabled"`
+	AverageUptime         time.Duration `json:"average_uptime" yaml:"average_uptime"`
 }
 
 // WorktreeStatus represents the status of a single worktree
 type WorktreeStatus struct {
-	Path         string    `json:"path" yaml:"path"`
-	Branch       string    `json:"branch" yaml:"branch"`
-	Head         string    `json:"head" yaml:"head"`
-	IsClean      bool      `json:"is_clean" yaml:"is_clean"`
-	HasUncommitted bool    `json:"has_uncommitted" yaml:"has_uncommitted"`
-	TmuxSession  string    `json:"tmux_session" yaml:"tmux_session"`
-	LastAccessed time.Time `json:"last_accessed" yaml:"last_accessed"`
-	ProcessCount int       `json:"process_count" yaml:"process_count"`
+	Path           string    `json:"path" yaml:"path"`
+	Branch         string    `json:"branch" yaml:"branch"`
+	Head           string    `json:"head" yaml:"head"`
+	IsClean        bool      `json:"is_clean" yaml:"is_clean"`
+	HasUncommitted bool      `json:"has_uncommitted" yaml:"has_uncommitted"`
+	TmuxSession    string    `json:"tmux_session" yaml:"tmux_session"`
+	LastAccessed   time.Time `json:"last_accessed" yaml:"last_accessed"`
+	ProcessCount   int       `json:"process_count" yaml:"process_count"`
 }
 
 // SessionStatus represents the status of a tmux session
@@ -176,7 +176,7 @@ func displayStatus() error {
 }
 
 func collectStatusData() (*StatusData, error) {
-	
+
 	// Load configuration
 	cfg, err := loadConfigWithOverrides()
 	if err != nil {
@@ -199,7 +199,7 @@ func collectStatusData() (*StatusData, error) {
 	if spinner != nil {
 		spinner.SetMessage("Collecting worktree information...")
 	}
-	
+
 	// Create repository manager and detect repository
 	gitCmd := git.NewGitCmd()
 	repoManager := git.NewRepositoryManager(gitCmd)
@@ -251,7 +251,7 @@ func collectStatusData() (*StatusData, error) {
 	} else {
 		processes := processManager.GetAllProcesses()
 		status.Processes = convertProcesses(processes)
-		
+
 		// Get system health
 		systemHealth := processManager.GetSystemHealth()
 		if systemHealth != nil {
@@ -322,7 +322,7 @@ func convertProcesses(processes []*claude.ProcessInfo) []ProcessStatus {
 	result := make([]ProcessStatus, len(processes))
 	for i, proc := range processes {
 		uptime := time.Since(proc.StartTime).Truncate(time.Second).String()
-		
+
 		result[i] = ProcessStatus{
 			PID:         proc.PID,
 			SessionID:   proc.SessionID,
@@ -344,15 +344,15 @@ func determineSystemHealth(status *StatusData) bool {
 	// - Process manager is running
 	// - No unhealthy processes (or all processes are healthy)
 	// - At least some worktrees are clean (if any exist)
-	
+
 	if !status.System.ProcessManagerRunning {
 		return false
 	}
-	
+
 	if status.System.TotalProcesses > 0 && status.System.UnhealthyProcesses > 0 {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -364,7 +364,7 @@ func filterByWorktree(statusData *StatusData, worktreeName string) *StatusData {
 			filteredWorktrees = append(filteredWorktrees, wt)
 		}
 	}
-	
+
 	// Filter sessions related to the worktree
 	filteredSessions := make([]SessionStatus, 0)
 	for _, sess := range statusData.Sessions {
@@ -372,7 +372,7 @@ func filterByWorktree(statusData *StatusData, worktreeName string) *StatusData {
 			filteredSessions = append(filteredSessions, sess)
 		}
 	}
-	
+
 	// Filter processes related to the worktree
 	filteredProcesses := make([]ProcessStatus, 0)
 	for _, proc := range statusData.Processes {
@@ -380,7 +380,7 @@ func filterByWorktree(statusData *StatusData, worktreeName string) *StatusData {
 			filteredProcesses = append(filteredProcesses, proc)
 		}
 	}
-	
+
 	return &StatusData{
 		System:    statusData.System, // Keep system status as is
 		Worktrees: filteredWorktrees,

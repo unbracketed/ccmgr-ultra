@@ -14,14 +14,14 @@ func NewSessionContextMenu(theme Theme) *SessionContextMenu {
 
 // SessionInfo represents session information for context menu generation
 type SessionInfo struct {
-	ID          string
-	Name        string
-	Active      bool
-	Project     string
-	Branch      string
-	Directory   string
-	HasChanges  bool
-	LastAccess  string
+	ID         string
+	Name       string
+	Active     bool
+	Project    string
+	Branch     string
+	Directory  string
+	HasChanges bool
+	LastAccess string
 }
 
 // CreateSessionListMenu creates a context menu for the session list
@@ -36,7 +36,7 @@ func (s *SessionContextMenu) CreateSessionListMenu() *ContextMenu {
 		NewMenuItemWithIcon("Session Templates", "session_templates", "t", "📋"),
 		NewMenuItemWithIcon("Bulk Operations", "session_bulk", "b", "⚙️"),
 	}
-	
+
 	return NewContextMenu(ContextMenuConfig{
 		Title: "Session Actions",
 		Items: items,
@@ -46,7 +46,7 @@ func (s *SessionContextMenu) CreateSessionListMenu() *ContextMenu {
 // CreateSessionItemMenu creates a context menu for a specific session
 func (s *SessionContextMenu) CreateSessionItemMenu(session SessionInfo) *ContextMenu {
 	var items []ContextMenuItem
-	
+
 	if session.Active {
 		items = append(items,
 			NewMenuItemWithIcon("Attach", "session_attach", "a", "🔗"),
@@ -59,7 +59,7 @@ func (s *SessionContextMenu) CreateSessionItemMenu(session SessionInfo) *Context
 			NewMenuDivider(),
 		)
 	}
-	
+
 	// Common actions
 	items = append(items,
 		NewMenuItemWithIcon("Rename", "session_rename", "r", "✏️"),
@@ -69,7 +69,7 @@ func (s *SessionContextMenu) CreateSessionItemMenu(session SessionInfo) *Context
 		NewMenuItemWithIcon("Show Logs", "session_logs", "l", "📄"),
 		NewMenuDivider(),
 	)
-	
+
 	// Directory operations
 	directorySubmenu := &ContextMenu{
 		title: "Directory",
@@ -82,7 +82,7 @@ func (s *SessionContextMenu) CreateSessionItemMenu(session SessionInfo) *Context
 		},
 		theme: s.theme,
 	}
-	
+
 	items = append(items, ContextMenuItem{
 		Label:   "Directory Actions",
 		Action:  "",
@@ -90,7 +90,7 @@ func (s *SessionContextMenu) CreateSessionItemMenu(session SessionInfo) *Context
 		Enabled: true,
 		Submenu: directorySubmenu,
 	})
-	
+
 	// Danger zone
 	items = append(items,
 		NewMenuDivider(),
@@ -109,7 +109,7 @@ func (s *SessionContextMenu) CreateSessionItemMenu(session SessionInfo) *Context
 			Enabled: true,
 		},
 	)
-	
+
 	return NewContextMenu(ContextMenuConfig{
 		Title: session.Name,
 		Items: items,
@@ -128,7 +128,7 @@ func (s *SessionContextMenu) CreateNewSessionMenu() *ContextMenu {
 		NewMenuDivider(),
 		NewMenuItemWithIcon("Custom Setup Wizard", "session_new_wizard", "z", "🧙"),
 	}
-	
+
 	return NewContextMenu(ContextMenuConfig{
 		Title: "New Session",
 		Items: items,
@@ -155,7 +155,7 @@ func (s *SessionContextMenu) CreateBulkSessionMenu() *ContextMenu {
 			Enabled: true,
 		},
 	}
-	
+
 	return NewContextMenu(ContextMenuConfig{
 		Title: "Bulk Operations",
 		Items: items,
@@ -180,7 +180,7 @@ func (s *SessionContextMenu) CreateSessionTemplateMenu() *ContextMenu {
 			Enabled: true,
 		},
 	}
-	
+
 	return NewContextMenu(ContextMenuConfig{
 		Title: "Templates",
 		Items: items,

@@ -5,20 +5,20 @@ import (
 	"sync"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/bcdekker/ccmgr-ultra/internal/claude"
 	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	"github.com/bcdekker/ccmgr-ultra/internal/git"
 	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 // Integration manages the integration between TUI and backend services
 type Integration struct {
-	config     *config.Config
-	claudeMgr  *claude.ProcessManager
-	tmuxMgr    *tmux.SessionManager
-	gitMgr     *git.WorktreeManager
-	
+	config    *config.Config
+	claudeMgr *claude.ProcessManager
+	tmuxMgr   *tmux.SessionManager
+	gitMgr    *git.WorktreeManager
+
 	// Data cache
 	mu              sync.RWMutex
 	sessions        []SessionInfo
@@ -26,7 +26,7 @@ type Integration struct {
 	systemStatus    SystemStatus
 	lastRefresh     time.Time
 	refreshInterval time.Duration
-	
+
 	// Context for background operations
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -70,10 +70,10 @@ type SessionSummary struct {
 
 // ClaudeStatus represents Claude Code process status for a worktree
 type ClaudeStatus struct {
-	State       string    // idle, busy, waiting, error
-	ProcessID   int
-	LastUpdate  time.Time
-	SessionID   string
+	State      string // idle, busy, waiting, error
+	ProcessID  int
+	LastUpdate time.Time
+	SessionID  string
 }
 
 // GitWorktreeStatus provides detailed git status information
@@ -101,14 +101,14 @@ const (
 
 // SystemStatus represents overall system status
 type SystemStatus struct {
-	ActiveProcesses   int
-	ActiveSessions    int
-	TrackedWorktrees  int
-	LastUpdate        time.Time
-	IsHealthy         bool
-	Errors            []string
-	Memory            MemoryStats
-	Performance       PerformanceStats
+	ActiveProcesses  int
+	ActiveSessions   int
+	TrackedWorktrees int
+	LastUpdate       time.Time
+	IsHealthy        bool
+	Errors           []string
+	Memory           MemoryStats
+	Performance      PerformanceStats
 }
 
 // MemoryStats holds memory usage information
@@ -120,33 +120,33 @@ type MemoryStats struct {
 
 // PerformanceStats holds performance metrics
 type PerformanceStats struct {
-	CPUPercent    float64
-	LoadAverage   float64
-	ResponseTime  time.Duration
-	ErrorRate     float64
+	CPUPercent   float64
+	LoadAverage  float64
+	ResponseTime time.Duration
+	ErrorRate    float64
 }
 
 // NewIntegration creates a new integration layer
 func NewIntegration(config *config.Config) (*Integration, error) {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Initialize backend managers
 	claudeMgr, err := claude.NewProcessManager(&claude.ProcessConfig{})
 	if err != nil {
 		cancel()
 		return nil, err
 	}
-	
+
 	tmuxMgr := tmux.NewSessionManager(config)
-	
+
 	// Note: gitMgr requires a repository, so we'll initialize it when needed
 	// For now, we'll set it to nil and handle it gracefully
-	
+
 	refreshInterval := time.Duration(config.RefreshInterval) * time.Second
 	if refreshInterval <= 0 {
 		refreshInterval = 5 * time.Second // Default to 5 seconds
 	}
-	
+
 	integration := &Integration{
 		config:          config,
 		claudeMgr:       claudeMgr,
@@ -159,13 +159,13 @@ func NewIntegration(config *config.Config) (*Integration, error) {
 		ctx:             ctx,
 		cancel:          cancel,
 	}
-	
+
 	// Start initial data refresh - do initial sync before returning
 	integration.refreshAllData()
-	
+
 	// Start background refresh
 	go integration.startBackgroundRefresh()
-	
+
 	return integration, nil
 }
 
@@ -173,9 +173,9 @@ func NewIntegration(config *config.Config) (*Integration, error) {
 func (i *Integration) startBackgroundRefresh() {
 	ticker := time.NewTicker(i.refreshInterval)
 	defer ticker.Stop()
-	
+
 	// No need for initial refresh here - already done in NewIntegration
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -190,18 +190,18 @@ func (i *Integration) startBackgroundRefresh() {
 func (i *Integration) refreshAllData() {
 	i.mu.Lock()
 	defer i.mu.Unlock()
-	
+
 	i.lastRefresh = time.Now()
-	
+
 	// Refresh Claude processes
 	i.refreshClaudeData()
-	
+
 	// Refresh Tmux sessions
 	i.refreshTmuxData()
-	
+
 	// Refresh Git worktrees
 	i.refreshGitData()
-	
+
 	// Update system status
 	i.updateSystemStatus()
 }
@@ -209,7 +209,7 @@ func (i *Integration) refreshAllData() {
 // refreshClaudeData refreshes Claude process information
 func (i *Integration) refreshClaudeData() {
 	processes := i.claudeMgr.GetAllProcesses()
-	
+
 	// Update session info with Claude process data
 	for j, session := range i.sessions {
 		for _, process := range processes {
@@ -228,14 +228,14 @@ func (i *Integration) refreshClaudeData() {
 func (i *Integration) refreshTmuxData() {
 	sessions, err := i.tmuxMgr.ListSessions()
 	if err != nil {
-		i.systemStatus.Errors = append(i.systemStatus.Errors, 
+		i.systemStatus.Errors = append(i.systemStatus.Errors,
 			"Failed to list tmux sessions: "+err.Error())
 		return
 	}
-	
+
 	// Clear existing sessions
 	i.sessions = []SessionInfo{}
-	
+
 	// Convert tmux sessions to TUI session info
 	for _, session := range sessions {
 		// Get session details
@@ -250,7 +250,7 @@ func (i *Integration) refreshTmuxData() {
 			LastAccess: session.LastAccess,
 			Status:     "active",
 		}
-		
+
 		i.sessions = append(i.sessions, sessionInfo)
 	}
 }
@@ -259,11 +259,11 @@ func (i *Integration) refreshTmuxData() {
 func (i *Integration) refreshGitData() {
 	// Since we don't have repository context at this level,
 	// we'll implement a basic worktree discovery mechanism
-	
+
 	// For now, create enhanced placeholder data
 	// In a real implementation, this would scan configured directories
 	// for git repositories and their worktrees
-	
+
 	i.worktrees = []WorktreeInfo{
 		{
 			Path:       "/example/worktree1",
@@ -300,13 +300,13 @@ func (i *Integration) refreshGitData() {
 			},
 		},
 		{
-			Path:       "/example/worktree2", 
-			Branch:     "feature/backend-refactor",
-			Repository: "ccmgr-ultra",
-			Active:     false,
-			LastAccess: time.Now().Add(-2 * time.Hour),
-			HasChanges: true,
-			Status:     "modified",
+			Path:           "/example/worktree2",
+			Branch:         "feature/backend-refactor",
+			Repository:     "ccmgr-ultra",
+			Active:         false,
+			LastAccess:     time.Now().Add(-2 * time.Hour),
+			HasChanges:     true,
+			Status:         "modified",
 			ActiveSessions: []SessionSummary{},
 			ClaudeStatus: ClaudeStatus{
 				State:      "error",
@@ -367,13 +367,13 @@ func (i *Integration) refreshGitData() {
 			},
 		},
 		{
-			Path:       "/example/worktree4",
-			Branch:     "hotfix/security-patch",
-			Repository: "ccmgr-ultra",
-			Active:     false,
-			LastAccess: time.Now().Add(-3 * time.Hour),
-			HasChanges: true,
-			Status:     "conflicts",
+			Path:           "/example/worktree4",
+			Branch:         "hotfix/security-patch",
+			Repository:     "ccmgr-ultra",
+			Active:         false,
+			LastAccess:     time.Now().Add(-3 * time.Hour),
+			HasChanges:     true,
+			Status:         "conflicts",
 			ActiveSessions: []SessionSummary{},
 			ClaudeStatus: ClaudeStatus{
 				State:      "waiting",
@@ -400,29 +400,29 @@ func (i *Integration) refreshGitData() {
 func (i *Integration) updateSystemStatus() {
 	activeProcesses := len(i.claudeMgr.GetAllProcesses())
 	activeSessions := 0
-	
+
 	for _, session := range i.sessions {
 		if session.Active {
 			activeSessions++
 		}
 	}
-	
+
 	trackedWorktrees := len(i.worktrees)
-	
+
 	// Check system health
 	isHealthy := len(i.systemStatus.Errors) == 0
-	
+
 	i.systemStatus = SystemStatus{
 		ActiveProcesses:  activeProcesses,
 		ActiveSessions:   activeSessions,
 		TrackedWorktrees: trackedWorktrees,
 		LastUpdate:       time.Now(),
 		IsHealthy:        isHealthy,
-		Errors:          i.systemStatus.Errors, // Keep accumulated errors
-		Memory:          i.getMemoryStats(),
-		Performance:     i.getPerformanceStats(),
+		Errors:           i.systemStatus.Errors, // Keep accumulated errors
+		Memory:           i.getMemoryStats(),
+		Performance:      i.getPerformanceStats(),
 	}
-	
+
 	// Clear old errors (keep only recent ones)
 	if len(i.systemStatus.Errors) > 10 {
 		i.systemStatus.Errors = i.systemStatus.Errors[len(i.systemStatus.Errors)-10:]
@@ -465,7 +465,7 @@ func (i *Integration) GetSystemStatus() SystemStatus {
 func (i *Integration) GetActiveSessions() []SessionInfo {
 	i.mu.RLock()
 	defer i.mu.RUnlock()
-	
+
 	var active []SessionInfo
 	for _, session := range i.sessions {
 		if session.Active {
@@ -486,7 +486,7 @@ func (i *Integration) GetAllSessions() []SessionInfo {
 func (i *Integration) GetRecentWorktrees() []WorktreeInfo {
 	i.mu.RLock()
 	defer i.mu.RUnlock()
-	
+
 	// Return up to 5 most recently accessed worktrees
 	recent := append([]WorktreeInfo(nil), i.worktrees...)
 	if len(recent) > 5 {
@@ -561,14 +561,14 @@ func (i *Integration) RefreshData() tea.Cmd {
 func (i *Integration) GetClaudeStatusForWorktree(worktreePath string) ClaudeStatus {
 	i.mu.RLock()
 	defer i.mu.RUnlock()
-	
+
 	// Find worktree and return its status
 	for _, wt := range i.worktrees {
 		if wt.Path == worktreePath {
 			return wt.ClaudeStatus
 		}
 	}
-	
+
 	// Return default status if not found
 	return ClaudeStatus{
 		State:      "unknown",
@@ -582,14 +582,14 @@ func (i *Integration) GetClaudeStatusForWorktree(worktreePath string) ClaudeStat
 func (i *Integration) GetActiveSessionsForWorktree(worktreePath string) []SessionSummary {
 	i.mu.RLock()
 	defer i.mu.RUnlock()
-	
+
 	// Find worktree and return its sessions
 	for _, wt := range i.worktrees {
 		if wt.Path == worktreePath {
 			return wt.ActiveSessions
 		}
 	}
-	
+
 	return []SessionSummary{}
 }
 
@@ -597,7 +597,7 @@ func (i *Integration) GetActiveSessionsForWorktree(worktreePath string) []Sessio
 func (i *Integration) UpdateClaudeStatusForWorktree(worktreePath string, status ClaudeStatus) {
 	i.mu.Lock()
 	defer i.mu.Unlock()
-	
+
 	// Find and update worktree status
 	for idx, wt := range i.worktrees {
 		if wt.Path == worktreePath {
@@ -611,7 +611,7 @@ func (i *Integration) UpdateClaudeStatusForWorktree(worktreePath string, status 
 func (i *Integration) FindSessionsForWorktree(worktreePath string) ([]SessionSummary, error) {
 	i.mu.RLock()
 	defer i.mu.RUnlock()
-	
+
 	var result []SessionSummary
 	for _, session := range i.sessions {
 		if session.Directory == worktreePath {
@@ -623,7 +623,7 @@ func (i *Integration) FindSessionsForWorktree(worktreePath string) ([]SessionSum
 			})
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -663,7 +663,7 @@ func (i *Integration) ProcessRealtimeStatusUpdate() tea.Cmd {
 	return func() tea.Msg {
 		// Update Claude statuses in background
 		go i.updateClaudeStatusesRealtime()
-		
+
 		// Return update message
 		return StatusUpdatedMsg{
 			UpdatedAt: time.Now(),
@@ -675,14 +675,14 @@ func (i *Integration) ProcessRealtimeStatusUpdate() tea.Cmd {
 func (i *Integration) updateClaudeStatusesRealtime() {
 	i.mu.Lock()
 	defer i.mu.Unlock()
-	
+
 	// Get current Claude processes
 	processes := i.claudeMgr.GetAllProcesses()
-	
+
 	// Update each worktree's Claude status
 	for idx := range i.worktrees {
 		wt := &i.worktrees[idx]
-		
+
 		// Find matching Claude process for this worktree
 		found := false
 		for _, process := range processes {
@@ -704,7 +704,7 @@ func (i *Integration) updateClaudeStatusesRealtime() {
 				}
 			}
 		}
-		
+
 		if !found {
 			// Simulate some status evolution for demo purposes
 			switch wt.ClaudeStatus.State {
@@ -763,7 +763,7 @@ func DefaultSystemStatus() SystemStatus {
 		TrackedWorktrees: 0,
 		LastUpdate:       time.Now(),
 		IsHealthy:        true,
-		Errors:          []string{},
+		Errors:           []string{},
 		Memory: MemoryStats{
 			UsedMB:     0,
 			TotalMB:    0,

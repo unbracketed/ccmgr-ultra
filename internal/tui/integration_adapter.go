@@ -27,7 +27,7 @@ func NewIntegrationAdapter(integration *Integration, config *config.Config) *Int
 func (a *IntegrationAdapter) GetAvailableProjects() ([]workflows.ProjectInfo, error) {
 	worktrees := a.integration.GetAllWorktrees()
 	projectMap := make(map[string]workflows.ProjectInfo)
-	
+
 	for _, wt := range worktrees {
 		if _, exists := projectMap[wt.Repository]; !exists {
 			// Count worktrees for this repository
@@ -41,7 +41,7 @@ func (a *IntegrationAdapter) GetAvailableProjects() ([]workflows.ProjectInfo, er
 					}
 				}
 			}
-			
+
 			projectMap[wt.Repository] = workflows.ProjectInfo{
 				Name:        wt.Repository,
 				Path:        filepath.Dir(wt.Path),
@@ -51,12 +51,12 @@ func (a *IntegrationAdapter) GetAvailableProjects() ([]workflows.ProjectInfo, er
 			}
 		}
 	}
-	
+
 	var projects []workflows.ProjectInfo
 	for _, project := range projectMap {
 		projects = append(projects, project)
 	}
-	
+
 	return projects, nil
 }
 
@@ -64,17 +64,17 @@ func (a *IntegrationAdapter) GetAvailableProjects() ([]workflows.ProjectInfo, er
 func (a *IntegrationAdapter) GetAvailableWorktrees() ([]workflows.WorktreeInfo, error) {
 	worktrees := a.integration.GetAllWorktrees()
 	var result []workflows.WorktreeInfo
-	
+
 	for _, wt := range worktrees {
 		result = append(result, workflows.WorktreeInfo{
-			Path:         wt.Path,
-			Branch:       wt.Branch,
-			ProjectName:  wt.Repository,
-			LastAccess:   wt.LastAccess.Format("2006-01-02 15:04"),
-			HasChanges:   wt.HasChanges,
+			Path:        wt.Path,
+			Branch:      wt.Branch,
+			ProjectName: wt.Repository,
+			LastAccess:  wt.LastAccess.Format("2006-01-02 15:04"),
+			HasChanges:  wt.HasChanges,
 		})
 	}
-	
+
 	return result, nil
 }
 
@@ -82,7 +82,7 @@ func (a *IntegrationAdapter) GetAvailableWorktrees() ([]workflows.WorktreeInfo, 
 func (a *IntegrationAdapter) CreateSession(config workflows.SessionConfig) error {
 	// Use the integration layer to create the session
 	cmd := a.integration.CreateSession(config.Name, config.WorktreePath)
-	
+
 	// Execute the command (this is a simplified approach)
 	// In a real implementation, we would need to handle the async nature properly
 	if cmd != nil {
@@ -90,7 +90,7 @@ func (a *IntegrationAdapter) CreateSession(config workflows.SessionConfig) error
 		// TODO: Implement proper async handling
 		return nil
 	}
-	
+
 	return fmt.Errorf("failed to create session")
 }
 
@@ -99,16 +99,16 @@ func (a *IntegrationAdapter) ValidateSessionName(name string) error {
 	if strings.TrimSpace(name) == "" {
 		return fmt.Errorf("session name cannot be empty")
 	}
-	
+
 	if len(name) > 50 {
 		return fmt.Errorf("session name cannot exceed 50 characters")
 	}
-	
+
 	// Check for invalid characters
 	if strings.ContainsAny(name, " \t\n\r") {
 		return fmt.Errorf("session name cannot contain whitespace")
 	}
-	
+
 	// Check if session name already exists
 	sessions := a.integration.GetAllSessions()
 	for _, session := range sessions {
@@ -116,7 +116,7 @@ func (a *IntegrationAdapter) ValidateSessionName(name string) error {
 			return fmt.Errorf("session name '%s' already exists", name)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -125,10 +125,10 @@ func (a *IntegrationAdapter) ValidateProjectPath(path string) error {
 	if strings.TrimSpace(path) == "" {
 		return fmt.Errorf("project path cannot be empty")
 	}
-	
+
 	// Check if path exists and is accessible
 	// TODO: Add actual filesystem validation
-	
+
 	return nil
 }
 
@@ -137,7 +137,7 @@ func (a *IntegrationAdapter) ValidateWorktreePath(path string) error {
 	if strings.TrimSpace(path) == "" {
 		return fmt.Errorf("worktree path cannot be empty")
 	}
-	
+
 	// Check if the worktree exists in our tracked worktrees
 	worktrees := a.integration.GetAllWorktrees()
 	for _, wt := range worktrees {
@@ -145,7 +145,7 @@ func (a *IntegrationAdapter) ValidateWorktreePath(path string) error {
 			return nil // Found it
 		}
 	}
-	
+
 	return fmt.Errorf("worktree path '%s' not found in tracked worktrees", path)
 }
 
@@ -153,7 +153,7 @@ func (a *IntegrationAdapter) ValidateWorktreePath(path string) error {
 func (a *IntegrationAdapter) GetDefaultClaudeConfig(projectPath string) (workflows.ClaudeConfig, error) {
 	// Check if project already has Claude configuration
 	worktrees := a.integration.GetAllWorktrees()
-	
+
 	for _, wt := range worktrees {
 		if strings.HasPrefix(wt.Path, projectPath) && len(wt.ActiveSessions) > 0 {
 			// Project has existing Claude sessions
@@ -165,7 +165,7 @@ func (a *IntegrationAdapter) GetDefaultClaudeConfig(projectPath string) (workflo
 			}, nil
 		}
 	}
-	
+
 	// Return default configuration
 	return workflows.ClaudeConfig{
 		Enabled:     false,
@@ -179,7 +179,7 @@ func (a *IntegrationAdapter) GetDefaultClaudeConfig(projectPath string) (workflo
 func (a *IntegrationAdapter) FindSessionsForWorktree(worktreePath string) ([]workflows.SessionInfo, error) {
 	sessions := a.integration.GetAllSessions()
 	var result []workflows.SessionInfo
-	
+
 	for _, session := range sessions {
 		if session.Directory == worktreePath {
 			result = append(result, workflows.SessionInfo{
@@ -193,7 +193,7 @@ func (a *IntegrationAdapter) FindSessionsForWorktree(worktreePath string) ([]wor
 			})
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -205,7 +205,7 @@ func (a *IntegrationAdapter) AttachToSession(sessionID string) error {
 		// TODO: Implement proper async handling
 		return nil
 	}
-	
+
 	return fmt.Errorf("failed to attach to session")
 }
 
@@ -225,13 +225,13 @@ func (a *IntegrationAdapter) GetWorktreeByPath(path string) (*workflows.Worktree
 	if err != nil {
 		return nil, err
 	}
-	
+
 	for _, wt := range worktrees {
 		if wt.Path == path {
 			return &wt, nil
 		}
 	}
-	
+
 	return nil, fmt.Errorf("worktree not found: %s", path)
 }
 
@@ -240,7 +240,7 @@ func (a *IntegrationAdapter) ValidateSessionConfig(config workflows.SessionConfi
 	if err := a.ValidateSessionName(config.Name); err != nil {
 		return err
 	}
-	
+
 	if config.WorktreePath != "" {
 		if err := a.ValidateWorktreePath(config.WorktreePath); err != nil {
 			return err
@@ -252,6 +252,6 @@ func (a *IntegrationAdapter) ValidateSessionConfig(config workflows.SessionConfi
 	} else {
 		return fmt.Errorf("either worktree path or project path must be specified")
 	}
-	
+
 	return nil
 }

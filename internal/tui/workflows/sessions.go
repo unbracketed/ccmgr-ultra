@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bcdekker/ccmgr-ultra/internal/tui/modals"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/bcdekker/ccmgr-ultra/internal/tui/modals"
 )
 
 // SessionCreationWizard implements a step-by-step session creation process
@@ -37,11 +37,11 @@ type ProjectInfo struct {
 
 // WorktreeInfo represents a worktree available for session creation
 type WorktreeInfo struct {
-	Path         string
-	Branch       string
-	ProjectName  string
-	LastAccess   string
-	HasChanges   bool
+	Path        string
+	Branch      string
+	ProjectName string
+	LastAccess  string
+	HasChanges  bool
 }
 
 // ClaudeConfig represents Claude Code configuration for a session
@@ -90,7 +90,7 @@ func (w *SessionCreationWizard) CreateWizard() *modals.MultiStepModal {
 		&ClaudeConfigStep{wizard: w},
 		&ConfirmationStep{wizard: w},
 	}
-	
+
 	return modals.NewMultiStepModal(modals.MultiStepModalConfig{
 		Title:        "Create New Session",
 		Steps:        steps,
@@ -100,13 +100,13 @@ func (w *SessionCreationWizard) CreateWizard() *modals.MultiStepModal {
 
 // ProjectSelectionStep handles project/worktree selection
 type ProjectSelectionStep struct {
-	wizard         *SessionCreationWizard
-	selectedType   string // "project" or "worktree"
-	selectedIndex  int
-	projects       []ProjectInfo
-	worktrees      []WorktreeInfo
-	loaded         bool
-	error          error
+	wizard        *SessionCreationWizard
+	selectedType  string // "project" or "worktree"
+	selectedIndex int
+	projects      []ProjectInfo
+	worktrees     []WorktreeInfo
+	loaded        bool
+	error         error
 }
 
 func (s *ProjectSelectionStep) Title() string {
@@ -121,32 +121,32 @@ func (s *ProjectSelectionStep) Render(theme modals.Theme, width int, data map[st
 	if !s.loaded {
 		s.loadData()
 	}
-	
+
 	if s.error != nil {
 		errorStyle := lipgloss.NewStyle().Foreground(theme.Error)
 		return errorStyle.Render("Error loading projects: " + s.error.Error())
 	}
-	
+
 	var elements []string
-	
+
 	// Type selection
 	typeStyle := lipgloss.NewStyle().Bold(true)
 	elements = append(elements, typeStyle.Render("Select source type:"))
-	
+
 	projectButton := s.renderTypeButton("project", "Projects", theme, len(s.projects))
 	worktreeButton := s.renderTypeButton("worktree", "Worktrees", theme, len(s.worktrees))
-	
+
 	buttons := lipgloss.JoinHorizontal(lipgloss.Left, projectButton, "  ", worktreeButton)
 	elements = append(elements, buttons)
 	elements = append(elements, "")
-	
+
 	// List items based on selected type
 	if s.selectedType == "project" {
 		elements = append(elements, s.renderProjectList(theme, width))
 	} else if s.selectedType == "worktree" {
 		elements = append(elements, s.renderWorktreeList(theme, width))
 	}
-	
+
 	return strings.Join(elements, "\n")
 }
 
@@ -154,7 +154,7 @@ func (s *ProjectSelectionStep) renderTypeButton(buttonType, label string, theme 
 	style := lipgloss.NewStyle().
 		Padding(0, 2).
 		Border(lipgloss.RoundedBorder())
-	
+
 	if s.selectedType == buttonType {
 		style = style.
 			Background(theme.Accent).
@@ -166,7 +166,7 @@ func (s *ProjectSelectionStep) renderTypeButton(buttonType, label string, theme 
 			BorderForeground(theme.Muted).
 			Foreground(theme.Text)
 	}
-	
+
 	text := fmt.Sprintf("%s (%d)", label, count)
 	return style.Render(text)
 }
@@ -175,29 +175,29 @@ func (s *ProjectSelectionStep) renderProjectList(theme modals.Theme, width int) 
 	if len(s.projects) == 0 {
 		return lipgloss.NewStyle().Foreground(theme.Muted).Render("No projects found")
 	}
-	
+
 	var items []string
 	for i, project := range s.projects {
 		cursor := " "
 		if i == s.selectedIndex {
 			cursor = ">"
 		}
-		
+
 		status := ""
 		if project.HasClaude {
 			status = lipgloss.NewStyle().Foreground(theme.Success).Render("●")
 		} else {
 			status = lipgloss.NewStyle().Foreground(theme.Muted).Render("○")
 		}
-		
+
 		line := fmt.Sprintf("%s %s %s", cursor, status, project.Name)
 		if project.Description != "" {
 			line += lipgloss.NewStyle().Foreground(theme.Muted).Render(" - " + project.Description)
 		}
-		
+
 		items = append(items, line)
 	}
-	
+
 	return strings.Join(items, "\n")
 }
 
@@ -205,46 +205,46 @@ func (s *ProjectSelectionStep) renderWorktreeList(theme modals.Theme, width int)
 	if len(s.worktrees) == 0 {
 		return lipgloss.NewStyle().Foreground(theme.Muted).Render("No worktrees found")
 	}
-	
+
 	var items []string
 	for i, worktree := range s.worktrees {
 		cursor := " "
 		if i == s.selectedIndex {
 			cursor = ">"
 		}
-		
+
 		status := ""
 		if worktree.HasChanges {
 			status = lipgloss.NewStyle().Foreground(theme.Warning).Render("●")
 		} else {
 			status = lipgloss.NewStyle().Foreground(theme.Success).Render("●")
 		}
-		
+
 		line := fmt.Sprintf("%s %s %s (%s)", cursor, status, filepath.Base(worktree.Path), worktree.Branch)
-		
+
 		items = append(items, line)
 	}
-	
+
 	return strings.Join(items, "\n")
 }
 
 func (s *ProjectSelectionStep) loadData() {
 	s.loaded = true
-	
+
 	projects, err := s.wizard.integration.GetAvailableProjects()
 	if err != nil {
 		s.error = err
 		return
 	}
 	s.projects = projects
-	
+
 	worktrees, err := s.wizard.integration.GetAvailableWorktrees()
 	if err != nil {
 		s.error = err
 		return
 	}
 	s.worktrees = worktrees
-	
+
 	// Set default selection
 	if len(s.projects) > 0 {
 		s.selectedType = "project"
@@ -263,12 +263,12 @@ func (s *ProjectSelectionStep) HandleKey(msg tea.KeyMsg, data map[string]interfa
 			s.selectedType = "project"
 			s.selectedIndex = 0
 		}
-		
+
 	case "up", "k":
 		if s.selectedIndex > 0 {
 			s.selectedIndex--
 		}
-		
+
 	case "down", "j":
 		maxIndex := 0
 		if s.selectedType == "project" {
@@ -276,11 +276,11 @@ func (s *ProjectSelectionStep) HandleKey(msg tea.KeyMsg, data map[string]interfa
 		} else if s.selectedType == "worktree" {
 			maxIndex = len(s.worktrees) - 1
 		}
-		
+
 		if s.selectedIndex < maxIndex {
 			s.selectedIndex++
 		}
-		
+
 	case "enter", " ":
 		// Store selection in data
 		if s.selectedType == "project" && s.selectedIndex < len(s.projects) {
@@ -297,7 +297,7 @@ func (s *ProjectSelectionStep) HandleKey(msg tea.KeyMsg, data map[string]interfa
 		}
 		data["source_type"] = s.selectedType
 	}
-	
+
 	return data, nil, nil
 }
 
@@ -306,7 +306,7 @@ func (s *ProjectSelectionStep) Validate(data map[string]interface{}) error {
 	if !ok || sourceType == "" {
 		return fmt.Errorf("please select a project or worktree")
 	}
-	
+
 	if sourceType == "project" {
 		projectPath, ok := data["project_path"].(string)
 		if !ok || projectPath == "" {
@@ -318,7 +318,7 @@ func (s *ProjectSelectionStep) Validate(data map[string]interface{}) error {
 			return fmt.Errorf("please select a worktree")
 		}
 	}
-	
+
 	return nil
 }
 
@@ -344,60 +344,60 @@ func (s *SessionDetailsStep) Description() string {
 
 func (s *SessionDetailsStep) Render(theme modals.Theme, width int, data map[string]interface{}) string {
 	var elements []string
-	
+
 	// Session name
 	nameLabel := lipgloss.NewStyle().Bold(true).Render("Session Name:")
 	elements = append(elements, nameLabel)
-	
+
 	nameStyle := lipgloss.NewStyle().
-		Width(width - 8).
+		Width(width-8).
 		Border(lipgloss.RoundedBorder()).
 		Padding(0, 1)
-	
+
 	if s.cursor == 0 {
 		nameStyle = nameStyle.BorderForeground(theme.Accent)
 	} else {
 		nameStyle = nameStyle.BorderForeground(theme.Muted)
 	}
-	
+
 	nameDisplay := s.nameInput
 	if s.cursor == 0 {
 		nameDisplay += "│"
 	}
-	
+
 	nameField := nameStyle.Render(nameDisplay)
 	elements = append(elements, nameField)
 	elements = append(elements, "")
-	
+
 	// Description
 	descLabel := lipgloss.NewStyle().Bold(true).Render("Description (optional):")
 	elements = append(elements, descLabel)
-	
+
 	descStyle := lipgloss.NewStyle().
-		Width(width - 8).
+		Width(width-8).
 		Height(3).
 		Border(lipgloss.RoundedBorder()).
 		Padding(0, 1)
-	
+
 	if s.cursor == 1 {
 		descStyle = descStyle.BorderForeground(theme.Accent)
 	} else {
 		descStyle = descStyle.BorderForeground(theme.Muted)
 	}
-	
+
 	descDisplay := s.descInput
 	if s.cursor == 1 {
 		descDisplay += "│"
 	}
-	
+
 	descField := descStyle.Render(descDisplay)
 	elements = append(elements, descField)
-	
+
 	// Help
 	helpStyle := lipgloss.NewStyle().Foreground(theme.Muted).Italic(true)
 	help := helpStyle.Render("Tab: Switch fields • Type to enter text")
 	elements = append(elements, "", help)
-	
+
 	return strings.Join(elements, "\n")
 }
 
@@ -405,14 +405,14 @@ func (s *SessionDetailsStep) HandleKey(msg tea.KeyMsg, data map[string]interface
 	switch msg.String() {
 	case "tab":
 		s.cursor = (s.cursor + 1) % 2
-		
+
 	case "backspace":
 		if s.cursor == 0 && len(s.nameInput) > 0 {
 			s.nameInput = s.nameInput[:len(s.nameInput)-1]
 		} else if s.cursor == 1 && len(s.descInput) > 0 {
 			s.descInput = s.descInput[:len(s.descInput)-1]
 		}
-		
+
 	default:
 		if len(msg.Runes) > 0 {
 			char := string(msg.Runes[0])
@@ -423,11 +423,11 @@ func (s *SessionDetailsStep) HandleKey(msg tea.KeyMsg, data map[string]interface
 			}
 		}
 	}
-	
+
 	// Store in data
 	data["session_name"] = s.nameInput
 	data["session_description"] = s.descInput
-	
+
 	return data, nil, nil
 }
 
@@ -436,12 +436,12 @@ func (s *SessionDetailsStep) Validate(data map[string]interface{}) error {
 	if strings.TrimSpace(name) == "" {
 		return fmt.Errorf("session name is required")
 	}
-	
+
 	// Validate with backend
 	if err := s.wizard.integration.ValidateSessionName(name); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -451,9 +451,9 @@ func (s *SessionDetailsStep) IsComplete(data map[string]interface{}) bool {
 
 // ClaudeConfigStep handles Claude Code configuration
 type ClaudeConfigStep struct {
-	wizard      *SessionCreationWizard
-	enableClaude bool
-	configLoaded bool
+	wizard        *SessionCreationWizard
+	enableClaude  bool
+	configLoaded  bool
 	defaultConfig ClaudeConfig
 }
 
@@ -469,57 +469,57 @@ func (s *ClaudeConfigStep) Render(theme modals.Theme, width int, data map[string
 	if !s.configLoaded {
 		s.loadDefaultConfig(data)
 	}
-	
+
 	var elements []string
-	
+
 	// Claude toggle
 	toggleStyle := lipgloss.NewStyle().Bold(true)
 	elements = append(elements, toggleStyle.Render("Enable Claude Code Integration:"))
-	
+
 	checkBox := "☐"
 	if s.enableClaude {
 		checkBox = "☑"
 	}
-	
+
 	checkStyle := lipgloss.NewStyle().
 		Foreground(theme.Accent).
 		Bold(true)
-	
+
 	checkbox := lipgloss.JoinHorizontal(lipgloss.Left,
 		checkStyle.Render(checkBox), " Enable Claude Code")
 	elements = append(elements, checkbox)
-	
+
 	if s.enableClaude {
 		elements = append(elements, "")
-		
+
 		// Configuration details
 		if s.defaultConfig.ConfigPath != "" {
 			configStyle := lipgloss.NewStyle().Foreground(theme.Muted)
 			elements = append(elements, configStyle.Render("Config file: "+s.defaultConfig.ConfigPath))
 		}
-		
+
 		if len(s.defaultConfig.MCPServers) > 0 {
 			mcpStyle := lipgloss.NewStyle().Foreground(theme.Muted)
 			elements = append(elements, mcpStyle.Render("MCP Servers: "+strings.Join(s.defaultConfig.MCPServers, ", ")))
 		}
-		
+
 		if len(s.defaultConfig.Permissions) > 0 {
 			permStyle := lipgloss.NewStyle().Foreground(theme.Muted)
 			elements = append(elements, permStyle.Render("Permissions: "+strings.Join(s.defaultConfig.Permissions, ", ")))
 		}
 	}
-	
+
 	// Help
 	helpStyle := lipgloss.NewStyle().Foreground(theme.Muted).Italic(true)
 	help := helpStyle.Render("Space: Toggle Claude integration")
 	elements = append(elements, "", help)
-	
+
 	return strings.Join(elements, "\n")
 }
 
 func (s *ClaudeConfigStep) loadDefaultConfig(data map[string]interface{}) {
 	s.configLoaded = true
-	
+
 	projectPath, _ := data["project_path"].(string)
 	if projectPath != "" {
 		config, err := s.wizard.integration.GetDefaultClaudeConfig(projectPath)
@@ -528,7 +528,7 @@ func (s *ClaudeConfigStep) loadDefaultConfig(data map[string]interface{}) {
 			s.enableClaude = config.Enabled
 		}
 	}
-	
+
 	// Check if project already has Claude
 	if hasClaude, ok := data["has_claude"].(bool); ok {
 		s.enableClaude = hasClaude
@@ -540,12 +540,12 @@ func (s *ClaudeConfigStep) HandleKey(msg tea.KeyMsg, data map[string]interface{}
 	case " ":
 		s.enableClaude = !s.enableClaude
 	}
-	
+
 	// Store in data
 	claudeConfig := s.defaultConfig
 	claudeConfig.Enabled = s.enableClaude
 	data["claude_config"] = claudeConfig
-	
+
 	return data, nil, nil
 }
 
@@ -573,32 +573,32 @@ func (s *ConfirmationStep) Description() string {
 
 func (s *ConfirmationStep) Render(theme modals.Theme, width int, data map[string]interface{}) string {
 	var elements []string
-	
+
 	summaryStyle := lipgloss.NewStyle().Bold(true)
 	elements = append(elements, summaryStyle.Render("Session Summary:"))
 	elements = append(elements, "")
-	
+
 	// Session details
 	if name, ok := data["session_name"].(string); ok {
 		elements = append(elements, fmt.Sprintf("Name: %s", name))
 	}
-	
+
 	if desc, ok := data["session_description"].(string); ok && desc != "" {
 		elements = append(elements, fmt.Sprintf("Description: %s", desc))
 	}
-	
+
 	if projectName, ok := data["project_name"].(string); ok {
 		elements = append(elements, fmt.Sprintf("Project: %s", projectName))
 	}
-	
+
 	if projectPath, ok := data["project_path"].(string); ok {
 		elements = append(elements, fmt.Sprintf("Path: %s", projectPath))
 	}
-	
+
 	if branch, ok := data["branch"].(string); ok && branch != "" {
 		elements = append(elements, fmt.Sprintf("Branch: %s", branch))
 	}
-	
+
 	// Claude configuration
 	if claudeConfig, ok := data["claude_config"].(ClaudeConfig); ok {
 		claudeStatus := "Disabled"
@@ -607,15 +607,15 @@ func (s *ConfirmationStep) Render(theme modals.Theme, width int, data map[string
 		}
 		elements = append(elements, fmt.Sprintf("Claude Code: %s", claudeStatus))
 	}
-	
+
 	elements = append(elements, "")
-	
+
 	// Confirmation message
 	confirmStyle := lipgloss.NewStyle().
 		Foreground(theme.Success).
 		Bold(true)
 	elements = append(elements, confirmStyle.Render("Press Ctrl+Enter to create session"))
-	
+
 	return strings.Join(elements, "\n")
 }
 
@@ -665,7 +665,7 @@ func (w *WorktreeSessionIntegration) CreateNewSessionForWorktree(worktree Worktr
 			worktree:    worktree,
 		},
 	}
-	
+
 	return modals.NewMultiStepModal(modals.MultiStepModalConfig{
 		Title:        fmt.Sprintf("New Session for %s", worktree.Branch),
 		Steps:        steps,
@@ -685,7 +685,7 @@ func (w *WorktreeSessionIntegration) CreateBulkSessionsForWorktrees(worktrees []
 			worktrees:   worktrees,
 		},
 	}
-	
+
 	return modals.NewMultiStepModal(modals.MultiStepModalConfig{
 		Title:        fmt.Sprintf("Create Sessions for %d Worktrees", len(worktrees)),
 		Steps:        steps,
@@ -705,7 +705,7 @@ func (w *WorktreeSessionIntegration) ContinueSessionInWorktree(worktree Worktree
 				Message:      fmt.Sprintf("Error finding sessions: %v", err),
 			}
 		}
-		
+
 		// Look for sessions in this worktree
 		for _, wt := range sessions {
 			if wt.Path == worktree.Path {
@@ -720,7 +720,7 @@ func (w *WorktreeSessionIntegration) ContinueSessionInWorktree(worktree Worktree
 				}
 			}
 		}
-		
+
 		return SessionContinueMsg{
 			WorktreePath: worktree.Path,
 			Success:      false,
@@ -735,7 +735,7 @@ func (w *WorktreeSessionIntegration) ResumeSessionInWorktree(worktree WorktreeIn
 		// This would restore a paused session
 		// For demonstration, we'll simulate finding and resuming a session
 		sessionID := "session-" + worktree.Branch + "-paused"
-		
+
 		return SessionResumeMsg{
 			WorktreePath: worktree.Path,
 			Success:      true,
@@ -764,13 +764,13 @@ func (s *WorktreeSessionDetailsStep) Description() string {
 
 func (s *WorktreeSessionDetailsStep) Render(theme modals.Theme, width int, data map[string]interface{}) string {
 	var elements []string
-	
+
 	// Worktree info
 	worktreeStyle := lipgloss.NewStyle().Foreground(theme.Primary).Bold(true)
 	elements = append(elements, worktreeStyle.Render(fmt.Sprintf("Worktree: %s", s.worktree.Path)))
 	elements = append(elements, fmt.Sprintf("Branch: %s", s.worktree.Branch))
 	elements = append(elements, "")
-	
+
 	// Session name input
 	nameLabel := "Session Name:"
 	if s.cursor == 0 {
@@ -779,14 +779,14 @@ func (s *WorktreeSessionDetailsStep) Render(theme modals.Theme, width int, data 
 		nameLabel = "  " + nameLabel
 	}
 	elements = append(elements, nameLabel)
-	
+
 	nameValue := s.nameInput
 	if nameValue == "" {
 		nameValue = fmt.Sprintf("session-%s", strings.ReplaceAll(s.worktree.Branch, "/", "-"))
 	}
 	elements = append(elements, fmt.Sprintf("  %s", nameValue))
 	elements = append(elements, "")
-	
+
 	// Description input
 	descLabel := "Description (optional):"
 	if s.cursor == 1 {
@@ -796,7 +796,7 @@ func (s *WorktreeSessionDetailsStep) Render(theme modals.Theme, width int, data 
 	}
 	elements = append(elements, descLabel)
 	elements = append(elements, fmt.Sprintf("  %s", s.descInput))
-	
+
 	return strings.Join(elements, "\n")
 }
 
@@ -826,19 +826,19 @@ func (s *WorktreeSessionDetailsStep) HandleKey(msg tea.KeyMsg, data map[string]i
 			}
 		}
 	}
-	
+
 	// Store in data
 	sessionName := s.nameInput
 	if sessionName == "" {
 		sessionName = fmt.Sprintf("session-%s", strings.ReplaceAll(s.worktree.Branch, "/", "-"))
 	}
-	
+
 	data["session_name"] = sessionName
 	data["session_description"] = s.descInput
 	data["worktree_path"] = s.worktree.Path
 	data["project_path"] = s.worktree.Path
 	data["branch"] = s.worktree.Branch
-	
+
 	return data, nil, nil
 }
 
@@ -847,7 +847,7 @@ func (s *WorktreeSessionDetailsStep) Validate(data map[string]interface{}) error
 	if strings.TrimSpace(name) == "" {
 		return fmt.Errorf("session name is required")
 	}
-	
+
 	return s.integration.ValidateSessionName(name)
 }
 
@@ -882,9 +882,9 @@ func (s *WorktreeClaudeConfigStep) Render(theme modals.Theme, width int, data ma
 		}
 		s.configLoaded = true
 	}
-	
+
 	var elements []string
-	
+
 	// Enable/disable toggle
 	enableText := "Disable Claude Code"
 	if !s.enableClaude {
@@ -892,7 +892,7 @@ func (s *WorktreeClaudeConfigStep) Render(theme modals.Theme, width int, data ma
 	}
 	elements = append(elements, fmt.Sprintf("> %s", enableText))
 	elements = append(elements, "")
-	
+
 	if s.enableClaude {
 		elements = append(elements, "Claude Code Configuration:")
 		elements = append(elements, fmt.Sprintf("  Config Path: %s", s.defaultConfig.ConfigPath))
@@ -901,7 +901,7 @@ func (s *WorktreeClaudeConfigStep) Render(theme modals.Theme, width int, data ma
 	} else {
 		elements = append(elements, "Claude Code will not be enabled for this session.")
 	}
-	
+
 	return strings.Join(elements, "\n")
 }
 
@@ -910,14 +910,14 @@ func (s *WorktreeClaudeConfigStep) HandleKey(msg tea.KeyMsg, data map[string]int
 	case "enter", " ":
 		s.enableClaude = !s.enableClaude
 	}
-	
+
 	// Store configuration
 	if s.enableClaude {
 		data["claude_config"] = s.defaultConfig
 	} else {
 		data["claude_config"] = ClaudeConfig{Enabled: false}
 	}
-	
+
 	return data, nil, nil
 }
 
@@ -945,24 +945,24 @@ func (s *WorktreeSessionConfirmationStep) Description() string {
 
 func (s *WorktreeSessionConfirmationStep) Render(theme modals.Theme, width int, data map[string]interface{}) string {
 	var elements []string
-	
+
 	// Header
 	headerStyle := lipgloss.NewStyle().Foreground(theme.Primary).Bold(true)
 	elements = append(elements, headerStyle.Render("Session Configuration Summary"))
 	elements = append(elements, "")
-	
+
 	// Session details
 	if sessionName, ok := data["session_name"].(string); ok {
 		elements = append(elements, fmt.Sprintf("Session Name: %s", sessionName))
 	}
-	
+
 	if description, ok := data["session_description"].(string); ok && description != "" {
 		elements = append(elements, fmt.Sprintf("Description: %s", description))
 	}
-	
+
 	elements = append(elements, fmt.Sprintf("Worktree: %s", s.worktree.Path))
 	elements = append(elements, fmt.Sprintf("Branch: %s", s.worktree.Branch))
-	
+
 	// Claude configuration
 	if claudeConfig, ok := data["claude_config"].(ClaudeConfig); ok {
 		claudeStatus := "Disabled"
@@ -971,13 +971,13 @@ func (s *WorktreeSessionConfirmationStep) Render(theme modals.Theme, width int, 
 		}
 		elements = append(elements, fmt.Sprintf("Claude Code: %s", claudeStatus))
 	}
-	
+
 	elements = append(elements, "")
-	
+
 	// Confirmation message
 	confirmStyle := lipgloss.NewStyle().Foreground(theme.Success).Bold(true)
 	elements = append(elements, confirmStyle.Render("Press Ctrl+Enter to create session"))
-	
+
 	return strings.Join(elements, "\n")
 }
 
@@ -997,12 +997,12 @@ func (s *WorktreeSessionConfirmationStep) IsComplete(data map[string]interface{}
 
 // BulkSessionConfigStep handles configuration for bulk session creation
 type BulkSessionConfigStep struct {
-	integration    Integration
-	worktrees      []WorktreeInfo
-	cursor         int
-	namingPattern  string
-	enableClaude   bool
-	autoStart      bool
+	integration   Integration
+	worktrees     []WorktreeInfo
+	cursor        int
+	namingPattern string
+	enableClaude  bool
+	autoStart     bool
 }
 
 func (s *BulkSessionConfigStep) Title() string {
@@ -1015,21 +1015,21 @@ func (s *BulkSessionConfigStep) Description() string {
 
 func (s *BulkSessionConfigStep) Render(theme modals.Theme, width int, data map[string]interface{}) string {
 	var elements []string
-	
+
 	// Worktree list
 	elements = append(elements, "Selected Worktrees:")
 	for _, wt := range s.worktrees {
 		elements = append(elements, fmt.Sprintf("  • %s (%s)", wt.Path, wt.Branch))
 	}
 	elements = append(elements, "")
-	
+
 	// Configuration options
 	options := []string{
 		fmt.Sprintf("Naming Pattern: %s", s.getNameExample()),
 		fmt.Sprintf("Enable Claude: %t", s.enableClaude),
 		fmt.Sprintf("Auto Start: %t", s.autoStart),
 	}
-	
+
 	for i, option := range options {
 		if i == s.cursor {
 			elements = append(elements, "> "+option)
@@ -1037,7 +1037,7 @@ func (s *BulkSessionConfigStep) Render(theme modals.Theme, width int, data map[s
 			elements = append(elements, "  "+option)
 		}
 	}
-	
+
 	return strings.Join(elements, "\n")
 }
 
@@ -1066,13 +1066,13 @@ func (s *BulkSessionConfigStep) HandleKey(msg tea.KeyMsg, data map[string]interf
 			s.autoStart = !s.autoStart
 		}
 	}
-	
+
 	// Store configuration
 	data["naming_pattern"] = s.namingPattern
 	data["enable_claude"] = s.enableClaude
 	data["auto_start"] = s.autoStart
 	data["worktrees"] = s.worktrees
-	
+
 	return data, nil, nil
 }
 
@@ -1100,36 +1100,36 @@ func (s *BulkSessionConfirmationStep) Description() string {
 
 func (s *BulkSessionConfirmationStep) Render(theme modals.Theme, width int, data map[string]interface{}) string {
 	var elements []string
-	
+
 	headerStyle := lipgloss.NewStyle().Foreground(theme.Primary).Bold(true)
 	elements = append(elements, headerStyle.Render("Bulk Session Creation Summary"))
 	elements = append(elements, "")
-	
+
 	elements = append(elements, fmt.Sprintf("Sessions to create: %d", len(s.worktrees)))
-	
+
 	if pattern, ok := data["naming_pattern"].(string); ok {
 		elements = append(elements, fmt.Sprintf("Naming pattern: %s", pattern))
 	}
-	
+
 	if enableClaude, ok := data["enable_claude"].(bool); ok {
 		elements = append(elements, fmt.Sprintf("Claude enabled: %t", enableClaude))
 	}
-	
+
 	if autoStart, ok := data["auto_start"].(bool); ok {
 		elements = append(elements, fmt.Sprintf("Auto start: %t", autoStart))
 	}
-	
+
 	elements = append(elements, "")
 	elements = append(elements, "Sessions will be created for:")
 	for _, wt := range s.worktrees {
 		sessionName := strings.ReplaceAll("session-{branch}", "{branch}", wt.Branch)
 		elements = append(elements, fmt.Sprintf("  • %s → %s", wt.Path, sessionName))
 	}
-	
+
 	elements = append(elements, "")
 	confirmStyle := lipgloss.NewStyle().Foreground(theme.Success).Bold(true)
 	elements = append(elements, confirmStyle.Render("Press Ctrl+Enter to create all sessions"))
-	
+
 	return strings.Join(elements, "\n")
 }
 

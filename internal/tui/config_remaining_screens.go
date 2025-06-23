@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/bcdekker/ccmgr-ultra/internal/config"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 // CommandsConfigModel represents the commands configuration screen
@@ -55,16 +55,16 @@ func (m *CommandsConfigModel) initComponents() {
 	}
 }
 
-func (m *CommandsConfigModel) Init() tea.Cmd                 { return nil }
+func (m *CommandsConfigModel) Init() tea.Cmd                           { return nil }
 func (m *CommandsConfigModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { return m, nil }
-func (m *CommandsConfigModel) View() string                 { return "Commands Configuration (placeholder)" }
-func (m *CommandsConfigModel) Title() string                { return "Commands" }
-func (m *CommandsConfigModel) Help() []string               { return []string{"Esc: Back"} }
-func (m *CommandsConfigModel) HasUnsavedChanges() bool      { return false }
-func (m *CommandsConfigModel) Save() error                  { return nil }
-func (m *CommandsConfigModel) Cancel()                      {}
-func (m *CommandsConfigModel) Reset()                       {}
-func (m *CommandsConfigModel) GetConfig() interface{}       { return m.config }
+func (m *CommandsConfigModel) View() string                            { return "Commands Configuration (placeholder)" }
+func (m *CommandsConfigModel) Title() string                           { return "Commands" }
+func (m *CommandsConfigModel) Help() []string                          { return []string{"Esc: Back"} }
+func (m *CommandsConfigModel) HasUnsavedChanges() bool                 { return false }
+func (m *CommandsConfigModel) Save() error                             { return nil }
+func (m *CommandsConfigModel) Cancel()                                 {}
+func (m *CommandsConfigModel) Reset()                                  {}
+func (m *CommandsConfigModel) GetConfig() interface{}                  { return m.config }
 
 // TUISettingsModel represents the TUI settings configuration screen
 type TUISettingsModel struct {
@@ -114,16 +114,16 @@ func (m *TUISettingsModel) initComponents() {
 	}
 }
 
-func (m *TUISettingsModel) Init() tea.Cmd                 { return nil }
+func (m *TUISettingsModel) Init() tea.Cmd                           { return nil }
 func (m *TUISettingsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { return m, nil }
-func (m *TUISettingsModel) View() string                 { return "TUI Settings (placeholder)" }
-func (m *TUISettingsModel) Title() string                { return "TUI Settings" }
-func (m *TUISettingsModel) Help() []string               { return []string{"Esc: Back"} }
-func (m *TUISettingsModel) HasUnsavedChanges() bool      { return false }
-func (m *TUISettingsModel) Save() error                  { return nil }
-func (m *TUISettingsModel) Cancel()                      {}
-func (m *TUISettingsModel) Reset()                       {}
-func (m *TUISettingsModel) GetConfig() interface{}       { return m.config }
+func (m *TUISettingsModel) View() string                            { return "TUI Settings (placeholder)" }
+func (m *TUISettingsModel) Title() string                           { return "TUI Settings" }
+func (m *TUISettingsModel) Help() []string                          { return []string{"Esc: Back"} }
+func (m *TUISettingsModel) HasUnsavedChanges() bool                 { return false }
+func (m *TUISettingsModel) Save() error                             { return nil }
+func (m *TUISettingsModel) Cancel()                                 {}
+func (m *TUISettingsModel) Reset()                                  {}
+func (m *TUISettingsModel) GetConfig() interface{}                  { return m.config }
 
 // GitSettingsModel represents the git settings configuration screen
 type GitSettingsModel struct {
@@ -184,16 +184,16 @@ func (m *GitSettingsModel) initComponents() {
 	}
 }
 
-func (m *GitSettingsModel) Init() tea.Cmd                 { return nil }
+func (m *GitSettingsModel) Init() tea.Cmd                           { return nil }
 func (m *GitSettingsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { return m, nil }
-func (m *GitSettingsModel) View() string                 { return "Git Settings (placeholder)" }
-func (m *GitSettingsModel) Title() string                { return "Git Settings" }
-func (m *GitSettingsModel) Help() []string               { return []string{"Esc: Back"} }
-func (m *GitSettingsModel) HasUnsavedChanges() bool      { return false }
-func (m *GitSettingsModel) Save() error                  { return nil }
-func (m *GitSettingsModel) Cancel()                      {}
-func (m *GitSettingsModel) Reset()                       {}
-func (m *GitSettingsModel) GetConfig() interface{}       { return m.config }
+func (m *GitSettingsModel) View() string                            { return "Git Settings (placeholder)" }
+func (m *GitSettingsModel) Title() string                           { return "Git Settings" }
+func (m *GitSettingsModel) Help() []string                          { return []string{"Esc: Back"} }
+func (m *GitSettingsModel) HasUnsavedChanges() bool                 { return false }
+func (m *GitSettingsModel) Save() error                             { return nil }
+func (m *GitSettingsModel) Cancel()                                 {}
+func (m *GitSettingsModel) Reset()                                  {}
+func (m *GitSettingsModel) GetConfig() interface{}                  { return m.config }
 
 // TmuxSettingsModel represents the tmux settings configuration screen
 type TmuxSettingsModel struct {
@@ -247,16 +247,16 @@ func (m *TmuxSettingsModel) initComponents() {
 	}
 }
 
-func (m *TmuxSettingsModel) Init() tea.Cmd                 { return nil }
+func (m *TmuxSettingsModel) Init() tea.Cmd                           { return nil }
 func (m *TmuxSettingsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { return m, nil }
-func (m *TmuxSettingsModel) View() string                 { return "Tmux Settings (placeholder)" }
-func (m *TmuxSettingsModel) Title() string                { return "Tmux Settings" }
-func (m *TmuxSettingsModel) Help() []string               { return []string{"Esc: Back"} }
-func (m *TmuxSettingsModel) HasUnsavedChanges() bool      { return false }
-func (m *TmuxSettingsModel) Save() error                  { return nil }
-func (m *TmuxSettingsModel) Cancel()                      {}
-func (m *TmuxSettingsModel) Reset()                       {}
-func (m *TmuxSettingsModel) GetConfig() interface{}       { return m.config }
+func (m *TmuxSettingsModel) View() string                            { return "Tmux Settings (placeholder)" }
+func (m *TmuxSettingsModel) Title() string                           { return "Tmux Settings" }
+func (m *TmuxSettingsModel) Help() []string                          { return []string{"Esc: Back"} }
+func (m *TmuxSettingsModel) HasUnsavedChanges() bool                 { return false }
+func (m *TmuxSettingsModel) Save() error                             { return nil }
+func (m *TmuxSettingsModel) Cancel()                                 {}
+func (m *TmuxSettingsModel) Reset()                                  {}
+func (m *TmuxSettingsModel) GetConfig() interface{}                  { return m.config }
 
 // ClaudeSettingsModel represents the Claude settings configuration screen
 type ClaudeSettingsModel struct {
@@ -271,18 +271,18 @@ type ClaudeSettingsModel struct {
 
 func NewClaudeSettingsModel(cfg *config.ClaudeConfig, theme Theme) *ClaudeSettingsModel {
 	original := &config.ClaudeConfig{
-		Enabled:                      cfg.Enabled,
-		PollInterval:                 cfg.PollInterval,
-		MaxProcesses:                 cfg.MaxProcesses,
-		CleanupInterval:              cfg.CleanupInterval,
-		StateTimeout:                 cfg.StateTimeout,
-		StartupTimeout:               cfg.StartupTimeout,
-		LogPaths:                     append([]string(nil), cfg.LogPaths...),
-		StatePatterns:                make(map[string]string),
-		EnableLogParsing:             cfg.EnableLogParsing,
-		EnableResourceMonitoring:     cfg.EnableResourceMonitoring,
-		IntegrateTmux:                cfg.IntegrateTmux,
-		IntegrateWorktrees:           cfg.IntegrateWorktrees,
+		Enabled:                  cfg.Enabled,
+		PollInterval:             cfg.PollInterval,
+		MaxProcesses:             cfg.MaxProcesses,
+		CleanupInterval:          cfg.CleanupInterval,
+		StateTimeout:             cfg.StateTimeout,
+		StartupTimeout:           cfg.StartupTimeout,
+		LogPaths:                 append([]string(nil), cfg.LogPaths...),
+		StatePatterns:            make(map[string]string),
+		EnableLogParsing:         cfg.EnableLogParsing,
+		EnableResourceMonitoring: cfg.EnableResourceMonitoring,
+		IntegrateTmux:            cfg.IntegrateTmux,
+		IntegrateWorktrees:       cfg.IntegrateWorktrees,
 	}
 	for k, v := range cfg.StatePatterns {
 		original.StatePatterns[k] = v
@@ -315,16 +315,16 @@ func (m *ClaudeSettingsModel) initComponents() {
 	}
 }
 
-func (m *ClaudeSettingsModel) Init() tea.Cmd                 { return nil }
+func (m *ClaudeSettingsModel) Init() tea.Cmd                           { return nil }
 func (m *ClaudeSettingsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { return m, nil }
-func (m *ClaudeSettingsModel) View() string                 { return "Claude Settings (placeholder)" }
-func (m *ClaudeSettingsModel) Title() string                { return "Claude Settings" }
-func (m *ClaudeSettingsModel) Help() []string               { return []string{"Esc: Back"} }
-func (m *ClaudeSettingsModel) HasUnsavedChanges() bool      { return false }
-func (m *ClaudeSettingsModel) Save() error                  { return nil }
-func (m *ClaudeSettingsModel) Cancel()                      {}
-func (m *ClaudeSettingsModel) Reset()                       {}
-func (m *ClaudeSettingsModel) GetConfig() interface{}       { return m.config }
+func (m *ClaudeSettingsModel) View() string                            { return "Claude Settings (placeholder)" }
+func (m *ClaudeSettingsModel) Title() string                           { return "Claude Settings" }
+func (m *ClaudeSettingsModel) Help() []string                          { return []string{"Esc: Back"} }
+func (m *ClaudeSettingsModel) HasUnsavedChanges() bool                 { return false }
+func (m *ClaudeSettingsModel) Save() error                             { return nil }
+func (m *ClaudeSettingsModel) Cancel()                                 {}
+func (m *ClaudeSettingsModel) Reset()                                  {}
+func (m *ClaudeSettingsModel) GetConfig() interface{}                  { return m.config }
 
 // WorktreeHooksConfigModel represents the worktree hooks configuration screen
 type WorktreeHooksConfigModel struct {
@@ -370,13 +370,13 @@ func (m *WorktreeHooksConfigModel) initComponents() {
 	}
 }
 
-func (m *WorktreeHooksConfigModel) Init() tea.Cmd                 { return nil }
+func (m *WorktreeHooksConfigModel) Init() tea.Cmd                           { return nil }
 func (m *WorktreeHooksConfigModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { return m, nil }
-func (m *WorktreeHooksConfigModel) View() string                 { return "Worktree Hooks (placeholder)" }
-func (m *WorktreeHooksConfigModel) Title() string                { return "Worktree Hooks" }
-func (m *WorktreeHooksConfigModel) Help() []string               { return []string{"Esc: Back"} }
-func (m *WorktreeHooksConfigModel) HasUnsavedChanges() bool      { return false }
-func (m *WorktreeHooksConfigModel) Save() error                  { return nil }
-func (m *WorktreeHooksConfigModel) Cancel()                      {}
-func (m *WorktreeHooksConfigModel) Reset()                       {}
-func (m *WorktreeHooksConfigModel) GetConfig() interface{}       { return m.config }
+func (m *WorktreeHooksConfigModel) View() string                            { return "Worktree Hooks (placeholder)" }
+func (m *WorktreeHooksConfigModel) Title() string                           { return "Worktree Hooks" }
+func (m *WorktreeHooksConfigModel) Help() []string                          { return []string{"Esc: Back"} }
+func (m *WorktreeHooksConfigModel) HasUnsavedChanges() bool                 { return false }
+func (m *WorktreeHooksConfigModel) Save() error                             { return nil }
+func (m *WorktreeHooksConfigModel) Cancel()                                 {}
+func (m *WorktreeHooksConfigModel) Reset()                                  {}
+func (m *WorktreeHooksConfigModel) GetConfig() interface{}                  { return m.config }

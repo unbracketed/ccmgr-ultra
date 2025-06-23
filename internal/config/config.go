@@ -46,7 +46,7 @@ func Load() (*Config, error) {
 	// Try to load from default config path
 	configPath := GetConfigPath()
 	configFile := filepath.Join(configPath, ConfigFileName)
-	
+
 	// Check if config file exists
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		// Create default config
@@ -56,11 +56,10 @@ func Load() (*Config, error) {
 		}
 		return config, nil
 	}
-	
+
 	// Load existing config using the path-based Load function
 	return LoadFromPath(configFile)
 }
-
 
 // Save saves configuration to the specified path
 func Save(config *Config, path string) error {
@@ -211,10 +210,10 @@ func DefaultConfig() *Config {
 // LoadWithViper loads configuration using Viper
 func LoadWithViper(configPath string) (*Config, error) {
 	v := viper.New()
-	
+
 	// Set config file
 	v.SetConfigFile(configPath)
-	
+
 	// Read config
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -271,7 +270,7 @@ func Watch(configPath string, onChange func(*Config)) error {
 // CopyDefaultTemplate copies the default configuration template to destination
 func CopyDefaultTemplate(destPath string) error {
 	config := DefaultConfig()
-	
+
 	// Read template from embedded file or generate from default config
 	templateData, err := generateTemplate(config)
 	if err != nil {
@@ -364,7 +363,7 @@ func ValidateConfigFile(path string) error {
 func ExportConfig(config *Config, w io.Writer) error {
 	encoder := yaml.NewEncoder(w)
 	encoder.SetIndent(2)
-	
+
 	if err := encoder.Encode(config); err != nil {
 		return fmt.Errorf("failed to encode config: %w", err)
 	}
@@ -375,7 +374,7 @@ func ExportConfig(config *Config, w io.Writer) error {
 // ImportConfig imports configuration from a reader
 func ImportConfig(r io.Reader) (*Config, error) {
 	decoder := yaml.NewDecoder(r)
-	
+
 	var config Config
 	if err := decoder.Decode(&config); err != nil {
 		return nil, fmt.Errorf("failed to decode config: %w", err)

@@ -33,7 +33,7 @@ func NewDefaultMetricCalculator(storage storage.Storage, cache Cache) *DefaultMe
 // Calculate calculates comprehensive metrics for the specified time range
 func (c *DefaultMetricCalculator) Calculate(ctx context.Context, timeRange TimeRange) (*Metrics, error) {
 	cacheKey := fmt.Sprintf("metrics_%s_%s", timeRange.Start.Format("2006-01-02"), timeRange.End.Format("2006-01-02"))
-	
+
 	// Try cache first
 	if cached, found := c.cache.Get(cacheKey); found {
 		if metrics, ok := cached.(*Metrics); ok {
@@ -49,14 +49,14 @@ func (c *DefaultMetricCalculator) Calculate(ctx context.Context, timeRange TimeR
 
 	// Cache the result
 	c.cache.Set(cacheKey, metrics, 5*time.Minute)
-	
+
 	return metrics, nil
 }
 
 // CalculateForProject calculates metrics for a specific project
 func (c *DefaultMetricCalculator) CalculateForProject(ctx context.Context, project string, timeRange TimeRange) (*Metrics, error) {
 	cacheKey := fmt.Sprintf("metrics_project_%s_%s_%s", project, timeRange.Start.Format("2006-01-02"), timeRange.End.Format("2006-01-02"))
-	
+
 	// Try cache first
 	if cached, found := c.cache.Get(cacheKey); found {
 		if metrics, ok := cached.(*Metrics); ok {
@@ -72,14 +72,14 @@ func (c *DefaultMetricCalculator) CalculateForProject(ctx context.Context, proje
 
 	// Cache the result
 	c.cache.Set(cacheKey, metrics, 5*time.Minute)
-	
+
 	return metrics, nil
 }
 
 // CalculateForWorktree calculates metrics for a specific worktree
 func (c *DefaultMetricCalculator) CalculateForWorktree(ctx context.Context, worktree string, timeRange TimeRange) (*Metrics, error) {
 	cacheKey := fmt.Sprintf("metrics_worktree_%s_%s_%s", worktree, timeRange.Start.Format("2006-01-02"), timeRange.End.Format("2006-01-02"))
-	
+
 	// Try cache first
 	if cached, found := c.cache.Get(cacheKey); found {
 		if metrics, ok := cached.(*Metrics); ok {
@@ -95,7 +95,7 @@ func (c *DefaultMetricCalculator) CalculateForWorktree(ctx context.Context, work
 
 	// Cache the result
 	c.cache.Set(cacheKey, metrics, 5*time.Minute)
-	
+
 	return metrics, nil
 }
 
@@ -284,7 +284,7 @@ func (c *DefaultMetricCalculator) calculateSessionActivity(events []*storage.Ses
 			if newStateData, ok := event.Data["new_state"].(string); ok {
 				// Calculate time spent in previous state
 				timeDiff := event.Timestamp.Sub(lastTransition)
-				
+
 				switch currentState {
 				case "busy":
 					activeTime += timeDiff
@@ -469,11 +469,11 @@ func (c *DefaultMetricCalculator) calculateWeeklyMetric(ctx context.Context, wee
 	}
 
 	metric := &WeeklyMetric{
-		WeekStart:       weekStart,
-		WeekEnd:         weekEnd,
-		DailyBreakdown:  dailyMetrics,
-		TopProjects:     make(map[string]int),
-		TopWorktrees:    make(map[string]int),
+		WeekStart:      weekStart,
+		WeekEnd:        weekEnd,
+		DailyBreakdown: dailyMetrics,
+		TopProjects:    make(map[string]int),
+		TopWorktrees:   make(map[string]int),
 	}
 
 	// Aggregate from daily metrics

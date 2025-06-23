@@ -200,19 +200,19 @@ func (shi *StatusHookIntegrator) HandleClaudeProcessEvent(event string, processI
 
 	// Extract information from process event
 	var context HookContext
-	
+
 	if workingDir, ok := processInfo["working_dir"].(string); ok {
 		context.WorktreePath = workingDir
 	}
-	
+
 	if branch, ok := processInfo["branch"].(string); ok {
 		context.WorktreeBranch = branch
 	}
-	
+
 	if sessionID, ok := processInfo["session_id"].(string); ok {
 		context.SessionID = sessionID
 	}
-	
+
 	if projectName, ok := processInfo["project_name"].(string); ok {
 		context.ProjectName = projectName
 	}

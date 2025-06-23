@@ -19,38 +19,38 @@ func NewQueryBuilder(db *sql.DB) *QueryBuilder {
 
 // SessionSummaryQuery represents a session summary query result
 type SessionSummaryQuery struct {
-	Project              string        `json:"project"`
-	Worktree             string        `json:"worktree"`
-	Branch               string        `json:"branch"`
-	SessionCount         int           `json:"session_count"`
-	TotalDurationMinutes float64       `json:"total_duration_minutes"`
-	AvgDurationMinutes   float64       `json:"avg_duration_minutes"`
-	SessionDate          time.Time     `json:"session_date"`
+	Project              string    `json:"project"`
+	Worktree             string    `json:"worktree"`
+	Branch               string    `json:"branch"`
+	SessionCount         int       `json:"session_count"`
+	TotalDurationMinutes float64   `json:"total_duration_minutes"`
+	AvgDurationMinutes   float64   `json:"avg_duration_minutes"`
+	SessionDate          time.Time `json:"session_date"`
 }
 
 // DailyActivityQuery represents a daily activity query result
 type DailyActivityQuery struct {
-	ActivityDate   time.Time `json:"activity_date"`
-	SessionID      string    `json:"session_id"`
-	Project        string    `json:"project"`
-	Worktree       string    `json:"worktree"`
-	BusyCount      int       `json:"busy_count"`
-	IdleCount      int       `json:"idle_count"`
-	WaitingCount   int       `json:"waiting_count"`
-	FirstActivity  time.Time `json:"first_activity"`
-	LastActivity   time.Time `json:"last_activity"`
+	ActivityDate  time.Time `json:"activity_date"`
+	SessionID     string    `json:"session_id"`
+	Project       string    `json:"project"`
+	Worktree      string    `json:"worktree"`
+	BusyCount     int       `json:"busy_count"`
+	IdleCount     int       `json:"idle_count"`
+	WaitingCount  int       `json:"waiting_count"`
+	FirstActivity time.Time `json:"first_activity"`
+	LastActivity  time.Time `json:"last_activity"`
 }
 
 // ProjectActivityQuery represents project activity summary
 type ProjectActivityQuery struct {
-	Project              string    `json:"project"`
-	TotalSessions        int       `json:"total_sessions"`
-	WorktreeCount        int       `json:"worktree_count"`
-	BranchCount          int       `json:"branch_count"`
-	FirstSession         time.Time `json:"first_session"`
-	LastSession          time.Time `json:"last_session"`
-	AvgSessionMinutes    float64   `json:"avg_session_minutes"`
-	TotalTimeMinutes     float64   `json:"total_time_minutes"`
+	Project           string    `json:"project"`
+	TotalSessions     int       `json:"total_sessions"`
+	WorktreeCount     int       `json:"worktree_count"`
+	BranchCount       int       `json:"branch_count"`
+	FirstSession      time.Time `json:"first_session"`
+	LastSession       time.Time `json:"last_session"`
+	AvgSessionMinutes float64   `json:"avg_session_minutes"`
+	TotalTimeMinutes  float64   `json:"total_time_minutes"`
 }
 
 // GetSessionSummary gets session summary for a date range
@@ -377,13 +377,13 @@ func (qb *QueryBuilder) GetProductivityStats(ctx context.Context, start, end tim
 
 // ProductivityStats represents productivity statistics
 type ProductivityStats struct {
-	TotalSessions      int     `json:"total_sessions"`
-	ActiveMinutes      float64 `json:"active_minutes"`
-	IdleMinutes        float64 `json:"idle_minutes"`
-	TotalMinutes       float64 `json:"total_minutes"`
-	ProductivityRatio  float64 `json:"productivity_ratio"`
-	AvgFocusDuration   float64 `json:"avg_focus_duration"`
-	FocusSessions      int     `json:"focus_sessions"`
+	TotalSessions     int     `json:"total_sessions"`
+	ActiveMinutes     float64 `json:"active_minutes"`
+	IdleMinutes       float64 `json:"idle_minutes"`
+	TotalMinutes      float64 `json:"total_minutes"`
+	ProductivityRatio float64 `json:"productivity_ratio"`
+	AvgFocusDuration  float64 `json:"avg_focus_duration"`
+	FocusSessions     int     `json:"focus_sessions"`
 }
 
 // GetRecentSessions gets recent session data
@@ -467,8 +467,8 @@ func (qb *QueryBuilder) CleanupOldData(ctx context.Context, retentionDays int) (
 	cutoffDate := time.Now().AddDate(0, 0, -retentionDays)
 
 	// Clean up old session events
-	result, err := qb.db.ExecContext(ctx, 
-		"DELETE FROM session_events WHERE timestamp < ?", 
+	result, err := qb.db.ExecContext(ctx,
+		"DELETE FROM session_events WHERE timestamp < ?",
 		cutoffDate)
 	if err != nil {
 		return 0, fmt.Errorf("failed to cleanup old session events: %w", err)
@@ -477,16 +477,16 @@ func (qb *QueryBuilder) CleanupOldData(ctx context.Context, retentionDays int) (
 	eventsDeleted, _ := result.RowsAffected()
 
 	// Clean up old daily stats
-	_, err = qb.db.ExecContext(ctx, 
-		"DELETE FROM daily_session_stats WHERE created_at < ?", 
+	_, err = qb.db.ExecContext(ctx,
+		"DELETE FROM daily_session_stats WHERE created_at < ?",
 		cutoffDate)
 	if err != nil {
 		return eventsDeleted, fmt.Errorf("failed to cleanup old daily stats: %w", err)
 	}
 
 	// Clean up old productivity metrics
-	_, err = qb.db.ExecContext(ctx, 
-		"DELETE FROM productivity_metrics WHERE calculated_at < ?", 
+	_, err = qb.db.ExecContext(ctx,
+		"DELETE FROM productivity_metrics WHERE calculated_at < ?",
 		cutoffDate)
 	if err != nil {
 		return eventsDeleted, fmt.Errorf("failed to cleanup old productivity metrics: %w", err)

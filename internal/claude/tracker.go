@@ -100,7 +100,7 @@ func (t *DefaultProcessTracker) AddProcess(process *ProcessInfo) error {
 	}
 
 	t.registry.processes[processID] = process
-	
+
 	// Notify subscribers of new process
 	event := StateChangeEvent{
 		ProcessID:   processID,
@@ -382,17 +382,17 @@ func (t *DefaultProcessTracker) notifySubscribers(event StateChangeEvent) {
 // GetTrackerStats returns statistics about the tracker
 func (t *DefaultProcessTracker) GetTrackerStats() map[string]interface{} {
 	stats := t.registry.GetStats()
-	
+
 	return map[string]interface{}{
-		"running":             t.running,
-		"total_processes":     stats.TotalProcesses,
-		"state_distribution":  stats.StateDistribution,
-		"average_uptime":      stats.AverageUptime.String(),
-		"subscribers":         len(t.subscribers),
-		"max_processes":       t.config.MaxProcesses,
-		"poll_interval":       t.config.PollInterval.String(),
-		"cleanup_interval":    t.config.CleanupInterval.String(),
-		"last_updated":        stats.LastUpdated,
+		"running":            t.running,
+		"total_processes":    stats.TotalProcesses,
+		"state_distribution": stats.StateDistribution,
+		"average_uptime":     stats.AverageUptime.String(),
+		"subscribers":        len(t.subscribers),
+		"max_processes":      t.config.MaxProcesses,
+		"poll_interval":      t.config.PollInterval.String(),
+		"cleanup_interval":   t.config.CleanupInterval.String(),
+		"last_updated":       stats.LastUpdated,
 	}
 }
 

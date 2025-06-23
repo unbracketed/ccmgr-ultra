@@ -36,7 +36,7 @@ func (g *GitCmd) Execute(dir string, args ...string) (string, error) {
 	if dir != "" {
 		cmd.Dir = dir
 	}
-	
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("git command failed: %s: %w", string(output), err)
@@ -50,7 +50,7 @@ func (g *GitCmd) ExecuteWithInput(dir, input string, args ...string) (string, er
 	if dir != "" {
 		cmd.Dir = dir
 	}
-	
+
 	cmd.Stdin = strings.NewReader(input)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -83,15 +83,15 @@ type Remote struct {
 
 // WorktreeInfo represents a git worktree
 type WorktreeInfo struct {
-	Path         string
-	Branch       string
-	Head         string
-	IsClean      bool
+	Path           string
+	Branch         string
+	Head           string
+	IsClean        bool
 	HasUncommitted bool
-	LastCommit   CommitInfo
-	TmuxSession  string
-	Created      time.Time
-	LastAccessed time.Time
+	LastCommit     CommitInfo
+	TmuxSession    string
+	Created        time.Time
+	LastAccessed   time.Time
 }
 
 // CommitInfo represents a git commit
@@ -321,7 +321,7 @@ func (rm *RepositoryManager) getRemotes(repo *Repository) ([]Remote, error) {
 
 	remoteMap := make(map[string]*Remote)
 	scanner := bufio.NewScanner(strings.NewReader(output))
-	
+
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
@@ -333,7 +333,7 @@ func (rm *RepositoryManager) getRemotes(repo *Repository) ([]Remote, error) {
 		if len(parts) >= 2 {
 			name := parts[0]
 			url := parts[1]
-			
+
 			if _, exists := remoteMap[name]; !exists {
 				remote := &Remote{
 					Name: name,
@@ -357,7 +357,7 @@ func (rm *RepositoryManager) getRemotes(repo *Repository) ([]Remote, error) {
 // parseRemoteURL parses a remote URL to extract host, owner, and repo
 func (rm *RepositoryManager) parseRemoteURL(remote *Remote) error {
 	url := remote.URL
-	
+
 	// Handle SSH URLs (git@host:owner/repo.git)
 	sshPattern := regexp.MustCompile(`^git@([^:]+):([^/]+)/(.+?)(?:\.git)?$`)
 	if matches := sshPattern.FindStringSubmatch(url); len(matches) == 4 {
@@ -404,7 +404,7 @@ func (rm *RepositoryManager) getWorktrees(repo *Repository) ([]WorktreeInfo, err
 
 	var worktrees []WorktreeInfo
 	var current WorktreeInfo
-	
+
 	scanner := bufio.NewScanner(strings.NewReader(output))
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())

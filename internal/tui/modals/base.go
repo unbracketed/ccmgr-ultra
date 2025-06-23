@@ -78,7 +78,7 @@ func (m *ModalManager) ShowModal(modal Modal) {
 	if m.activeModal != nil {
 		m.modalStack = append(m.modalStack, m.activeModal)
 	}
-	
+
 	modal.SetTheme(m.theme)
 	modal.SetSize(m.width, m.height)
 	m.activeModal = modal
@@ -95,7 +95,7 @@ func (m *ModalManager) CloseModal() {
 			Canceled: false,
 		}
 	}
-	
+
 	if len(m.modalStack) > 0 {
 		m.activeModal = m.modalStack[len(m.modalStack)-1]
 		m.modalStack = m.modalStack[:len(m.modalStack)-1]
@@ -109,7 +109,7 @@ func (m *ModalManager) CancelModal() {
 	m.result = &ModalResult{
 		Canceled: true,
 	}
-	
+
 	if len(m.modalStack) > 0 {
 		m.activeModal = m.modalStack[len(m.modalStack)-1]
 		m.modalStack = m.modalStack[:len(m.modalStack)-1]
@@ -134,7 +134,7 @@ func (m *ModalManager) GetResult() *ModalResult {
 func (m *ModalManager) SetSize(width, height int) {
 	m.width = width
 	m.height = height
-	
+
 	if m.activeModal != nil {
 		m.activeModal.SetSize(width, height)
 	}
@@ -143,7 +143,7 @@ func (m *ModalManager) SetSize(width, height int) {
 // SetTheme updates the theme for all modals
 func (m *ModalManager) SetTheme(theme Theme) {
 	m.theme = theme
-	
+
 	if m.activeModal != nil {
 		m.activeModal.SetTheme(theme)
 	}
@@ -154,11 +154,11 @@ func (m *ModalManager) Update(msg tea.Msg) tea.Cmd {
 	if !m.IsActive() {
 		return nil
 	}
-	
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.SetSize(msg.Width, msg.Height)
-		
+
 	case tea.KeyMsg:
 		// Handle global modal keys
 		switch msg.String() {
@@ -166,34 +166,34 @@ func (m *ModalManager) Update(msg tea.Msg) tea.Cmd {
 			m.CancelModal()
 			return nil
 		}
-		
+
 		// Pass to active modal
 		if m.activeModal != nil {
 			updatedModal, cmd := m.activeModal.HandleKeyMsg(msg)
 			m.activeModal = updatedModal
-			
+
 			// Check if modal completed
 			if m.activeModal.IsComplete() {
 				m.CloseModal()
 			}
-			
+
 			return cmd
 		}
 	}
-	
+
 	// Pass other messages to active modal
 	if m.activeModal != nil {
 		updatedModal, cmd := m.activeModal.Update(msg)
 		m.activeModal = updatedModal.(Modal)
-		
+
 		// Check if modal completed
 		if m.activeModal.IsComplete() {
 			m.CloseModal()
 		}
-		
+
 		return cmd
 	}
-	
+
 	return nil
 }
 
@@ -202,13 +202,13 @@ func (m *ModalManager) View() string {
 	if !m.IsActive() {
 		return ""
 	}
-	
+
 	modalContent := m.activeModal.View()
-	
+
 	if !m.backdrop {
 		return modalContent
 	}
-	
+
 	// Create backdrop (unused for now)
 	_ = lipgloss.NewStyle().
 		Width(m.width).
@@ -216,14 +216,14 @@ func (m *ModalManager) View() string {
 		Background(lipgloss.Color("#000000")).
 		Foreground(lipgloss.Color("#FFFFFF")).
 		Render("")
-	
+
 	// Center the modal content
 	centeredModal := lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
 		modalContent,
 	)
-	
+
 	// Overlay modal on backdrop
 	return lipgloss.NewStyle().
 		Width(m.width).
@@ -295,7 +295,7 @@ func (m *BaseModal) MarkError(err error) {
 func (m *BaseModal) RenderWithBorder(content string) string {
 	contentWidth := max(m.minWidth, 40)
 	contentHeight := max(m.minHeight, 8)
-	
+
 	// Ensure modal fits in available space
 	if m.width > 0 && contentWidth > m.width-4 {
 		contentWidth = m.width - 4
@@ -303,20 +303,20 @@ func (m *BaseModal) RenderWithBorder(content string) string {
 	if m.height > 0 && contentHeight > m.height-4 {
 		contentHeight = m.height - 4
 	}
-	
+
 	borderStyle := lipgloss.NewStyle().
 		Border(m.theme.BorderStyle).
 		BorderForeground(m.theme.Primary).
 		Width(contentWidth).
 		Height(contentHeight).
 		Padding(1, 2)
-	
+
 	titleStyle := m.theme.TitleStyle.
 		Width(contentWidth - 4).
 		Align(lipgloss.Center)
-	
+
 	title := titleStyle.Render(m.title)
-	
+
 	return borderStyle.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
 			title,

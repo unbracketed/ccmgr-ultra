@@ -12,7 +12,7 @@ import (
 
 func TestViperManager(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	t.Run("creates new viper manager", func(t *testing.T) {
 		vm := NewViperManager()
 		assert.NotNil(t, vm)
@@ -22,7 +22,7 @@ func TestViperManager(t *testing.T) {
 
 	t.Run("initializes global viper", func(t *testing.T) {
 		vm := NewViperManager()
-		
+
 		// Mock config path
 		oldConfigHome := os.Getenv("XDG_CONFIG_HOME")
 		defer func() {
@@ -83,7 +83,7 @@ func TestViperEnvironmentVariables(t *testing.T) {
 		}{
 			{"true", true},
 			{"false", false},
-			{"1", false},  // Only "true" should be true
+			{"1", false}, // Only "true" should be true
 		}
 
 		for _, tt := range tests {
@@ -133,7 +133,7 @@ func TestViperDefaultsAndBinding(t *testing.T) {
 		v := viper.New()
 
 		vm.bindEnvironment(v)
-		
+
 		// Verify environment prefix is set
 		assert.NotNil(t, v)
 	})
@@ -172,10 +172,10 @@ func TestLoadConfigWithViper(t *testing.T) {
 
 	t.Run("handles missing config file gracefully", func(t *testing.T) {
 		nonExistentPath := filepath.Join(tmpDir, "non-existent.yaml")
-		
+
 		v := viper.New()
 		v.SetConfigFile(nonExistentPath)
-		
+
 		// Set defaults first
 		manager := &ViperManager{}
 		manager.setDefaults(v)

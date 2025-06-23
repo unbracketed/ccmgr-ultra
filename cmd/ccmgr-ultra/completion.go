@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/bcdekker/ccmgr-ultra/internal/cli"
 	"github.com/bcdekker/ccmgr-ultra/internal/git"
 	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
+	"github.com/spf13/cobra"
 )
 
 var completionCmd = &cobra.Command{
@@ -79,28 +79,28 @@ func registerCompletionFunctions() {
 	// Worktree name completion
 	worktreeListCmd.RegisterFlagCompletionFunc("branch", completeWorktreeBranches)
 	worktreeListCmd.RegisterFlagCompletionFunc("status", completeWorktreeStatuses)
-	
+
 	worktreeCreateCmd.RegisterFlagCompletionFunc("base", completeBranches)
 	worktreeCreateCmd.RegisterFlagCompletionFunc("directory", completeDirectories)
-	
+
 	worktreeDeleteCmd.ValidArgsFunction = completeWorktreeNames
 	worktreeMergeCmd.ValidArgsFunction = completeWorktreeNames
 	worktreeMergeCmd.RegisterFlagCompletionFunc("target", completeBranches)
 	worktreeMergeCmd.RegisterFlagCompletionFunc("strategy", completeMergeStrategies)
-	
+
 	worktreePushCmd.ValidArgsFunction = completeWorktreeNames
-	
+
 	// Session name completion
 	sessionListCmd.RegisterFlagCompletionFunc("worktree", completeWorktreeNames)
 	sessionListCmd.RegisterFlagCompletionFunc("project", completeProjectNames)
 	sessionListCmd.RegisterFlagCompletionFunc("status", completeSessionStatuses)
-	
+
 	sessionNewCmd.ValidArgsFunction = completeWorktreeNames
 	sessionNewCmd.RegisterFlagCompletionFunc("config", completeConfigFiles)
-	
+
 	sessionResumeCmd.ValidArgsFunction = completeSessionIDs
 	sessionKillCmd.ValidArgsFunction = completeSessionIDs
-	
+
 	// Status command completion
 	statusCmd.RegisterFlagCompletionFunc("worktree", completeWorktreeNames)
 	statusCmd.RegisterFlagCompletionFunc("format", completeOutputFormats)
@@ -112,7 +112,7 @@ func completeWorktreeNames(cmd *cobra.Command, args []string, toComplete string)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
 	}
-	
+
 	return filterCompletions(worktrees, toComplete), cobra.ShellCompDirectiveNoFileComp
 }
 
@@ -122,7 +122,7 @@ func completeWorktreeBranches(cmd *cobra.Command, args []string, toComplete stri
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
 	}
-	
+
 	return filterCompletions(branches, toComplete), cobra.ShellCompDirectiveNoFileComp
 }
 
@@ -138,7 +138,7 @@ func completeBranches(cmd *cobra.Command, args []string, toComplete string) ([]s
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
 	}
-	
+
 	return filterCompletions(branches, toComplete), cobra.ShellCompDirectiveNoFileComp
 }
 
@@ -160,7 +160,7 @@ func completeSessionIDs(cmd *cobra.Command, args []string, toComplete string) ([
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
 	}
-	
+
 	return filterCompletions(sessionIDs, toComplete), cobra.ShellCompDirectiveNoFileComp
 }
 
@@ -176,7 +176,7 @@ func completeProjectNames(cmd *cobra.Command, args []string, toComplete string) 
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
 	}
-	
+
 	return filterCompletions(projects, toComplete), cobra.ShellCompDirectiveNoFileComp
 }
 
@@ -185,14 +185,14 @@ func completeConfigFiles(cmd *cobra.Command, args []string, toComplete string) (
 	// Look for common config file patterns
 	patterns := []string{"*.toml", "*.yaml", "*.yml", "*.json"}
 	var files []string
-	
+
 	for _, pattern := range patterns {
 		matches, err := filepath.Glob(pattern)
 		if err == nil {
 			files = append(files, matches...)
 		}
 	}
-	
+
 	return filterCompletions(files, toComplete), cobra.ShellCompDirectiveDefault
 }
 

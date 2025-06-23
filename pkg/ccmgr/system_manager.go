@@ -27,18 +27,18 @@ func (sm *systemManager) Refresh() error {
 // Health returns system health information
 func (sm *systemManager) Health() HealthInfo {
 	status := sm.integration.GetSystemStatus()
-	
+
 	overall := "healthy"
 	if !status.IsHealthy {
 		overall = "unhealthy"
 	}
-	
+
 	services := map[string]string{
 		"tmux":   "running",
 		"claude": "running",
 		"git":    "running",
 	}
-	
+
 	// Check for errors in specific services
 	for _, err := range status.Errors {
 		if contains(err, "tmux") {
@@ -51,7 +51,7 @@ func (sm *systemManager) Health() HealthInfo {
 			services["git"] = "error"
 		}
 	}
-	
+
 	return HealthInfo{
 		Overall:   overall,
 		Services:  services,

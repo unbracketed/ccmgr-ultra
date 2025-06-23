@@ -11,11 +11,11 @@ import (
 
 // BatchOperation represents a single operation in a batch
 type BatchOperation struct {
-	ID          string
-	Description string
-	Target      string
-	Operation   func(ctx context.Context) error
-	Priority    int
+	ID           string
+	Description  string
+	Target       string
+	Operation    func(ctx context.Context) error
+	Priority     int
 	Dependencies []string
 }
 
@@ -25,7 +25,7 @@ type BatchExecutor struct {
 	maxConcurrency  int
 	continueOnError bool
 	progressTracker *BatchProgressTracker
-	mutex          sync.RWMutex
+	mutex           sync.RWMutex
 }
 
 // BatchExecutorOptions configures batch execution behavior
@@ -109,9 +109,9 @@ func (be *BatchExecutor) Execute(ctx context.Context) (*BatchResult, error) {
 
 	// Execute operations with concurrency control
 	err := be.executeWithConcurrency(ctx, sortedOps, result)
-	
+
 	result.Duration = time.Since(startTime)
-	
+
 	// Get final stats
 	stats := be.progressTracker.GetStats()
 	result.SuccessCount = stats.Completed
@@ -257,11 +257,11 @@ func (pm *PatternMatcher) Filter(targets []string) []string {
 func globToRegex(pattern string) (string, error) {
 	// Escape regex special characters except * and ?
 	escaped := regexp.QuoteMeta(pattern)
-	
+
 	// Replace escaped glob characters with regex equivalents
 	escaped = strings.ReplaceAll(escaped, "\\*", ".*")
 	escaped = strings.ReplaceAll(escaped, "\\?", ".")
-	
+
 	// Anchor the pattern
 	return "^" + escaped + "$", nil
 }
@@ -456,10 +456,10 @@ func HasCriticalErrors(errors []ValidationError) bool {
 // GroupValidationErrors groups validation errors by operation ID
 func GroupValidationErrors(errors []ValidationError) map[string][]ValidationError {
 	grouped := make(map[string][]ValidationError)
-	
+
 	for _, err := range errors {
 		grouped[err.OperationID] = append(grouped[err.OperationID], err)
 	}
-	
+
 	return grouped
 }

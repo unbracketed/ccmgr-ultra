@@ -12,18 +12,18 @@ import (
 // ProgressModal represents a progress indicator modal
 type ProgressModal struct {
 	BaseModal
-	message      string
-	progress     float64  // 0.0 to 1.0
+	message       string
+	progress      float64 // 0.0 to 1.0
 	indeterminate bool
-	status       string
-	spinner      int
-	tickCounter  int
-	cancelable   bool
-	canceled     bool
-	showETA      bool
-	startTime    time.Time
-	totalSteps   int
-	currentStep  int
+	status        string
+	spinner       int
+	tickCounter   int
+	cancelable    bool
+	canceled      bool
+	showETA       bool
+	startTime     time.Time
+	totalSteps    int
+	currentStep   int
 }
 
 // ProgressModalConfig configures a progress modal
@@ -86,14 +86,14 @@ func (m *ProgressModal) HandleKeyMsg(msg tea.KeyMsg) (Modal, tea.Cmd) {
 	if !m.cancelable {
 		return m, nil
 	}
-	
+
 	switch msg.String() {
 	case "ctrl+c", "esc":
 		m.canceled = true
 		m.MarkComplete(false)
 		return m, nil
 	}
-	
+
 	return m, nil
 }
 
@@ -106,17 +106,17 @@ func (m *ProgressModal) handleProgressUpdate(msg ProgressUpdateMsg) (Modal, tea.
 	if msg.CurrentStep > 0 {
 		m.currentStep = msg.CurrentStep
 	}
-	
+
 	if msg.Complete {
 		m.MarkComplete(true)
 		return m, nil
 	}
-	
+
 	var cmd tea.Cmd
 	if m.indeterminate {
 		cmd = m.tick()
 	}
-	
+
 	return m, cmd
 }
 
@@ -155,23 +155,23 @@ func (m *ProgressModal) IsCanceled() bool {
 // View implements the tea.Model interface
 func (m *ProgressModal) View() string {
 	var elements []string
-	
+
 	// Message
 	messageStyle := m.theme.ContentStyle.Copy().Bold(true)
 	elements = append(elements, messageStyle.Render(m.message))
-	
+
 	if m.indeterminate {
 		// Spinner view
 		spinnerStyle := lipgloss.NewStyle().
 			Foreground(m.theme.Accent).
 			Bold(true)
-		
+
 		spinner := spinnerStyle.Render(spinnerFrames[m.spinner])
 		statusText := m.status
 		if statusText == "" {
 			statusText = "Working..."
 		}
-		
+
 		spinnerLine := lipgloss.JoinHorizontal(lipgloss.Left,
 			spinner, " ", statusText)
 		elements = append(elements, "", spinnerLine)
@@ -179,20 +179,20 @@ func (m *ProgressModal) View() string {
 		// Progress bar view
 		progressBar := m.renderProgressBar()
 		elements = append(elements, "", progressBar)
-		
+
 		// Step counter if available
 		if m.totalSteps > 0 {
 			stepText := fmt.Sprintf("Step %d of %d", m.currentStep, m.totalSteps)
 			stepStyle := lipgloss.NewStyle().Foreground(m.theme.Muted)
 			elements = append(elements, stepStyle.Render(stepText))
 		}
-		
+
 		// Status text
 		if m.status != "" {
 			statusStyle := m.theme.ContentStyle
 			elements = append(elements, statusStyle.Render(m.status))
 		}
-		
+
 		// ETA if enabled
 		if m.showETA && m.progress > 0 {
 			eta := m.calculateETA()
@@ -204,7 +204,7 @@ func (m *ProgressModal) View() string {
 			}
 		}
 	}
-	
+
 	// Help text
 	if m.cancelable {
 		helpStyle := lipgloss.NewStyle().
@@ -213,7 +213,7 @@ func (m *ProgressModal) View() string {
 		help := helpStyle.Render("Esc: Cancel")
 		elements = append(elements, "", help)
 	}
-	
+
 	content := strings.Join(elements, "\n")
 	return m.RenderWithBorder(content)
 }
@@ -222,20 +222,20 @@ func (m *ProgressModal) View() string {
 func (m *ProgressModal) renderProgressBar() string {
 	width := 40
 	filled := int(m.progress * float64(width))
-	
+
 	_ = strings.Repeat("█", filled) + strings.Repeat("░", width-filled)
-	
+
 	barStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Success)
-		
+
 	emptyStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Muted)
-	
+
 	filledPart := barStyle.Render(strings.Repeat("█", filled))
 	emptyPart := emptyStyle.Render(strings.Repeat("░", width-filled))
-	
+
 	percentage := fmt.Sprintf("%.1f%%", m.progress*100)
-	
+
 	return lipgloss.JoinHorizontal(lipgloss.Left,
 		"[", filledPart, emptyPart, "] ", percentage)
 }
@@ -245,10 +245,10 @@ func (m *ProgressModal) calculateETA() string {
 	if m.progress <= 0 {
 		return ""
 	}
-	
+
 	elapsed := time.Since(m.startTime)
 	remaining := time.Duration(float64(elapsed) * (1.0/m.progress - 1.0))
-	
+
 	if remaining < time.Minute {
 		return fmt.Sprintf("%ds", int(remaining.Seconds()))
 	} else if remaining < time.Hour {

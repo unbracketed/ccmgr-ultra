@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/bcdekker/ccmgr-ultra/internal/cli"
 	"github.com/bcdekker/ccmgr-ultra/internal/claude"
+	"github.com/bcdekker/ccmgr-ultra/internal/cli"
 	"github.com/bcdekker/ccmgr-ultra/internal/tmux"
+	"github.com/spf13/cobra"
 )
 
 // SessionListData represents data for session list output
@@ -22,18 +22,18 @@ type SessionListData struct {
 
 // SessionListItem represents a single session in list output
 type SessionListItem struct {
-	ID            string    `json:"id" yaml:"id"`
-	Name          string    `json:"name" yaml:"name"`
-	Project       string    `json:"project" yaml:"project"`
-	Worktree      string    `json:"worktree" yaml:"worktree"`
-	Branch        string    `json:"branch" yaml:"branch"`
-	Directory     string    `json:"directory" yaml:"directory"`
-	Status        string    `json:"status" yaml:"status"`
-	Active        bool      `json:"active" yaml:"active"`
-	ProcessCount  int       `json:"process_count" yaml:"process_count"`
-	Created       time.Time `json:"created" yaml:"created"`
-	LastAccess    time.Time `json:"last_access" yaml:"last_access"`
-	Uptime        string    `json:"uptime" yaml:"uptime"`
+	ID           string    `json:"id" yaml:"id"`
+	Name         string    `json:"name" yaml:"name"`
+	Project      string    `json:"project" yaml:"project"`
+	Worktree     string    `json:"worktree" yaml:"worktree"`
+	Branch       string    `json:"branch" yaml:"branch"`
+	Directory    string    `json:"directory" yaml:"directory"`
+	Status       string    `json:"status" yaml:"status"`
+	Active       bool      `json:"active" yaml:"active"`
+	ProcessCount int       `json:"process_count" yaml:"process_count"`
+	Created      time.Time `json:"created" yaml:"created"`
+	LastAccess   time.Time `json:"last_access" yaml:"last_access"`
+	Uptime       string    `json:"uptime" yaml:"uptime"`
 }
 
 var sessionCmd = &cobra.Command{
@@ -60,10 +60,10 @@ var sessionListCmd = &cobra.Command{
 }
 
 var sessionListFlags struct {
-	format       string
-	worktree     string
-	project      string
-	status       string
+	format        string
+	worktree      string
+	project       string
+	status        string
 	withProcesses bool
 }
 
@@ -150,10 +150,10 @@ func init() {
 	sessionListCmd.Flags().BoolVar(&sessionListFlags.withProcesses, "with-processes", false, "Include Claude Code process details")
 
 	// New command flags
-	sessionNewCmd.Flags().StringVarP(&sessionNewFlags.name, "name", "n", "", "Custom session name suffix")
+	sessionNewCmd.Flags().StringVar(&sessionNewFlags.name, "name", "", "Custom session name suffix")
 	sessionNewCmd.Flags().BoolVar(&sessionNewFlags.startClaude, "start-claude", false, "Automatically start Claude Code")
 	sessionNewCmd.Flags().BoolVarP(&sessionNewFlags.detached, "detached", "d", false, "Create session detached from terminal")
-	sessionNewCmd.Flags().StringVarP(&sessionNewFlags.config, "config", "c", "", "Custom Claude Code config for session")
+	sessionNewCmd.Flags().StringVar(&sessionNewFlags.config, "claude-config", "", "Custom Claude Code config for session")
 	sessionNewCmd.Flags().BoolVar(&sessionNewFlags.inheritConfig, "inherit-config", false, "Inherit config from parent directory")
 
 	// Resume command flags
@@ -174,7 +174,7 @@ func init() {
 	sessionCleanCmd.Flags().BoolVarP(&sessionCleanFlags.force, "force", "f", false, "Skip confirmation prompts")
 	sessionCleanCmd.Flags().BoolVar(&sessionCleanFlags.all, "all", false, "Clean all eligible sessions, not just stale ones")
 	sessionCleanCmd.Flags().StringVar(&sessionCleanFlags.olderThan, "older-than", "24h", "Clean sessions older than specified duration")
-	sessionCleanCmd.Flags().BoolVarP(&sessionCleanFlags.verbose, "verbose", "v", false, "Detailed cleanup information")
+	sessionCleanCmd.Flags().BoolVar(&sessionCleanFlags.verbose, "verbose", false, "Detailed cleanup information")
 
 	// Add subcommands to session command
 	sessionCmd.AddCommand(sessionListCmd)

@@ -65,7 +65,7 @@ func (sm *SessionManager) CreateSession(project, worktree, branch, directory str
 	}
 
 	sessionName := GenerateSessionName(project, worktree, branch)
-	
+
 	exists, err := sm.tmux.HasSession(sessionName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if session exists: %w", err)
@@ -370,16 +370,16 @@ func CheckTmuxAvailable() error {
 
 func (s *Session) toPersistedSession() *PersistedSession {
 	return &PersistedSession{
-		ID:         s.ID,
-		Name:       s.Name,
-		Project:    s.Project,
-		Worktree:   s.Worktree,
-		Branch:     s.Branch,
-		Directory:  s.Directory,
-		Created:    s.Created,
-		LastAccess: s.LastAccess,
-		LastState:  StateUnknown,
+		ID:          s.ID,
+		Name:        s.Name,
+		Project:     s.Project,
+		Worktree:    s.Worktree,
+		Branch:      s.Branch,
+		Directory:   s.Directory,
+		Created:     s.Created,
+		LastAccess:  s.LastAccess,
+		LastState:   StateUnknown,
 		Environment: make(map[string]string),
-		Metadata:   make(map[string]interface{}),
+		Metadata:    make(map[string]interface{}),
 	}
 }

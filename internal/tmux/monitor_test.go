@@ -35,70 +35,70 @@ func TestNewProcessMonitor(t *testing.T) {
 			MonitorInterval: 5 * time.Second,
 		},
 	}
-	
+
 	pm := NewProcessMonitor(cfg)
-	
+
 	if pm == nil {
 		t.Error("NewProcessMonitor returned nil")
 	}
-	
+
 	if pm.sessions == nil {
 		t.Error("ProcessMonitor sessions not initialized")
 	}
-	
+
 	if pm.stateHooks == nil {
 		t.Error("ProcessMonitor stateHooks not initialized")
 	}
-	
+
 	if pm.pollInterval != 5*time.Second {
 		t.Errorf("Expected poll interval 5s, got %v", pm.pollInterval)
 	}
-	
+
 	if pm.tmux == nil {
 		t.Error("ProcessMonitor tmux not initialized")
 	}
-	
+
 	if pm.ctx == nil {
 		t.Error("ProcessMonitor context not initialized")
 	}
-	
+
 	pm.Shutdown()
 }
 
 func TestNewProcessMonitorWithNilConfig(t *testing.T) {
 	pm := NewProcessMonitor(nil)
-	
+
 	if pm == nil {
 		t.Error("NewProcessMonitor returned nil")
 	}
-	
+
 	if pm.pollInterval != 2*time.Second {
 		t.Errorf("Expected default poll interval 2s, got %v", pm.pollInterval)
 	}
-	
+
 	pm.Shutdown()
 }
 
 func TestMonitoredSessionOperations(t *testing.T) {
 	pm := NewProcessMonitor(nil)
 	defer pm.Shutdown()
-	
+
 	sessionID := "test-session"
-	
+
 	t.Run("GetProcessState before monitoring", func(t *testing.T) {
 		_, err := pm.GetProcessState(sessionID)
 		if err == nil {
 			t.Error("Expected error when getting state of non-monitored session")
 		}
 	})
-	
+
 	t.Run("GetProcessPID before monitoring", func(t *testing.T) {
 		_, err := pm.GetProcessPID(sessionID)
 		if err == nil {
 			t.Error("Expected error when getting PID of non-monitored session")
 		}
 	})
-	
+
 	t.Run("StopMonitoring before starting", func(t *testing.T) {
 		err := pm.StopMonitoring(sessionID)
 		if err == nil {
@@ -129,10 +129,10 @@ func (m *mockStateHook) OnStateChange(sessionID string, from, to ProcessState) e
 func TestRegisterStateHook(t *testing.T) {
 	pm := NewProcessMonitor(nil)
 	defer pm.Shutdown()
-	
+
 	hook := &mockStateHook{}
 	pm.RegisterStateHook(hook)
-	
+
 	if len(pm.stateHooks) != 1 {
 		t.Errorf("Expected 1 hook, got %d", len(pm.stateHooks))
 	}
@@ -141,9 +141,9 @@ func TestRegisterStateHook(t *testing.T) {
 func TestUpdateSessionState(t *testing.T) {
 	pm := NewProcessMonitor(nil)
 	defer pm.Shutdown()
-	
+
 	sessionID := "test-session"
-	
+
 	session := &MonitoredSession{
 		SessionID:       sessionID,
 		ProcessPID:      1234,
@@ -151,28 +151,28 @@ func TestUpdateSessionState(t *testing.T) {
 		LastStateChange: time.Now(),
 		StateHistory:    make([]StateChange, 0),
 	}
-	
+
 	pm.sessions[sessionID] = session
-	
+
 	pm.updateSessionState(sessionID, StateIdle, "test")
-	
+
 	if session.CurrentState != StateIdle {
 		t.Errorf("Expected state to be StateIdle, got %v", session.CurrentState)
 	}
-	
+
 	if len(session.StateHistory) != 1 {
 		t.Errorf("Expected 1 state change in history, got %d", len(session.StateHistory))
 	}
-	
+
 	change := session.StateHistory[0]
 	if change.From != StateUnknown {
 		t.Errorf("Expected From to be StateUnknown, got %v", change.From)
 	}
-	
+
 	if change.To != StateIdle {
 		t.Errorf("Expected To to be StateIdle, got %v", change.To)
 	}
-	
+
 	if change.Trigger != "test" {
 		t.Errorf("Expected trigger to be 'test', got %s", change.Trigger)
 	}
@@ -181,7 +181,7 @@ func TestUpdateSessionState(t *testing.T) {
 func TestAnalyzeOutput(t *testing.T) {
 	pm := NewProcessMonitor(nil)
 	defer pm.Shutdown()
-	
+
 	tests := []struct {
 		name     string
 		output   string
@@ -237,19 +237,19 @@ func TestAnalyzeOutput(t *testing.T) {
 func TestDetectStateByProcess(t *testing.T) {
 	pm := NewProcessMonitor(nil)
 	defer pm.Shutdown()
-	
+
 	t.Run("invalid PID", func(t *testing.T) {
 		_, err := pm.detectStateByProcess(0)
 		if err == nil {
 			t.Error("Expected error for invalid PID")
 		}
-		
+
 		_, err = pm.detectStateByProcess(-1)
 		if err == nil {
 			t.Error("Expected error for negative PID")
 		}
 	})
-	
+
 	t.Run("non-existent PID", func(t *testing.T) {
 		_, err := pm.detectStateByProcess(999999)
 		if err == nil {
@@ -261,7 +261,7 @@ func TestDetectStateByProcess(t *testing.T) {
 func TestStateChangeHistory(t *testing.T) {
 	pm := NewProcessMonitor(nil)
 	defer pm.Shutdown()
-	
+
 	sessionID := "test-session"
 	session := &MonitoredSession{
 		SessionID:       sessionID,
@@ -270,14 +270,14 @@ func TestStateChangeHistory(t *testing.T) {
 		LastStateChange: time.Now(),
 		StateHistory:    make([]StateChange, 0),
 	}
-	
+
 	pm.sessions[sessionID] = session
-	
+
 	for i := 0; i < 105; i++ {
 		pm.updateSessionState(sessionID, StateIdle, "test")
 		pm.updateSessionState(sessionID, StateBusy, "test")
 	}
-	
+
 	if len(session.StateHistory) > 100 {
 		t.Errorf("Expected history to be limited to 100 entries, got %d", len(session.StateHistory))
 	}
@@ -286,33 +286,33 @@ func TestStateChangeHistory(t *testing.T) {
 func TestExecuteHooks(t *testing.T) {
 	pm := NewProcessMonitor(nil)
 	defer pm.Shutdown()
-	
+
 	hook1 := &mockStateHook{}
 	hook2 := &mockStateHook{}
-	
+
 	pm.RegisterStateHook(hook1)
 	pm.RegisterStateHook(hook2)
-	
+
 	sessionID := "test-session"
 	pm.executeHooks(sessionID, StateIdle, StateBusy)
-	
+
 	if len(hook1.calls) != 1 {
 		t.Errorf("Expected 1 call to hook1, got %d", len(hook1.calls))
 	}
-	
+
 	if len(hook2.calls) != 1 {
 		t.Errorf("Expected 1 call to hook2, got %d", len(hook2.calls))
 	}
-	
+
 	call := hook1.calls[0]
 	if call.sessionID != sessionID {
 		t.Errorf("Expected sessionID %s, got %s", sessionID, call.sessionID)
 	}
-	
+
 	if call.from != StateIdle {
 		t.Errorf("Expected from StateIdle, got %v", call.from)
 	}
-	
+
 	if call.to != StateBusy {
 		t.Errorf("Expected to StateBusy, got %v", call.to)
 	}

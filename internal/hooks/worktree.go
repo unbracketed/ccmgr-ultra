@@ -42,7 +42,7 @@ func (whm *WorktreeHookManager) OnWorktreeCreated(worktreePath, branch, parentPa
 		ProjectName:    projectName,
 		SessionType:    "new",
 		CustomVars: map[string]string{
-			"CCMGR_PARENT_PATH":    parentPath,
+			"CCMGR_PARENT_PATH":   parentPath,
 			"CCMGR_WORKTREE_TYPE": "new",
 		},
 	}
@@ -246,27 +246,27 @@ func extractProjectName(path string) string {
 	if path == "" {
 		return ""
 	}
-	
+
 	// Get the last component of the path
 	projectName := filepath.Base(path)
-	
+
 	// Remove common worktree suffixes
 	if idx := findWorktreeSuffix(projectName); idx > 0 {
 		projectName = projectName[:idx]
 	}
-	
+
 	return projectName
 }
 
 // findWorktreeSuffix finds the index of common worktree suffixes
 func findWorktreeSuffix(name string) int {
 	suffixes := []string{"-worktree", "_worktree", "-wt", "_wt"}
-	
+
 	for _, suffix := range suffixes {
 		if idx := len(name) - len(suffix); idx > 0 && name[idx:] == suffix {
 			return idx
 		}
 	}
-	
+
 	return -1
 }

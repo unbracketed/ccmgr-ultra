@@ -13,12 +13,12 @@ import (
 
 // LogEntry represents a parsed log entry
 type LogEntry struct {
-	Timestamp time.Time   `json:"timestamp"`
-	Level     LogLevel    `json:"level"`
-	Message   string      `json:"message"`
-	Source    string      `json:"source"`
-	ProcessID string      `json:"process_id,omitempty"`
-	Raw       string      `json:"raw"`
+	Timestamp time.Time `json:"timestamp"`
+	Level     LogLevel  `json:"level"`
+	Message   string    `json:"message"`
+	Source    string    `json:"source"`
+	ProcessID string    `json:"process_id,omitempty"`
+	Raw       string    `json:"raw"`
 }
 
 // LogLevel represents the severity level of a log entry
@@ -131,7 +131,7 @@ func (p *LogParser) ParseReader(reader io.Reader, source string) ([]*LogEntry, e
 	for scanner.Scan() {
 		lineNumber++
 		line := scanner.Text()
-		
+
 		if entry := p.ParseLine(line, source); entry != nil {
 			entries = append(entries, entry)
 		}
@@ -253,7 +253,7 @@ func (p *LogParser) DetectStateFromEntries(entries []*LogEntry) ProcessState {
 
 	// Analyze recent entries (last 10 or within last minute)
 	recentEntries := p.getRecentEntries(entries, 10, time.Minute)
-	
+
 	// Check for error patterns first (highest priority)
 	for _, entry := range recentEntries {
 		if entry.Level >= LogLevelError {
@@ -265,7 +265,7 @@ func (p *LogParser) DetectStateFromEntries(entries []*LogEntry) ProcessState {
 
 	// Check for other state patterns
 	stateScores := make(map[ProcessState]int)
-	
+
 	for _, entry := range recentEntries {
 		for state, pattern := range p.statePatterns {
 			if pattern.MatchString(entry.Message) {
@@ -277,7 +277,7 @@ func (p *LogParser) DetectStateFromEntries(entries []*LogEntry) ProcessState {
 	// Return the state with the highest score
 	maxScore := 0
 	detectedState := StateUnknown
-	
+
 	for state, score := range stateScores {
 		if score > maxScore {
 			maxScore = score
@@ -297,7 +297,7 @@ func (p *LogParser) getRecentEntries(entries []*LogEntry, maxCount int, maxAge t
 	// Start from the end and work backwards
 	cutoff := time.Now().Add(-maxAge)
 	var recent []*LogEntry
-	
+
 	for i := len(entries) - 1; i >= 0 && len(recent) < maxCount; i-- {
 		entry := entries[i]
 		if entry.Timestamp.After(cutoff) {
@@ -332,7 +332,7 @@ func (p *LogParser) FilterByTimeRange(entries []*LogEntry, start, end time.Time)
 	var filtered []*LogEntry
 	for _, entry := range entries {
 		if (entry.Timestamp.Equal(start) || entry.Timestamp.After(start)) &&
-		   (entry.Timestamp.Equal(end) || entry.Timestamp.Before(end)) {
+			(entry.Timestamp.Equal(end) || entry.Timestamp.Before(end)) {
 			filtered = append(filtered, entry)
 		}
 	}
@@ -353,7 +353,7 @@ func (p *LogParser) FilterByPattern(entries []*LogEntry, pattern *regexp.Regexp)
 // GetStateSummary returns a summary of states detected in the log entries
 func (p *LogParser) GetStateSummary(entries []*LogEntry) map[ProcessState]int {
 	summary := make(map[ProcessState]int)
-	
+
 	for _, entry := range entries {
 		for state := range p.statePatterns {
 			if p.matchesStatePattern(entry.Message, state) {
@@ -361,15 +361,15 @@ func (p *LogParser) GetStateSummary(entries []*LogEntry) map[ProcessState]int {
 			}
 		}
 	}
-	
+
 	return summary
 }
 
 // TailFile provides functionality to tail a log file for new entries
 type LogTailer struct {
-	filePath    string
-	parser      *LogParser
-	lastOffset  int64
+	filePath     string
+	parser       *LogParser
+	lastOffset   int64
 	pollInterval time.Duration
 }
 

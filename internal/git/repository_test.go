@@ -28,15 +28,15 @@ func NewMockGitCmd() *MockGitCmd {
 
 func (m *MockGitCmd) Execute(dir string, args ...string) (string, error) {
 	key := strings.Join(args, " ")
-	
+
 	if err, exists := m.errors[key]; exists {
 		return "", err
 	}
-	
+
 	if output, exists := m.commands[key]; exists {
 		return output, nil
 	}
-	
+
 	return "", fmt.Errorf("mock command not found: %s", key)
 }
 
@@ -92,7 +92,7 @@ func TestDetectRepository(t *testing.T) {
 	mockGit.SetCommand("worktree list --porcelain", "worktree /home/user/repo\nHEAD abc123\nbranch refs/heads/main")
 
 	repo, err := rm.DetectRepository("/home/user/repo")
-	
+
 	require.NoError(t, err)
 	assert.Equal(t, "/home/user/repo", repo.Path)
 	assert.Equal(t, "/home/user/repo", repo.RootPath)
@@ -111,7 +111,7 @@ func TestDetectRepository_NotGitRepo(t *testing.T) {
 	mockGit.SetError("rev-parse --git-dir", fmt.Errorf("not a git repository"))
 
 	_, err := rm.DetectRepository("/path/to/non-repo")
-	
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not a git repository")
 }
@@ -133,7 +133,7 @@ func TestDetectRepository_EmptyPath(t *testing.T) {
 	mockGit.SetCommand("worktree list --porcelain", "")
 
 	repo, err := rm.DetectRepository("")
-	
+
 	require.NoError(t, err)
 	assert.Equal(t, cwd, repo.Path)
 }
@@ -276,7 +276,7 @@ HEAD def456ghi
 branch refs/heads/feature-branch`
 
 	mockGit.SetCommand("worktree list --porcelain", worktreeOutput)
-	
+
 	// Mock status and commit info for worktrees
 	mockGit.SetCommand("status --porcelain", "")
 	mockGit.SetCommand("show --no-patch --pretty=format:%H%n%an%n%at%n%s abc123def", "abc123def\nJohn Doe\n1640995200\nInitial commit")
@@ -441,7 +441,7 @@ func TestGetDefaultBranch(t *testing.T) {
 
 	// Test getting default branch from remote HEAD
 	mockGit.SetCommand("symbolic-ref refs/remotes/origin/HEAD", "refs/remotes/origin/main")
-	
+
 	branch, err := rm.getDefaultBranch(repo)
 	require.NoError(t, err)
 	assert.Equal(t, "main", branch)
@@ -449,14 +449,14 @@ func TestGetDefaultBranch(t *testing.T) {
 	// Test fallback to git config
 	mockGit.SetError("symbolic-ref refs/remotes/origin/HEAD", fmt.Errorf("not found"))
 	mockGit.SetCommand("config --get init.defaultBranch", "develop")
-	
+
 	branch, err = rm.getDefaultBranch(repo)
 	require.NoError(t, err)
 	assert.Equal(t, "develop", branch)
 
 	// Test complete failure
 	mockGit.SetError("config --get init.defaultBranch", fmt.Errorf("not found"))
-	
+
 	_, err = rm.getDefaultBranch(repo)
 	assert.Error(t, err)
 }

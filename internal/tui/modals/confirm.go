@@ -34,12 +34,12 @@ func NewConfirmModal(config ConfirmModalConfig) *ConfirmModal {
 	if confirmText == "" {
 		confirmText = "Yes"
 	}
-	
+
 	cancelText := config.CancelText
 	if cancelText == "" {
 		cancelText = "No"
 	}
-	
+
 	return &ConfirmModal{
 		BaseModal:      NewBaseModal(config.Title, 40, 10),
 		message:        config.Message,
@@ -71,29 +71,29 @@ func (m *ConfirmModal) HandleKeyMsg(msg tea.KeyMsg) (Modal, tea.Cmd) {
 	case "ctrl+c", "esc":
 		m.MarkComplete(false)
 		return m, nil
-		
+
 	case "enter", " ":
 		m.MarkComplete(m.selected)
 		return m, nil
-		
+
 	case "y", "Y":
 		m.MarkComplete(true)
 		return m, nil
-		
+
 	case "n", "N":
 		m.MarkComplete(false)
 		return m, nil
-		
+
 	case "left", "h":
 		m.selected = false
-		
+
 	case "right", "l":
 		m.selected = true
-		
+
 	case "tab":
 		m.selected = !m.selected
 	}
-	
+
 	return m, nil
 }
 
@@ -104,22 +104,22 @@ func (m *ConfirmModal) View() string {
 	if m.dangerMode {
 		messageStyle = messageStyle.Foreground(m.theme.Warning)
 	}
-	
+
 	// Wrap message text
 	messageLines := strings.Split(m.message, "\n")
 	message := messageStyle.Render(strings.Join(messageLines, "\n"))
-	
+
 	// Button styling
 	confirmButtonStyle := lipgloss.NewStyle().
 		Padding(0, 3).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(m.theme.Accent)
-	
+
 	cancelButtonStyle := lipgloss.NewStyle().
 		Padding(0, 3).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(m.theme.Muted)
-	
+
 	// Apply selection styling
 	var confirmButton, cancelButton string
 	if m.selected {
@@ -139,7 +139,7 @@ func (m *ConfirmModal) View() string {
 				Bold(true)
 		}
 		confirmButton = confirmStyle.Render(m.confirmText)
-		
+
 		cancelStyle := cancelButtonStyle.Copy().
 			Foreground(m.theme.Muted)
 		cancelButton = cancelStyle.Render(m.cancelText)
@@ -148,7 +148,7 @@ func (m *ConfirmModal) View() string {
 		confirmStyle := confirmButtonStyle.Copy().
 			Foreground(m.theme.Muted)
 		confirmButton = confirmStyle.Render(m.confirmText)
-		
+
 		cancelStyle := cancelButtonStyle.Copy().
 			Background(m.theme.Accent).
 			BorderForeground(m.theme.Accent).
@@ -156,21 +156,21 @@ func (m *ConfirmModal) View() string {
 			Bold(true)
 		cancelButton = cancelStyle.Render(m.cancelText)
 	}
-	
+
 	// Button layout
 	buttons := lipgloss.JoinHorizontal(lipgloss.Center,
 		confirmButton,
 		"   ",
 		cancelButton,
 	)
-	
+
 	// Help text
 	helpStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Muted).
 		Italic(true)
-	
+
 	help := helpStyle.Render("← → Tab: Select • Enter/Space: Confirm • Y/N: Quick choice • Esc: Cancel")
-	
+
 	// Combine all elements
 	content := lipgloss.JoinVertical(lipgloss.Center,
 		message,
@@ -180,6 +180,6 @@ func (m *ConfirmModal) View() string {
 		"",
 		help,
 	)
-	
+
 	return m.RenderWithBorder(content)
 }

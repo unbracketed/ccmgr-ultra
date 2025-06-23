@@ -11,13 +11,13 @@ import (
 
 // Spinner provides a simple text-based progress indicator
 type Spinner struct {
-	writer   io.Writer
-	message  string
-	frames   []string
-	delay    time.Duration
-	active   bool
-	done     chan bool
-	mu       sync.Mutex
+	writer  io.Writer
+	message string
+	frames  []string
+	delay   time.Duration
+	active  bool
+	done    chan bool
+	mu      sync.Mutex
 }
 
 // NewSpinner creates a new spinner with default settings
@@ -105,11 +105,11 @@ func (s *Spinner) spin() {
 				s.mu.Unlock()
 				return
 			}
-			
+
 			frame := s.frames[frameIndex%len(s.frames)]
 			output := fmt.Sprintf("\r%s %s", frame, s.message)
 			fmt.Fprint(s.writer, output)
-			
+
 			frameIndex++
 			s.mu.Unlock()
 		}
@@ -120,13 +120,12 @@ func (s *Spinner) spin() {
 func (s *Spinner) clearLine() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	// Calculate the length of the line to clear
 	lineLength := len(s.message) + 2 // spinner character + space + message
 	clearString := "\r" + strings.Repeat(" ", lineLength) + "\r"
 	fmt.Fprint(s.writer, clearString)
 }
-
 
 // IsQuietMode checks if output should be suppressed based on environment
 func IsQuietMode() bool {

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 func TestNewPatternManager(t *testing.T) {
@@ -326,17 +326,18 @@ func TestResolvePatternVariables(t *testing.T) {
 
 func TestGenerateWorktreePath(t *testing.T) {
 	pm := NewPatternManager(&config.WorktreeConfig{
-		DirectoryPattern: "{{.Project}}-{{.Branch}}",
+		BaseDirectory:    "../.worktrees/{{.Project}}",
+		DirectoryPattern: "{{.Branch}}",
 		DefaultBranch:    "main",
 	})
 
 	path, err := pm.GenerateWorktreePath("feature/auth", "my-project")
 	require.NoError(t, err)
 
-	// Should be relative to .worktrees directory
+	// Should be relative to sibling .worktrees directory
 	cwd, _ := os.Getwd()
-	expectedBase := filepath.Join(cwd, ".worktrees")
-	expectedPath := filepath.Join(expectedBase, "my-project-feature-auth")
+	expectedBase := filepath.Join(cwd, "../.worktrees/my-project")
+	expectedPath := filepath.Join(expectedBase, "feature-auth")
 
 	assert.Equal(t, filepath.Clean(expectedPath), path)
 }
@@ -345,29 +346,32 @@ func TestGenerateWorktreePath_CreatesWorktreesDirectory(t *testing.T) {
 	// Create a temporary directory for testing
 	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-worktrees-creation")
 	defer os.RemoveAll(tempDir)
-	
-	// Change to temp directory
+
+	// Create repo directory inside temp dir
+	repoDir := filepath.Join(tempDir, "test-repo")
+	os.MkdirAll(repoDir, 0755)
+
+	// Change to repo directory
 	originalCwd, _ := os.Getwd()
 	defer os.Chdir(originalCwd)
-	
-	os.MkdirAll(tempDir, 0755)
-	os.Chdir(tempDir)
+	os.Chdir(repoDir)
 
 	pm := NewPatternManager(&config.WorktreeConfig{
-		DirectoryPattern: "{{.Project}}-{{.Branch}}",
+		BaseDirectory:    "../.worktrees/{{.Project}}",
+		DirectoryPattern: "{{.Branch}}",
 		DefaultBranch:    "main",
 	})
 
-	// Verify .worktrees doesn't exist yet
+	// Verify .worktrees doesn't exist yet in parent
 	worktreesDir := filepath.Join(tempDir, ".worktrees")
 	_, err := os.Stat(worktreesDir)
 	assert.True(t, os.IsNotExist(err))
 
 	// Generate worktree path
-	path, err := pm.GenerateWorktreePath("feature/test", "test-project")
+	path, err := pm.GenerateWorktreePath("feature/test", "test-repo")
 	require.NoError(t, err)
 
-	// Verify .worktrees directory was created
+	// Verify .worktrees directory was created as sibling
 	stat, err := os.Stat(worktreesDir)
 	assert.NoError(t, err)
 	assert.True(t, stat.IsDir())
@@ -375,39 +379,61 @@ func TestGenerateWorktreePath_CreatesWorktreesDirectory(t *testing.T) {
 	// Verify correct permissions
 	assert.Equal(t, os.FileMode(0755), stat.Mode().Perm())
 
-	// Verify path is within .worktrees
+	// Verify path structure - should be sibling to repo
+	expectedPath := filepath.Join(tempDir, ".worktrees", "test-repo", "feature-test")
+	// Resolve symlinks to handle /private/var vs /var on macOS
+	expectedResolved, _ := filepath.EvalSymlinks(expectedPath)
+	actualResolved, _ := filepath.EvalSymlinks(path)
+	assert.Equal(t, expectedResolved, actualResolved)
 	assert.Contains(t, path, ".worktrees")
-	assert.Contains(t, path, "test-project-feature-test")
 }
 
 func TestGenerateWorktreePath_UsesWorktreesBasePath(t *testing.T) {
+	// Create a temporary directory for testing
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-base-path")
+	defer os.RemoveAll(tempDir)
+
+	// Create repo directory inside temp dir
+	repoDir := filepath.Join(tempDir, "test-repo")
+	os.MkdirAll(repoDir, 0755)
+
+	// Change to repo directory
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	os.Chdir(repoDir)
+
 	pm := NewPatternManager(&config.WorktreeConfig{
-		DirectoryPattern: "{{.Project}}-{{.Branch}}",
+		BaseDirectory:    "../.worktrees/{{.Project}}",
+		DirectoryPattern: "{{.Branch}}",
 		DefaultBranch:    "main",
 	})
 
 	path, err := pm.GenerateWorktreePath("feature/auth", "my-project")
 	require.NoError(t, err)
 
-	// Should use .worktrees as base directory, not parent directory
+	// Should use sibling .worktrees as base directory
 	assert.Contains(t, path, ".worktrees")
-	assert.NotContains(t, path, "..")
-	
-	cwd, _ := os.Getwd()
-	expectedPrefix := filepath.Join(cwd, ".worktrees")
-	assert.True(t, strings.HasPrefix(path, expectedPrefix))
+
+	// Verify the path structure
+	expectedPath := filepath.Join(tempDir, ".worktrees", "my-project", "feature-auth")
+	// Resolve symlinks to handle /private/var vs /var on macOS
+	expectedResolved, _ := filepath.EvalSymlinks(expectedPath)
+	actualResolved, _ := filepath.EvalSymlinks(path)
+	assert.Equal(t, expectedResolved, actualResolved)
 }
 
 func TestGenerateWorktreePath_DirectoryCreationError(t *testing.T) {
 	// Create a temporary directory for testing
 	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-creation-error")
 	defer os.RemoveAll(tempDir)
-	
+
+	// Create repo directory
+	repoDir := filepath.Join(tempDir, "test-repo")
+	os.MkdirAll(repoDir, 0755)
+
 	originalCwd, _ := os.Getwd()
 	defer os.Chdir(originalCwd)
-	
-	os.MkdirAll(tempDir, 0755)
-	os.Chdir(tempDir)
+	os.Chdir(repoDir)
 
 	// Create a file where .worktrees directory should be (to cause error)
 	worktreesPath := filepath.Join(tempDir, ".worktrees")
@@ -416,29 +442,33 @@ func TestGenerateWorktreePath_DirectoryCreationError(t *testing.T) {
 	file.Close()
 
 	pm := NewPatternManager(&config.WorktreeConfig{
-		DirectoryPattern: "{{.Project}}-{{.Branch}}",
+		BaseDirectory:    "../.worktrees/{{.Project}}",
+		DirectoryPattern: "{{.Branch}}",
 		DefaultBranch:    "main",
 	})
 
 	// Should fail because .worktrees exists as a file, not directory
-	_, err = pm.GenerateWorktreePath("feature/test", "test-project")
+	_, err = pm.GenerateWorktreePath("feature/test", "test-repo")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "failed to create .worktrees directory")
+	assert.Contains(t, err.Error(), "failed to create base directory")
 }
 
 func TestGenerateWorktreePath_PreservesPatternFunctionality(t *testing.T) {
 	// Create a temporary directory for testing
 	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-pattern-functionality")
 	defer os.RemoveAll(tempDir)
-	
+
+	// Create repo directory
+	repoDir := filepath.Join(tempDir, "test-repo")
+	os.MkdirAll(repoDir, 0755)
+
 	originalCwd, _ := os.Getwd()
 	defer os.Chdir(originalCwd)
-	
-	os.MkdirAll(tempDir, 0755)
-	os.Chdir(tempDir)
+	os.Chdir(repoDir)
 
 	pm := NewPatternManager(&config.WorktreeConfig{
-		DirectoryPattern: "{{.Prefix}}-{{.Project}}-{{.Branch}}-{{.Suffix}}",
+		BaseDirectory:    "../.worktrees/{{.Project}}",
+		DirectoryPattern: "{{.Prefix}}-{{.Branch}}-{{.Suffix}}",
 		DefaultBranch:    "main",
 	})
 
@@ -447,37 +477,40 @@ func TestGenerateWorktreePath_PreservesPatternFunctionality(t *testing.T) {
 
 	// Should preserve all pattern functionality
 	assert.Contains(t, path, ".worktrees")
-	assert.Contains(t, path, "main-my-project-feature-auth")
-	
+	assert.Contains(t, path, "main-feature-auth")
+
 	// Verify the pattern variables are properly processed
 	dirName := filepath.Base(path)
-	assert.Equal(t, "main-my-project-feature-auth", dirName)
+	assert.Equal(t, "main-feature-auth", dirName)
 }
 
 func TestGenerateWorktreePath_CorrectPermissions(t *testing.T) {
 	// Create a temporary directory for testing
 	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-permissions")
 	defer os.RemoveAll(tempDir)
-	
+
+	// Create repo directory
+	repoDir := filepath.Join(tempDir, "test-repo")
+	os.MkdirAll(repoDir, 0755)
+
 	originalCwd, _ := os.Getwd()
 	defer os.Chdir(originalCwd)
-	
-	os.MkdirAll(tempDir, 0755)
-	os.Chdir(tempDir)
+	os.Chdir(repoDir)
 
 	pm := NewPatternManager(&config.WorktreeConfig{
-		DirectoryPattern: "{{.Project}}-{{.Branch}}",
+		BaseDirectory:    "../.worktrees/{{.Project}}",
+		DirectoryPattern: "{{.Branch}}",
 		DefaultBranch:    "main",
 	})
 
-	_, err := pm.GenerateWorktreePath("feature/test", "test-project")
+	_, err := pm.GenerateWorktreePath("feature/test", "test-repo")
 	require.NoError(t, err)
 
 	// Verify .worktrees directory has correct permissions
 	worktreesDir := filepath.Join(tempDir, ".worktrees")
 	stat, err := os.Stat(worktreesDir)
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, os.FileMode(0755), stat.Mode().Perm())
 }
 
@@ -673,7 +706,7 @@ func TestGetPatternVariables(t *testing.T) {
 	pm := NewPatternManager(nil)
 
 	variables := pm.GetPatternVariables()
-	
+
 	assert.NotEmpty(t, variables)
 	assert.Contains(t, variables, "{{.Project}}")
 	assert.Contains(t, variables, "{{.Branch}}")
@@ -688,7 +721,7 @@ func TestGetPatternFunctions(t *testing.T) {
 	pm := NewPatternManager(nil)
 
 	functions := pm.GetPatternFunctions()
-	
+
 	assert.NotEmpty(t, functions)
 	assert.Contains(t, functions, "lower")
 	assert.Contains(t, functions, "upper")
@@ -719,7 +752,7 @@ func TestGenerateWorktreeID(t *testing.T) {
 	pm := NewPatternManager(nil)
 
 	id := pm.generateWorktreeID("feature/auth")
-	
+
 	assert.NotEmpty(t, id)
 	assert.Contains(t, id, "feature-auth")
 	assert.Contains(t, id, "-") // Should contain timestamp separator
@@ -729,7 +762,7 @@ func TestGetUserName(t *testing.T) {
 	pm := NewPatternManager(nil)
 
 	name := pm.getUserName()
-	
+
 	assert.NotEmpty(t, name)
 	// Should be sanitized (no special characters)
 	assert.NotContains(t, name, "/")
@@ -740,14 +773,318 @@ func TestGetUserName(t *testing.T) {
 func TestDefaultConfigurationPatternsValid(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.SetDefaults()
-	
+
 	pm := NewPatternManager(&cfg.Worktree)
-	
+
 	// Test WorktreeConfig default pattern
 	err := pm.ValidatePattern(cfg.Worktree.DirectoryPattern)
 	assert.NoError(t, err, "Default WorktreeConfig pattern should be valid")
-	
-	// Test GitConfig default pattern  
+
+	// Test GitConfig default pattern
 	err = pm.ValidatePattern(cfg.Git.DirectoryPattern)
 	assert.NoError(t, err, "Default GitConfig pattern should be valid")
+}
+
+// Tests for new sibling directory functionality
+
+func TestGenerateWorktreePath_SiblingDirectory(t *testing.T) {
+	// Create a temporary directory for testing
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-sibling-patterns")
+	defer os.RemoveAll(tempDir)
+
+	// Create repo directory inside temp dir
+	repoDir := filepath.Join(tempDir, "test-repo")
+	os.MkdirAll(repoDir, 0755)
+
+	// Change to repo directory for testing
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	os.Chdir(repoDir)
+
+	tests := []struct {
+		name         string
+		baseDir      string
+		pattern      string
+		branch       string
+		project      string
+		expectedPath string
+		shouldError  bool
+	}{
+		{
+			name:         "default sibling pattern",
+			baseDir:      "../.worktrees/{{.Project}}",
+			pattern:      "{{.Branch}}",
+			branch:       "feature/auth",
+			project:      "myapp",
+			expectedPath: filepath.Join(tempDir, ".worktrees", "myapp", "feature-auth"),
+		},
+		{
+			name:         "absolute base directory",
+			baseDir:      filepath.Join(tempDir, "worktrees", "{{.Project}}"),
+			pattern:      "{{.Branch}}",
+			branch:       "main",
+			project:      "testapp",
+			expectedPath: filepath.Join(tempDir, "worktrees", "testapp", "main"),
+		},
+		{
+			name:         "simple relative base",
+			baseDir:      "../my-worktrees",
+			pattern:      "{{.Project}}-{{.Branch}}",
+			branch:       "feature/test",
+			project:      "app",
+			expectedPath: filepath.Join(tempDir, "my-worktrees", "app-feature-test"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := &config.WorktreeConfig{
+				BaseDirectory:    tt.baseDir,
+				DirectoryPattern: tt.pattern,
+				DefaultBranch:    "main",
+			}
+			pm := NewPatternManager(config)
+
+			path, err := pm.GenerateWorktreePath(tt.branch, tt.project)
+
+			if tt.shouldError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				// Resolve symlinks to handle /var vs /private/var on macOS
+				expectedResolved, _ := filepath.EvalSymlinks(tt.expectedPath)
+				actualResolved, _ := filepath.EvalSymlinks(path)
+				assert.Equal(t, expectedResolved, actualResolved)
+			}
+		})
+	}
+}
+
+func TestValidateBaseDirectory(t *testing.T) {
+	// Create a temporary directory structure for testing
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-validation")
+	defer os.RemoveAll(tempDir)
+
+	repoDir := filepath.Join(tempDir, "myproject")
+	os.MkdirAll(repoDir, 0755)
+
+	// Change to repo directory for testing
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	os.Chdir(repoDir)
+
+	tests := []struct {
+		name        string
+		baseDir     string
+		repoPath    string
+		shouldError bool
+		errorMsg    string
+	}{
+		{
+			name:        "sibling directory should pass",
+			baseDir:     "../.worktrees/myproject",
+			repoPath:    repoDir,
+			shouldError: false,
+		},
+		{
+			name:        "absolute path outside repo should pass",
+			baseDir:     filepath.Join(tempDir, "external-worktrees"),
+			repoPath:    repoDir,
+			shouldError: false,
+		},
+		{
+			name:        "directory inside repo should fail",
+			baseDir:     ".worktrees",
+			repoPath:    repoDir,
+			shouldError: true,
+			errorMsg:    "cannot be inside repository",
+		},
+		{
+			name:        "empty base directory should fail",
+			baseDir:     "",
+			repoPath:    repoDir,
+			shouldError: true,
+			errorMsg:    "cannot be empty",
+		},
+		{
+			name:        "base directory with template outside repo should pass",
+			baseDir:     "../.worktrees/{{.Project}}",
+			repoPath:    repoDir,
+			shouldError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pm := &PatternManager{
+				config: &config.WorktreeConfig{}, // Initialize with empty config to avoid nil pointer
+			}
+
+			err := pm.ValidateBaseDirectory(tt.baseDir, tt.repoPath)
+
+			if tt.shouldError {
+				require.Error(t, err, "Expected error for baseDir=%s, repoPath=%s", tt.baseDir, tt.repoPath)
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGenerateWorktreePath_CreatesSiblingDirectory(t *testing.T) {
+	// Create a temporary directory structure for testing
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-sibling-creation")
+	defer os.RemoveAll(tempDir)
+
+	// Create project directory inside temp dir
+	repoDir := filepath.Join(tempDir, "test-repo")
+	os.MkdirAll(repoDir, 0755)
+
+	// Change to repo directory
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	os.Chdir(repoDir)
+
+	pm := NewPatternManager(&config.WorktreeConfig{
+		BaseDirectory:    "../.worktrees/{{.Project}}",
+		DirectoryPattern: "{{.Branch}}",
+		DefaultBranch:    "main",
+	})
+
+	// Verify worktrees directory doesn't exist yet
+	worktreesDir := filepath.Join(tempDir, ".worktrees")
+	_, err := os.Stat(worktreesDir)
+	assert.True(t, os.IsNotExist(err))
+
+	// Generate worktree path
+	path, err := pm.GenerateWorktreePath("feature/test", "test-repo")
+	require.NoError(t, err)
+
+	// Verify .worktrees directory was created as sibling
+	stat, err := os.Stat(worktreesDir)
+	assert.NoError(t, err)
+	assert.True(t, stat.IsDir())
+
+	// Verify project subdirectory was created
+	projectDir := filepath.Join(worktreesDir, "test-repo")
+	stat, err = os.Stat(projectDir)
+	assert.NoError(t, err)
+	assert.True(t, stat.IsDir())
+
+	// Verify path structure
+	expectedPath := filepath.Join(tempDir, ".worktrees", "test-repo", "feature-test")
+	// Resolve symlinks to handle /private/var vs /var on macOS
+	expectedResolved, _ := filepath.EvalSymlinks(expectedPath)
+	actualResolved, _ := filepath.EvalSymlinks(path)
+	assert.Equal(t, expectedResolved, actualResolved)
+
+	// Verify path is outside the repository
+	absPath, _ := filepath.Abs(path)
+	absRepoPath, _ := filepath.Abs(repoDir)
+	assert.False(t, strings.HasPrefix(absPath, absRepoPath), "Worktree path should not be inside repository")
+}
+
+func TestGenerateWorktreePath_AbsoluteBasePath(t *testing.T) {
+	// Create a temporary directory for testing
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-absolute-base")
+	defer os.RemoveAll(tempDir)
+
+	absoluteBase := filepath.Join(tempDir, "worktrees")
+
+	pm := NewPatternManager(&config.WorktreeConfig{
+		BaseDirectory:    absoluteBase,
+		DirectoryPattern: "{{.Project}}-{{.Branch}}",
+		DefaultBranch:    "main",
+	})
+
+	path, err := pm.GenerateWorktreePath("feature/auth", "myproject")
+	require.NoError(t, err)
+
+	// Verify absolute base directory was created
+	stat, err := os.Stat(absoluteBase)
+	assert.NoError(t, err)
+	assert.True(t, stat.IsDir())
+
+	// Verify correct path structure
+	expectedPath := filepath.Join(absoluteBase, "myproject-feature-auth")
+	assert.Equal(t, expectedPath, path)
+}
+
+func TestGenerateWorktreePath_TemplateInBaseDirectory(t *testing.T) {
+	// Create a temporary directory for testing
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-template-base")
+	defer os.RemoveAll(tempDir)
+
+	// Create repo directory inside temp dir
+	repoDir := filepath.Join(tempDir, "test-repo")
+	os.MkdirAll(repoDir, 0755)
+
+	// Change to repo directory
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	os.Chdir(repoDir)
+
+	pm := NewPatternManager(&config.WorktreeConfig{
+		BaseDirectory:    "../.worktrees/{{.Project}}/{{.UserName}}",
+		DirectoryPattern: "{{.Branch}}",
+		DefaultBranch:    "main",
+	})
+
+	path, err := pm.GenerateWorktreePath("feature/test", "myproject")
+	require.NoError(t, err)
+
+	// Verify path contains resolved template variables
+	assert.Contains(t, path, ".worktrees")
+	assert.Contains(t, path, "myproject")
+	assert.Contains(t, path, "feature-test")
+
+	// Verify the path structure contains the expected components
+	pathParts := strings.Split(path, string(filepath.Separator))
+	assert.Contains(t, pathParts, ".worktrees")
+	assert.Contains(t, pathParts, "myproject")
+	assert.Contains(t, pathParts, "feature-test")
+}
+
+func TestValidateBaseDirectory_ResolveTemplates(t *testing.T) {
+	// Create a temporary directory structure for testing
+	tempDir := filepath.Join(os.TempDir(), "ccmgr-test-template-validation")
+	defer os.RemoveAll(tempDir)
+
+	repoDir := filepath.Join(tempDir, "myproject")
+	os.MkdirAll(repoDir, 0755)
+
+	// Change to repo directory for testing
+	originalCwd, _ := os.Getwd()
+	defer os.Chdir(originalCwd)
+	os.Chdir(repoDir)
+
+	pm := &PatternManager{
+		config: &config.WorktreeConfig{}, // Initialize with empty config to avoid nil pointer
+	}
+
+	// Base directory with templates outside repo should pass validation
+	// (templates themselves don't matter for validation, only the resolved path)
+	err := pm.ValidateBaseDirectory("../worktrees/{{.Project}}", repoDir)
+	assert.NoError(t, err)
+
+	// Base directory that would resolve to inside repo should fail
+	err = pm.ValidateBaseDirectory(".worktrees/{{.Project}}", repoDir)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot be inside repository")
+}
+
+func TestGenerateWorktreePath_ErrorHandling(t *testing.T) {
+	// Test invalid base directory template
+	pm := NewPatternManager(&config.WorktreeConfig{
+		BaseDirectory:    "../.worktrees/{{.InvalidVariable}}",
+		DirectoryPattern: "{{.Branch}}",
+		DefaultBranch:    "main",
+	})
+
+	_, err := pm.GenerateWorktreePath("feature/test", "myproject")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to resolve base directory pattern")
 }

@@ -10,10 +10,10 @@ import (
 
 // HooksConfig defines configuration for hook-based analytics collection
 type HooksConfig struct {
-	Enabled              bool `yaml:"enabled" json:"enabled" default:"true"`
-	CaptureStateChanges  bool `yaml:"capture_state_changes" json:"capture_state_changes" default:"true"`
+	Enabled               bool `yaml:"enabled" json:"enabled" default:"true"`
+	CaptureStateChanges   bool `yaml:"capture_state_changes" json:"capture_state_changes" default:"true"`
 	CaptureWorktreeEvents bool `yaml:"capture_worktree_events" json:"capture_worktree_events" default:"true"`
-	CaptureSessionEvents bool `yaml:"capture_session_events" json:"capture_session_events" default:"true"`
+	CaptureSessionEvents  bool `yaml:"capture_session_events" json:"capture_session_events" default:"true"`
 }
 
 // SetDefaults sets default values for HooksConfig
@@ -114,14 +114,14 @@ func (hc *HooksCollector) OnHookExecution(hookType hooks.HookType, hookCtx hooks
 		Timestamp: result.Timestamp,
 		SessionID: hookCtx.SessionID,
 		Data: map[string]interface{}{
-			"hook_type":     hookType.String(),
-			"hook_success":  result.Success,
-			"hook_duration": result.Duration.Milliseconds(),
-			"hook_exit_code": result.ExitCode,
-			"project_name":  hookCtx.ProjectName,
-			"worktree_path": hookCtx.WorktreePath,
+			"hook_type":       hookType.String(),
+			"hook_success":    result.Success,
+			"hook_duration":   result.Duration.Milliseconds(),
+			"hook_exit_code":  result.ExitCode,
+			"project_name":    hookCtx.ProjectName,
+			"worktree_path":   hookCtx.WorktreePath,
 			"worktree_branch": hookCtx.WorktreeBranch,
-			"session_type":  hookCtx.SessionType,
+			"session_type":    hookCtx.SessionType,
 		},
 	}
 
@@ -177,12 +177,12 @@ func (hc *HooksCollector) OnWorktreeSwitch(sessionID, oldWorktree, newWorktree, 
 		Timestamp: time.Now(),
 		SessionID: sessionID,
 		Data: map[string]interface{}{
-			"action":        "switch",
-			"old_worktree":  oldWorktree,
-			"new_worktree":  newWorktree,
-			"old_branch":    oldBranch,
-			"new_branch":    newBranch,
-			"project":       project,
+			"action":       "switch",
+			"old_worktree": oldWorktree,
+			"new_worktree": newWorktree,
+			"old_branch":   oldBranch,
+			"new_branch":   newBranch,
+			"project":      project,
 		},
 	}
 
@@ -231,7 +231,7 @@ func (hc *HooksCollector) OnActivityDetection(sessionID, activityType string, du
 		Type:      eventType,
 		Timestamp: time.Now(),
 		SessionID: sessionID,
-		Data: NewActivityEventData(activityType, duration),
+		Data:      NewActivityEventData(activityType, duration),
 	}
 
 	// Add any additional metadata
@@ -266,10 +266,10 @@ func (hc *HooksCollector) IsEnabled() bool {
 // GetStats returns statistics about hook-based event collection
 func (hc *HooksCollector) GetStats() map[string]interface{} {
 	return map[string]interface{}{
-		"enabled":                     hc.config.Enabled,
-		"capture_state_changes":       hc.config.CaptureStateChanges,
-		"capture_worktree_events":     hc.config.CaptureWorktreeEvents,
-		"capture_session_events":      hc.config.CaptureSessionEvents,
-		"collector_running":           hc.collector.IsRunning(),
+		"enabled":                 hc.config.Enabled,
+		"capture_state_changes":   hc.config.CaptureStateChanges,
+		"capture_worktree_events": hc.config.CaptureWorktreeEvents,
+		"capture_session_events":  hc.config.CaptureSessionEvents,
+		"collector_running":       hc.collector.IsRunning(),
 	}
 }

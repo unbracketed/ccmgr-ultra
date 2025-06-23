@@ -10,10 +10,10 @@ import (
 // ErrorModal represents an error dialog with recovery options
 type ErrorModal struct {
 	BaseModal
-	message       string
-	errorDetails  string
-	showDetails   bool
-	actions       []ErrorAction
+	message        string
+	errorDetails   string
+	showDetails    bool
+	actions        []ErrorAction
 	selectedAction int
 }
 
@@ -40,7 +40,7 @@ func NewErrorModal(config ErrorModalConfig) *ErrorModal {
 			{Label: "OK", Action: "ok", Primary: true},
 		}
 	}
-	
+
 	return &ErrorModal{
 		BaseModal:    NewBaseModal(config.Title, 50, 12),
 		message:      config.Message,
@@ -69,7 +69,7 @@ func (m *ErrorModal) HandleKeyMsg(msg tea.KeyMsg) (Modal, tea.Cmd) {
 	case "ctrl+c", "esc":
 		m.MarkComplete("cancel")
 		return m, nil
-		
+
 	case "enter", " ":
 		if m.selectedAction < len(m.actions) {
 			action := m.actions[m.selectedAction]
@@ -78,25 +78,25 @@ func (m *ErrorModal) HandleKeyMsg(msg tea.KeyMsg) (Modal, tea.Cmd) {
 			m.MarkComplete("ok")
 		}
 		return m, nil
-		
+
 	case "left", "h":
 		if m.selectedAction > 0 {
 			m.selectedAction--
 		}
-		
+
 	case "right", "l":
 		if m.selectedAction < len(m.actions)-1 {
 			m.selectedAction++
 		}
-		
+
 	case "tab":
 		m.selectedAction = (m.selectedAction + 1) % len(m.actions)
-		
+
 	case "d":
 		if m.errorDetails != "" {
 			m.showDetails = !m.showDetails
 		}
-		
+
 	case "1", "2", "3", "4", "5", "6", "7", "8", "9":
 		// Quick action selection
 		idx := int(msg.Runes[0] - '1')
@@ -106,27 +106,27 @@ func (m *ErrorModal) HandleKeyMsg(msg tea.KeyMsg) (Modal, tea.Cmd) {
 			return m, nil
 		}
 	}
-	
+
 	return m, nil
 }
 
 // View implements the tea.Model interface
 func (m *ErrorModal) View() string {
 	var elements []string
-	
+
 	// Error icon and message
 	errorStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Error).
 		Bold(true)
-	
+
 	messageStyle := m.theme.ContentStyle.Copy()
-	
+
 	icon := errorStyle.Render("❌")
 	message := messageStyle.Render(m.message)
-	
+
 	errorLine := lipgloss.JoinHorizontal(lipgloss.Left, icon, " ", message)
 	elements = append(elements, errorLine)
-	
+
 	// Error details if available and shown
 	if m.errorDetails != "" && m.showDetails {
 		detailsStyle := lipgloss.NewStyle().
@@ -136,18 +136,18 @@ func (m *ErrorModal) View() string {
 			Padding(1, 2).
 			Width(m.width - 12).
 			Height(6)
-		
+
 		details := detailsStyle.Render(m.errorDetails)
 		elements = append(elements, "", details)
 	}
-	
+
 	// Action buttons
 	var buttons []string
 	for i, action := range m.actions {
 		buttonStyle := lipgloss.NewStyle().
 			Padding(0, 2).
 			Border(lipgloss.RoundedBorder())
-		
+
 		if i == m.selectedAction {
 			if action.Primary {
 				buttonStyle = buttonStyle.
@@ -167,20 +167,20 @@ func (m *ErrorModal) View() string {
 				BorderForeground(m.theme.Muted).
 				Foreground(m.theme.Muted)
 		}
-		
+
 		label := action.Label
 		if i < 9 {
 			label = lipgloss.JoinHorizontal(lipgloss.Left,
 				lipgloss.NewStyle().Foreground(m.theme.Accent).Render(string(rune('1'+i))),
 				". ", action.Label)
 		}
-		
+
 		buttons = append(buttons, buttonStyle.Render(label))
 	}
-	
+
 	buttonRow := lipgloss.JoinHorizontal(lipgloss.Center, buttons...)
 	elements = append(elements, "", buttonRow)
-	
+
 	// Help text
 	helpLines := []string{
 		"← → Tab: Select",
@@ -188,18 +188,18 @@ func (m *ErrorModal) View() string {
 		"1-9: Quick select",
 		"Esc: Cancel",
 	}
-	
+
 	if m.errorDetails != "" {
 		helpLines = append(helpLines, "D: Toggle details")
 	}
-	
+
 	helpStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Muted).
 		Italic(true)
-	
+
 	help := helpStyle.Render(strings.Join(helpLines, " • "))
 	elements = append(elements, "", help)
-	
+
 	content := strings.Join(elements, "\n")
 	return m.RenderWithBorder(content)
 }

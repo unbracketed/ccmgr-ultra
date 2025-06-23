@@ -5,22 +5,21 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
 	// "github.com/bcdekker/ccmgr-ultra/internal/analytics" // Commented out to avoid import cycle
 )
 
 // ProcessManager provides a unified API for Claude Code process management
 type ProcessManager struct {
-	config      *ProcessConfig
-	detector    ProcessDetector
-	monitor     StateMonitor
-	tracker     ProcessTracker
-	handlers    []StateChangeHandler
+	config   *ProcessConfig
+	detector ProcessDetector
+	monitor  StateMonitor
+	tracker  ProcessTracker
+	handlers []StateChangeHandler
 	// eventChan   chan<- analytics.AnalyticsEvent // Commented out to avoid import cycle
-	running     bool
-	mutex       sync.RWMutex
-	ctx         context.Context
-	cancel      context.CancelFunc
+	running bool
+	mutex   sync.RWMutex
+	ctx     context.Context
+	cancel  context.CancelFunc
 }
 
 // NewProcessManager creates a new process manager with default implementations
@@ -265,18 +264,18 @@ func (pm *ProcessManager) EmitSessionEvent(eventType, sessionID, project, worktr
 	//	return
 	// }
 
-// analyticsEvent := analytics.AnalyticsEvent{
+	// analyticsEvent := analytics.AnalyticsEvent{
 	// 	Type:      eventType,
 	// 	Timestamp: time.Now(),
 	// 	SessionID: sessionID,
-// Data: analytics.NewSessionEventData(
-		//	eventType,
+	// Data: analytics.NewSessionEventData(
+	//	eventType,
 	//		project,
 	//		worktree,
 	//		branch,
 	//		directory,
-// 		),
-// 	}
+	// 		),
+	// 	}
 
 	// Non-blocking send - commented out due to import cycle
 	// select {
@@ -421,11 +420,11 @@ type ProcessHealth struct {
 
 // SystemHealth represents overall system health
 type SystemHealth struct {
-	TotalProcesses     int                     `json:"total_processes"`
-	HealthyProcesses   int                     `json:"healthy_processes"`
-	UnhealthyProcesses int                     `json:"unhealthy_processes"`
-	StateDistribution  map[ProcessState]int    `json:"state_distribution"`
-	AverageUptime      time.Duration           `json:"average_uptime"`
-	IsManagerRunning   bool                    `json:"is_manager_running"`
-	LastUpdated        time.Time               `json:"last_updated"`
+	TotalProcesses     int                  `json:"total_processes"`
+	HealthyProcesses   int                  `json:"healthy_processes"`
+	UnhealthyProcesses int                  `json:"unhealthy_processes"`
+	StateDistribution  map[ProcessState]int `json:"state_distribution"`
+	AverageUptime      time.Duration        `json:"average_uptime"`
+	IsManagerRunning   bool                 `json:"is_manager_running"`
+	LastUpdated        time.Time            `json:"last_updated"`
 }

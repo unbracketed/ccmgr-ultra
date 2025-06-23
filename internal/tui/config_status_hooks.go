@@ -6,23 +6,23 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 // StatusHooksConfigModel represents the status hooks configuration screen
 type StatusHooksConfigModel struct {
-	config        *config.StatusHooksConfig
-	original      *config.StatusHooksConfig
-	theme         Theme
-	width         int
-	height        int
-	cursor        int
-	components    []interface{} // Mix of different component types
-	focusedIndex  int
-	testResult    string
-	testError     error
+	config       *config.StatusHooksConfig
+	original     *config.StatusHooksConfig
+	theme        Theme
+	width        int
+	height       int
+	cursor       int
+	components   []interface{} // Mix of different component types
+	focusedIndex int
+	testResult   string
+	testError    error
 }
 
 // NewStatusHooksConfigModel creates a new status hooks configuration model
@@ -50,10 +50,10 @@ func (m *StatusHooksConfigModel) initComponents() {
 	m.components = []interface{}{
 		NewConfigSection("Status Hooks Configuration", m.theme),
 		NewConfigHelp("Configure scripts that run when Claude changes state", m.theme),
-		
+
 		// Master enable toggle
 		NewConfigToggle("Enable Status Hooks", m.config.Enabled, m.theme),
-		
+
 		// Idle Hook Section
 		NewConfigSection("Idle Hook", m.theme),
 		NewConfigHelp("Runs when Claude becomes idle", m.theme),
@@ -61,7 +61,7 @@ func (m *StatusHooksConfigModel) initComponents() {
 		m.createScriptInput(&m.config.IdleHook, "Idle Hook Script"),
 		m.createTimeoutInput(&m.config.IdleHook, "Idle Hook Timeout"),
 		m.createAsyncToggle(&m.config.IdleHook, "Run Idle Hook Asynchronously"),
-		
+
 		// Busy Hook Section
 		NewConfigSection("Busy Hook", m.theme),
 		NewConfigHelp("Runs when Claude becomes busy", m.theme),
@@ -69,7 +69,7 @@ func (m *StatusHooksConfigModel) initComponents() {
 		m.createScriptInput(&m.config.BusyHook, "Busy Hook Script"),
 		m.createTimeoutInput(&m.config.BusyHook, "Busy Hook Timeout"),
 		m.createAsyncToggle(&m.config.BusyHook, "Run Busy Hook Asynchronously"),
-		
+
 		// Waiting Hook Section
 		NewConfigSection("Waiting Hook", m.theme),
 		NewConfigHelp("Runs when Claude is waiting for input", m.theme),
@@ -319,7 +319,7 @@ func (m *StatusHooksConfigModel) testCurrentHook() tea.Cmd {
 		// Determine which hook section we're in
 		var hookName string
 		var hook *config.HookConfig
-		
+
 		if m.focusedIndex >= 5 && m.focusedIndex <= 8 {
 			hookName = "Idle"
 			hook = &m.config.IdleHook
@@ -377,7 +377,7 @@ func (m *StatusHooksConfigModel) View() string {
 	}
 
 	header := m.theme.HeaderStyle.Render("⚙️  Configuration > Status Hooks")
-	
+
 	// Build component views
 	var lines []string
 	for _, comp := range m.components {
@@ -492,7 +492,7 @@ func (m *StatusHooksConfigModel) Save() error {
 
 	// Update original to match current
 	*m.original = *m.config
-	
+
 	// Mark all components as saved
 	for _, comp := range m.components {
 		switch c := comp.(type) {
@@ -515,7 +515,7 @@ func (m *StatusHooksConfigModel) Cancel() {
 func (m *StatusHooksConfigModel) Reset() {
 	// Reset config to original
 	*m.config = *m.original
-	
+
 	// Reset all components
 	for _, comp := range m.components {
 		switch c := comp.(type) {
@@ -527,7 +527,7 @@ func (m *StatusHooksConfigModel) Reset() {
 			c.Reset()
 		}
 	}
-	
+
 	// Re-init to sync component values
 	m.initComponents()
 }

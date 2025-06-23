@@ -79,6 +79,24 @@ func NewSessionFormatter(format OutputFormat, writer io.Writer) OutputFormatter 
 	}
 }
 
+// NewWorktreeFormatter creates a new formatter specifically for worktree data
+func NewWorktreeFormatter(format OutputFormat, writer io.Writer) OutputFormatter {
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	switch format {
+	case FormatJSON:
+		return &JSONFormatter{writer: writer}
+	case FormatYAML:
+		return &YAMLFormatter{writer: writer}
+	case FormatTable:
+		return NewWorktreeTableFormatter(writer)
+	default:
+		return &SimpleTableFormatter{writer: writer}
+	}
+}
+
 // SimpleTableFormatter formats output as a simple table (for backward compatibility)
 type SimpleTableFormatter struct {
 	writer io.Writer
@@ -138,12 +156,12 @@ func (f *SimpleTableFormatter) formatSingle(data interface{}) error {
 		for i := 0; i < v.NumField(); i++ {
 			field := t.Field(i)
 			value := v.Field(i)
-			
+
 			// Skip unexported fields
 			if !field.IsExported() {
 				continue
 			}
-			
+
 			fmt.Fprintf(f.writer, "%-20s: %v\n", field.Name, value.Interface())
 		}
 	default:

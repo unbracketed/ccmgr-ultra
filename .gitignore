@@ -50,3 +50,6 @@ air.log
 
 # Test directories
 .testdirs/
+
+# Legacy worktree directories (for backward compatibility)
+.worktrees/

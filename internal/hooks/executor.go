@@ -60,19 +60,19 @@ func (e *DefaultExecutor) Execute(ctx context.Context, hookType HookType, hookCt
 // ExecuteAsync executes a hook asynchronously
 func (e *DefaultExecutor) ExecuteAsync(hookType HookType, hookCtx HookContext) <-chan error {
 	errChan := make(chan error, 1)
-	
+
 	go func() {
 		defer close(errChan)
-		
+
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
-		
+
 		err := e.Execute(ctx, hookType, hookCtx)
 		if err != nil && !shouldFailSilently(hookType, err) {
 			errChan <- err
 		}
 	}()
-	
+
 	return errChan
 }
 
@@ -188,7 +188,7 @@ func (e *DefaultExecutor) ExecuteWorktreeActivationHook(hookCtx HookContext) err
 func (e *DefaultExecutor) executeHook(ctx context.Context, hook Hook, hookCtx HookContext) error {
 	// Expand script path
 	scriptPath := expandPath(hook.Script)
-	
+
 	// Validate script exists and is executable
 	if err := e.validateScript(scriptPath); err != nil {
 		return err
@@ -239,7 +239,7 @@ func (e *DefaultExecutor) executeHook(ctx context.Context, hook Hook, hookCtx Ho
 		if exitError, ok := err.(*exec.ExitError); ok {
 			result.ExitCode = exitError.ExitCode()
 		}
-		
+
 		hookErr := &HookError{
 			HookType: hook.Type,
 			Script:   scriptPath,
@@ -361,7 +361,7 @@ func (e *DefaultExecutor) getShell() string {
 	if shell := os.Getenv("SHELL"); shell != "" {
 		return shell
 	}
-	
+
 	// Default shells by platform
 	return "/bin/bash"
 }

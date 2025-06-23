@@ -109,7 +109,7 @@ func (pm *PatternManager) ValidatePattern(pattern string) error {
 
 	// Validate against known variables
 	validVars := []string{
-		"{{.Project}}", "{{.Branch}}", "{{.Worktree}}", 
+		"{{.Project}}", "{{.Branch}}", "{{.Worktree}}",
 		"{{.Timestamp}}", "{{.UserName}}", "{{.Prefix}}", "{{.Suffix}}",
 	}
 
@@ -141,7 +141,7 @@ func (pm *PatternManager) SanitizePath(path string) string {
 
 	// Replace unsafe characters
 	unsafe := []string{
-		"<", ">", ":", "\"", "|", "?", "*", 
+		"<", ">", ":", "\"", "|", "?", "*",
 		"\x00", "\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07",
 		"\x08", "\x09", "\x0a", "\x0b", "\x0c", "\x0d", "\x0e", "\x0f",
 		"\x10", "\x11", "\x12", "\x13", "\x14", "\x15", "\x16", "\x17",
@@ -179,27 +179,40 @@ func (pm *PatternManager) GenerateWorktreePath(branch, project string) (string, 
 		Suffix:    "",
 	}
 
-	// Apply the pattern
+	// Resolve base directory pattern first
+	baseDir, err := pm.ResolvePatternVariables(pm.config.BaseDirectory, context)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve base directory pattern: %w", err)
+	}
+
+	// Apply the naming pattern for the worktree directory
 	dirName, err := pm.ApplyPattern(pm.config.DirectoryPattern, context)
 	if err != nil {
 		return "", fmt.Errorf("failed to apply pattern: %w", err)
 	}
 
-	// Get current working directory as base
+	// Get current working directory as reference
 	cwd, err := os.Getwd()
 	if err != nil {
 		return "", fmt.Errorf("failed to get current directory: %w", err)
 	}
 
-	// Create .worktrees base directory if it doesn't exist
-	worktreeBaseDir := filepath.Join(cwd, ".worktrees")
-	if err := os.MkdirAll(worktreeBaseDir, 0755); err != nil {
-		return "", fmt.Errorf("failed to create .worktrees directory: %w", err)
+	// Resolve base directory (can be relative or absolute)
+	var fullBaseDir string
+	if filepath.IsAbs(baseDir) {
+		fullBaseDir = baseDir
+	} else {
+		fullBaseDir = filepath.Join(cwd, baseDir)
 	}
 
-	// Create full path within .worktrees
-	fullPath := filepath.Join(worktreeBaseDir, dirName)
-	
+	// Create base directory if it doesn't exist
+	if err := os.MkdirAll(fullBaseDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create base directory: %w", err)
+	}
+
+	// Create full path
+	fullPath := filepath.Join(fullBaseDir, dirName)
+
 	// Clean the path
 	fullPath = filepath.Clean(fullPath)
 
@@ -226,13 +239,13 @@ func (pm *PatternManager) ResolvePatternVariables(template string, context Patte
 // createPatternTemplate creates a template with custom functions
 func createPatternTemplate(pattern string) (*template.Template, error) {
 	funcMap := template.FuncMap{
-		"lower":     strings.ToLower,
-		"upper":     strings.ToUpper,
-		"title":     strings.Title,
-		"replace":   replaceString,
-		"trim":      strings.TrimSpace,
-		"sanitize":  sanitizeForFilesystem,
-		"truncate":  truncateString,
+		"lower":    strings.ToLower,
+		"upper":    strings.ToUpper,
+		"title":    strings.Title,
+		"replace":  replaceString,
+		"trim":     strings.TrimSpace,
+		"sanitize": sanitizeForFilesystem,
+		"truncate": truncateString,
 	}
 
 	return template.New("pattern").Funcs(funcMap).Parse(pattern)
@@ -398,13 +411,13 @@ func (pm *PatternManager) GetPatternVariables() map[string]string {
 // GetPatternFunctions returns all available template functions with descriptions
 func (pm *PatternManager) GetPatternFunctions() map[string]string {
 	return map[string]string{
-		"lower":     "Convert to lowercase: {{.Branch | lower}}",
-		"upper":     "Convert to uppercase: {{.Branch | upper}}",
-		"title":     "Convert to title case: {{.Branch | title}}",
-		"replace":   "Replace text: {{.Branch | replace \"/\" \"-\"}}",
-		"trim":      "Trim whitespace: {{.Branch | trim}}",
-		"sanitize":  "Sanitize for filesystem: {{.Branch | sanitize}}",
-		"truncate":  "Truncate to length: {{.Branch | truncate 10}}",
+		"lower":    "Convert to lowercase: {{.Branch | lower}}",
+		"upper":    "Convert to uppercase: {{.Branch | upper}}",
+		"title":    "Convert to title case: {{.Branch | title}}",
+		"replace":  "Replace text: {{.Branch | replace \"/\" \"-\"}}",
+		"trim":     "Trim whitespace: {{.Branch | trim}}",
+		"sanitize": "Sanitize for filesystem: {{.Branch | sanitize}}",
+		"truncate": "Truncate to length: {{.Branch | truncate 10}}",
 	}
 }
 
@@ -467,6 +480,53 @@ func (pm *PatternManager) ValidatePatternResult(result string) error {
 	// Check length
 	if len(result) > 255 {
 		return fmt.Errorf("pattern result too long (%d chars, max 255): %s", len(result), result)
+	}
+
+	return nil
+}
+
+// ValidateBaseDirectory validates the base directory configuration
+func (pm *PatternManager) ValidateBaseDirectory(baseDir string, repoPath string) error {
+	if baseDir == "" {
+		return fmt.Errorf("base directory cannot be empty")
+	}
+
+	// Resolve relative paths
+	var absBaseDir string
+	if filepath.IsAbs(baseDir) {
+		absBaseDir = baseDir
+	} else {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("failed to get current directory: %w", err)
+		}
+		absBaseDir = filepath.Join(cwd, baseDir)
+	}
+
+	absBaseDir = filepath.Clean(absBaseDir)
+
+	// Get absolute repository path
+	absRepoPath, err := filepath.Abs(repoPath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute repository path: %w", err)
+	}
+
+	// Resolve symlinks to handle /var vs /private/var on macOS
+	resolvedBaseDir, err := filepath.EvalSymlinks(absBaseDir)
+	if err != nil {
+		// If symlink resolution fails, use the original path
+		resolvedBaseDir = absBaseDir
+	}
+
+	resolvedRepoPath, err := filepath.EvalSymlinks(absRepoPath)
+	if err != nil {
+		// If symlink resolution fails, use the original path
+		resolvedRepoPath = absRepoPath
+	}
+
+	// Check if base directory is inside repository
+	if strings.HasPrefix(resolvedBaseDir, resolvedRepoPath) {
+		return fmt.Errorf("base directory cannot be inside repository: %s", baseDir)
 	}
 
 	return nil

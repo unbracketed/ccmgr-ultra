@@ -10,19 +10,19 @@ import (
 type SessionManager interface {
 	// List all sessions
 	List() ([]SessionInfo, error)
-	
+
 	// Get active sessions only
 	Active() ([]SessionInfo, error)
-	
+
 	// Create a new session
 	Create(name, directory string) (string, error)
-	
+
 	// Attach to an existing session
 	Attach(sessionID string) error
-	
+
 	// Resume a paused session
 	Resume(sessionID string) error
-	
+
 	// Find sessions for a specific worktree
 	FindForWorktree(worktreePath string) ([]SessionSummary, error)
 }
@@ -31,19 +31,19 @@ type SessionManager interface {
 type WorktreeManager interface {
 	// List all worktrees
 	List() ([]WorktreeInfo, error)
-	
+
 	// Get recently accessed worktrees
 	Recent() ([]WorktreeInfo, error)
-	
+
 	// Create a new worktree
 	Create(path, branch string) error
-	
+
 	// Open a worktree directory
 	Open(path string) error
-	
+
 	// Get Claude status for a worktree
 	GetClaudeStatus(worktreePath string) ClaudeStatus
-	
+
 	// Update Claude status for a worktree
 	UpdateClaudeStatus(worktreePath string, status ClaudeStatus)
 }
@@ -52,10 +52,10 @@ type WorktreeManager interface {
 type SystemManager interface {
 	// Get overall system status
 	Status() SystemStatus
-	
+
 	// Refresh all data
 	Refresh() error
-	
+
 	// Get system health information
 	Health() HealthInfo
 }
@@ -98,10 +98,10 @@ type SessionSummary struct {
 
 // ClaudeStatus represents Claude Code process status
 type ClaudeStatus struct {
-	State       string
-	ProcessID   int
-	LastUpdate  time.Time
-	SessionID   string
+	State      string
+	ProcessID  int
+	LastUpdate time.Time
+	SessionID  string
 }
 
 // GitWorktreeStatus provides detailed git status information
@@ -119,14 +119,14 @@ type GitWorktreeStatus struct {
 
 // SystemStatus represents overall system status
 type SystemStatus struct {
-	ActiveProcesses   int
-	ActiveSessions    int
-	TrackedWorktrees  int
-	LastUpdate        time.Time
-	IsHealthy         bool
-	Errors            []string
-	Memory            MemoryStats
-	Performance       PerformanceStats
+	ActiveProcesses  int
+	ActiveSessions   int
+	TrackedWorktrees int
+	LastUpdate       time.Time
+	IsHealthy        bool
+	Errors           []string
+	Memory           MemoryStats
+	Performance      PerformanceStats
 }
 
 // MemoryStats holds memory usage information
@@ -138,18 +138,18 @@ type MemoryStats struct {
 
 // PerformanceStats holds performance metrics
 type PerformanceStats struct {
-	CPUPercent    float64
-	LoadAverage   float64
-	ResponseTime  time.Duration
-	ErrorRate     float64
+	CPUPercent   float64
+	LoadAverage  float64
+	ResponseTime time.Duration
+	ErrorRate    float64
 }
 
 // HealthInfo provides system health details
 type HealthInfo struct {
-	Overall    string
-	Services   map[string]string
-	LastCheck  time.Time
-	Uptime     time.Duration
+	Overall   string
+	Services  map[string]string
+	LastCheck time.Time
+	Uptime    time.Duration
 }
 
 // convertSessionInfo converts internal session info to public API
@@ -231,7 +231,7 @@ func convertSystemStatus(internal tui.SystemStatus) SystemStatus {
 		TrackedWorktrees: internal.TrackedWorktrees,
 		LastUpdate:       internal.LastUpdate,
 		IsHealthy:        internal.IsHealthy,
-		Errors:          internal.Errors,
+		Errors:           internal.Errors,
 		Memory: MemoryStats{
 			UsedMB:     internal.Memory.UsedMB,
 			TotalMB:    internal.Memory.TotalMB,

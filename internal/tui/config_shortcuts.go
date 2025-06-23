@@ -12,20 +12,20 @@ import (
 
 // ShortcutsConfigModel represents the shortcuts configuration screen
 type ShortcutsConfigModel struct {
-	shortcuts     map[string]string
-	original      map[string]string
-	theme         Theme
-	width         int
-	height        int
-	cursor        int
-	adding        bool
-	editing       bool
-	deleting      bool
-	editKey       string
-	newKeyInput   textinput.Model
+	shortcuts      map[string]string
+	original       map[string]string
+	theme          Theme
+	width          int
+	height         int
+	cursor         int
+	adding         bool
+	editing        bool
+	deleting       bool
+	editKey        string
+	newKeyInput    textinput.Model
 	newActionInput textinput.Model
-	err           error
-	sortedKeys    []string
+	err            error
+	sortedKeys     []string
 }
 
 // Predefined actions that can be assigned to shortcuts
@@ -189,7 +189,7 @@ func (m *ShortcutsConfigModel) handleInputMode(msg tea.KeyMsg) (tea.Model, tea.C
 
 		m.shortcuts[key] = action
 		m.updateSortedKeys()
-		
+
 		// Find the new key in sorted list and set cursor
 		for i, k := range m.sortedKeys {
 			if k == key {
@@ -253,7 +253,7 @@ func (m *ShortcutsConfigModel) View() string {
 
 	// Build content
 	var lines []string
-	
+
 	// Instructions
 	if !m.adding && !m.editing {
 		lines = append(lines, m.theme.MutedStyle.Render("Customize keyboard shortcuts for common actions"))
@@ -320,7 +320,7 @@ func (m *ShortcutsConfigModel) renderShortcutsList() string {
 	}
 
 	var lines []string
-	
+
 	// Header
 	headerStyle := m.theme.TitleStyle
 	lines = append(lines, fmt.Sprintf(
@@ -350,7 +350,7 @@ func (m *ShortcutsConfigModel) renderShortcutsList() string {
 
 		keyDisplay := padRight(key, 13)
 		actionDisplay := padRight(action, 28)
-		
+
 		if isModified {
 			keyDisplay += " *"
 		}
@@ -410,14 +410,14 @@ func (m *ShortcutsConfigModel) renderInputForm() string {
 	// Available actions hint
 	lines = append(lines, "")
 	lines = append(lines, m.theme.MutedStyle.Render("Available actions:"))
-	
+
 	// Show first few available actions
 	actionNames := make([]string, 0, len(availableActions))
 	for name := range availableActions {
 		actionNames = append(actionNames, name)
 	}
 	sort.Strings(actionNames)
-	
+
 	for i, name := range actionNames {
 		if i >= 5 {
 			lines = append(lines, m.theme.MutedStyle.Render("  ... and more"))

@@ -21,7 +21,7 @@ type Migration struct {
 
 func (db *DB) Migrate() error {
 	ctx := context.Background()
-	
+
 	if err := db.createMigrationsTable(ctx); err != nil {
 		return fmt.Errorf("failed to create migrations table: %w", err)
 	}

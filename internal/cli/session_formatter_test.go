@@ -10,20 +10,20 @@ import (
 func TestSessionTableFormatter_EmptyList(t *testing.T) {
 	var buf bytes.Buffer
 	formatter := NewSessionTableFormatter(&buf)
-	
+
 	data := struct {
 		Sessions []interface{} `json:"sessions"`
-		Total    int          `json:"total"`
+		Total    int           `json:"total"`
 	}{
 		Sessions: []interface{}{},
 		Total:    0,
 	}
-	
+
 	err := formatter.Format(data)
 	if err != nil {
 		t.Fatalf("Format failed: %v", err)
 	}
-	
+
 	output := buf.String()
 	if !strings.Contains(output, "No sessions found") {
 		t.Errorf("Expected 'No sessions found', got: %s", output)
@@ -33,7 +33,7 @@ func TestSessionTableFormatter_EmptyList(t *testing.T) {
 func TestSessionTableFormatter_SingleSession(t *testing.T) {
 	var buf bytes.Buffer
 	formatter := NewSessionTableFormatter(&buf)
-	
+
 	session := struct {
 		Name       string    `json:"name"`
 		Project    string    `json:"project"`
@@ -51,22 +51,22 @@ func TestSessionTableFormatter_SingleSession(t *testing.T) {
 		Created:    time.Now().Add(-2 * time.Hour),
 		LastAccess: time.Now().Add(-5 * time.Minute),
 	}
-	
+
 	data := struct {
 		Sessions []interface{} `json:"sessions"`
-		Total    int          `json:"total"`
+		Total    int           `json:"total"`
 	}{
 		Sessions: []interface{}{session},
 		Total:    1,
 	}
-	
+
 	err := formatter.Format(data)
 	if err != nil {
 		t.Fatalf("Format failed: %v", err)
 	}
-	
+
 	output := buf.String()
-	
+
 	// Check for expected content
 	if !strings.Contains(output, "Sessions") {
 		t.Errorf("Expected section header 'Sessions', got: %s", output)
@@ -88,7 +88,7 @@ func TestSessionTableFormatter_SingleSession(t *testing.T) {
 func TestSessionTableFormatter_MultipleSessions(t *testing.T) {
 	var buf bytes.Buffer
 	formatter := NewSessionTableFormatter(&buf)
-	
+
 	sessions := []interface{}{
 		struct {
 			Name       string    `json:"name"`
@@ -125,22 +125,22 @@ func TestSessionTableFormatter_MultipleSessions(t *testing.T) {
 			LastAccess: time.Now().Add(-3 * time.Hour),
 		},
 	}
-	
+
 	data := struct {
 		Sessions []interface{} `json:"sessions"`
-		Total    int          `json:"total"`
+		Total    int           `json:"total"`
 	}{
 		Sessions: sessions,
 		Total:    2,
 	}
-	
+
 	err := formatter.Format(data)
 	if err != nil {
 		t.Fatalf("Format failed: %v", err)
 	}
-	
+
 	output := buf.String()
-	
+
 	// Check for table structure
 	if !strings.Contains(output, "┌─ Sessions ─") {
 		t.Errorf("Expected table header, got: %s", output)
@@ -157,7 +157,7 @@ func TestSessionTableFormatter_MultipleSessions(t *testing.T) {
 	if !strings.Contains(output, "Total sessions: 2") {
 		t.Errorf("Expected 'Total sessions: 2', got: %s", output)
 	}
-	
+
 	// Check for status formatting
 	activeStatusCount := strings.Count(output, "✓")
 	inactiveStatusCount := strings.Count(output, "✗")
@@ -172,12 +172,12 @@ func TestSessionTableFormatter_MultipleSessions(t *testing.T) {
 func TestSessionTableFormatter_NilData(t *testing.T) {
 	var buf bytes.Buffer
 	formatter := NewSessionTableFormatter(&buf)
-	
+
 	err := formatter.Format(nil)
 	if err == nil {
 		t.Error("Expected error for nil data, got nil")
 	}
-	
+
 	expectedError := "invalid data type for session formatter"
 	if !strings.Contains(err.Error(), expectedError) {
 		t.Errorf("Expected error containing '%s', got: %v", expectedError, err)
@@ -187,12 +187,12 @@ func TestSessionTableFormatter_NilData(t *testing.T) {
 func TestSessionTableFormatter_InvalidDataType(t *testing.T) {
 	var buf bytes.Buffer
 	formatter := NewSessionTableFormatter(&buf)
-	
+
 	err := formatter.Format("invalid data")
 	if err == nil {
 		t.Error("Expected error for invalid data type, got nil")
 	}
-	
+
 	expectedError := "invalid data type for session formatter"
 	if !strings.Contains(err.Error(), expectedError) {
 		t.Errorf("Expected error containing '%s', got: %v", expectedError, err)
@@ -202,7 +202,7 @@ func TestSessionTableFormatter_InvalidDataType(t *testing.T) {
 func TestSessionTableFormatter_TimeFormatting(t *testing.T) {
 	var buf bytes.Buffer
 	formatter := NewSessionTableFormatter(&buf)
-	
+
 	now := time.Now()
 	session := struct {
 		Name       string    `json:"name"`
@@ -218,25 +218,25 @@ func TestSessionTableFormatter_TimeFormatting(t *testing.T) {
 		Branch:     "main",
 		Active:     true,
 		Directory:  "/test",
-		Created:    now.Add(-25 * time.Hour), // Should show as "1d ago"
+		Created:    now.Add(-25 * time.Hour),   // Should show as "1d ago"
 		LastAccess: now.Add(-90 * time.Minute), // Should show as "1h ago"
 	}
-	
+
 	data := struct {
 		Sessions []interface{} `json:"sessions"`
-		Total    int          `json:"total"`
+		Total    int           `json:"total"`
 	}{
 		Sessions: []interface{}{session},
 		Total:    1,
 	}
-	
+
 	err := formatter.Format(data)
 	if err != nil {
 		t.Fatalf("Format failed: %v", err)
 	}
-	
+
 	output := buf.String()
-	
+
 	// Check for human-readable time formatting
 	if !strings.Contains(output, "d ago") && !strings.Contains(output, "h ago") {
 		t.Errorf("Expected human-readable time format, got: %s", output)
@@ -246,7 +246,7 @@ func TestSessionTableFormatter_TimeFormatting(t *testing.T) {
 func TestSessionTableFormatter_LongPathShortening(t *testing.T) {
 	var buf bytes.Buffer
 	formatter := NewSessionTableFormatter(&buf)
-	
+
 	longPath := "/very/long/path/to/some/deeply/nested/project/directory/that/exceeds/normal/length"
 	session := struct {
 		Name       string    `json:"name"`
@@ -265,22 +265,22 @@ func TestSessionTableFormatter_LongPathShortening(t *testing.T) {
 		Created:    time.Now(),
 		LastAccess: time.Now(),
 	}
-	
+
 	data := struct {
 		Sessions []interface{} `json:"sessions"`
-		Total    int          `json:"total"`
+		Total    int           `json:"total"`
 	}{
 		Sessions: []interface{}{session},
 		Total:    1,
 	}
-	
+
 	err := formatter.Format(data)
 	if err != nil {
 		t.Fatalf("Format failed: %v", err)
 	}
-	
+
 	output := buf.String()
-	
+
 	// Check that the long path is shortened (should contain "..." or be truncated)
 	if strings.Contains(output, longPath) {
 		t.Errorf("Expected long path to be shortened, but found full path in output: %s", output)

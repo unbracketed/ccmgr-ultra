@@ -18,10 +18,10 @@ import (
 
 // RemoteManager handles remote repository operations
 type RemoteManager struct {
-	repo            *Repository
-	config          *config.GitConfig
-	clients         map[string]HostingClient
-	gitCmd          GitInterface
+	repo             *Repository
+	config           *config.GitConfig
+	clients          map[string]HostingClient
+	gitCmd           GitInterface
 	analyticsEmitter analytics.EventEmitter
 }
 
@@ -49,34 +49,34 @@ type PullRequestRequest struct {
 
 // PullRequest represents a created PR/MR
 type PullRequest struct {
-	ID          int
-	Number      int
-	Title       string
-	URL         string
-	State       string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Author      string
+	ID           int
+	Number       int
+	Title        string
+	URL          string
+	State        string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Author       string
 	SourceBranch string
 	TargetBranch string
-	Draft       bool
-	Labels      []string
+	Draft        bool
+	Labels       []string
 }
 
 // GitHub API response structures
 type GitHubPullRequestResponse struct {
-	ID        int                    `json:"id"`
-	Number    int                    `json:"number"`
-	Title     string                 `json:"title"`
-	HTMLURL   string                 `json:"html_url"`
-	State     string                 `json:"state"`
-	Draft     bool                   `json:"draft"`
-	CreatedAt time.Time              `json:"created_at"`
-	UpdatedAt time.Time              `json:"updated_at"`
-	User      GitHubUser             `json:"user"`
-	Head      GitHubBranch           `json:"head"`
-	Base      GitHubBranch           `json:"base"`
-	Labels    []GitHubLabel          `json:"labels"`
+	ID        int           `json:"id"`
+	Number    int           `json:"number"`
+	Title     string        `json:"title"`
+	HTMLURL   string        `json:"html_url"`
+	State     string        `json:"state"`
+	Draft     bool          `json:"draft"`
+	CreatedAt time.Time     `json:"created_at"`
+	UpdatedAt time.Time     `json:"updated_at"`
+	User      GitHubUser    `json:"user"`
+	Head      GitHubBranch  `json:"head"`
+	Base      GitHubBranch  `json:"base"`
+	Labels    []GitHubLabel `json:"labels"`
 }
 
 type GitHubUser struct {
@@ -85,8 +85,8 @@ type GitHubUser struct {
 }
 
 type GitHubBranch struct {
-	Ref  string `json:"ref"`
-	SHA  string `json:"sha"`
+	Ref  string     `json:"ref"`
+	SHA  string     `json:"sha"`
 	Repo GitHubRepo `json:"repo"`
 }
 
@@ -121,10 +121,10 @@ func NewRemoteManager(repo *Repository, cfg *config.GitConfig, gitCmd GitInterfa
 	}
 
 	rm := &RemoteManager{
-		repo:            repo,
-		config:          cfg,
-		clients:         make(map[string]HostingClient),
-		gitCmd:          gitCmd,
+		repo:             repo,
+		config:           cfg,
+		clients:          make(map[string]HostingClient),
+		gitCmd:           gitCmd,
 		analyticsEmitter: nil, // Will be set via SetAnalyticsEmitter if needed
 	}
 
@@ -147,7 +147,7 @@ func (rm *RemoteManager) DetectHostingService(remoteURL string) (string, error) 
 
 	// Parse the URL to extract the host
 	var host string
-	
+
 	// Handle SSH URLs (git@host:owner/repo.git)
 	sshPattern := regexp.MustCompile(`^git@([^:]+):`)
 	if matches := sshPattern.FindStringSubmatch(remoteURL); len(matches) > 1 {
@@ -226,7 +226,7 @@ func (rm *RemoteManager) CreatePullRequest(worktree *WorktreeInfo, req PullReque
 
 	// Create the pull request
 	pr, err := client.CreatePullRequest(req)
-	
+
 	// Emit analytics event for PR creation
 	if rm.analyticsEmitter != nil && rm.analyticsEmitter.IsEnabled() {
 		prEvent := analytics.AnalyticsEvent{
@@ -240,7 +240,7 @@ func (rm *RemoteManager) CreatePullRequest(worktree *WorktreeInfo, req PullReque
 		}
 		rm.analyticsEmitter.EmitEventAsync(prEvent)
 	}
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pull request: %w", err)
 	}
@@ -252,7 +252,7 @@ func (rm *RemoteManager) CreatePullRequest(worktree *WorktreeInfo, req PullReque
 func (rm *RemoteManager) PushAndCreatePR(worktree *WorktreeInfo, prOptions PullRequestRequest) (*PullRequest, error) {
 	// Push the branch first
 	pushErr := rm.ensureBranchPushed(worktree.Branch)
-	
+
 	// Emit analytics event for push operation
 	if rm.analyticsEmitter != nil && rm.analyticsEmitter.IsEnabled() {
 		pushEvent := analytics.AnalyticsEvent{
@@ -263,7 +263,7 @@ func (rm *RemoteManager) PushAndCreatePR(worktree *WorktreeInfo, prOptions PullR
 		}
 		rm.analyticsEmitter.EmitEventAsync(pushEvent)
 	}
-	
+
 	if pushErr != nil {
 		return nil, fmt.Errorf("failed to push branch: %w", pushErr)
 	}
@@ -275,7 +275,7 @@ func (rm *RemoteManager) PushAndCreatePR(worktree *WorktreeInfo, prOptions PullR
 // PushBranch pushes a branch to remote without creating a PR
 func (rm *RemoteManager) PushBranch(branch string) error {
 	err := rm.ensureBranchPushed(branch)
-	
+
 	// Emit analytics event for push operation
 	if rm.analyticsEmitter != nil && rm.analyticsEmitter.IsEnabled() {
 		pushEvent := analytics.AnalyticsEvent{
@@ -286,7 +286,7 @@ func (rm *RemoteManager) PushBranch(branch string) error {
 		}
 		rm.analyticsEmitter.EmitEventAsync(pushEvent)
 	}
-	
+
 	return err
 }
 
@@ -386,7 +386,7 @@ func (gc *GitHubClient) CreatePullRequest(req PullRequestRequest) (*PullRequest,
 
 	// Create HTTP request
 	apiURL := fmt.Sprintf("%s/repos/%s/%s/pulls", gc.apiURL, req.Owner, req.Repository)
-	
+
 	// Marshal payload to JSON
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
@@ -415,17 +415,17 @@ func (gc *GitHubClient) CreatePullRequest(req PullRequestRequest) (*PullRequest,
 
 	// Convert to our PR format
 	pr := &PullRequest{
-		ID:          githubPR.ID,
-		Number:      githubPR.Number,
-		Title:       githubPR.Title,
-		URL:         githubPR.HTMLURL,
-		State:       githubPR.State,
-		CreatedAt:   githubPR.CreatedAt,
-		UpdatedAt:   githubPR.UpdatedAt,
-		Author:      githubPR.User.Login,
+		ID:           githubPR.ID,
+		Number:       githubPR.Number,
+		Title:        githubPR.Title,
+		URL:          githubPR.HTMLURL,
+		State:        githubPR.State,
+		CreatedAt:    githubPR.CreatedAt,
+		UpdatedAt:    githubPR.UpdatedAt,
+		Author:       githubPR.User.Login,
 		SourceBranch: githubPR.Head.Ref,
 		TargetBranch: githubPR.Base.Ref,
-		Draft:       githubPR.Draft,
+		Draft:        githubPR.Draft,
 	}
 
 	// Extract labels
@@ -447,11 +447,11 @@ func (gc *GitHubClient) AuthenticateToken(token string) error {
 	if token == "" {
 		return fmt.Errorf("GitHub token is empty")
 	}
-	
+
 	// Call /user endpoint to validate token
 	apiURL := fmt.Sprintf("%s/user", gc.apiURL)
 	headers := buildAuthHeaders("github", token)
-	
+
 	resp, err := makeHTTPRequest("GET", apiURL, headers, nil)
 	if err != nil {
 		return fmt.Errorf("failed to authenticate token: %w", err)
@@ -474,7 +474,7 @@ func (gc *GitHubClient) ValidateRepository(owner, repo string) error {
 	if owner == "" || repo == "" {
 		return fmt.Errorf("owner and repository name are required")
 	}
-	
+
 	// Simplified validation - would normally make API call
 	return nil
 }
@@ -584,7 +584,7 @@ func parseJSONResponse(resp *http.Response, target interface{}) error {
 // buildAuthHeaders creates authentication headers for GitHub
 func buildAuthHeaders(service, token string) map[string]string {
 	headers := make(map[string]string)
-	
+
 	switch service {
 	case "github":
 		headers["Authorization"] = fmt.Sprintf("token %s", token)
@@ -619,7 +619,7 @@ func (rm *RemoteManager) ListRemotes() ([]RemoteInfo, error) {
 
 	for _, remote := range rm.repo.Remotes {
 		service, _ := rm.DetectHostingService(remote.URL)
-		
+
 		remoteInfo := RemoteInfo{
 			Remote:         remote,
 			HostingService: service,

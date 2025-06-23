@@ -49,7 +49,7 @@ func TestContextMenu(t *testing.T) {
 	t.Run("Navigation", func(t *testing.T) {
 		// Test down navigation
 		menu, _ = menu.Update(tea.KeyMsg{Type: tea.KeyDown})
-		
+
 		// Should skip divider and select item 3
 		menu, _ = menu.Update(tea.KeyMsg{Type: tea.KeyDown})
 		menu, _ = menu.Update(tea.KeyMsg{Type: tea.KeyDown})
@@ -57,7 +57,7 @@ func TestContextMenu(t *testing.T) {
 
 	t.Run("Selection", func(t *testing.T) {
 		_, cmd := menu.Update(tea.KeyMsg{Type: tea.KeyEnter})
-		
+
 		if cmd == nil {
 			t.Error("Selection should return a command")
 		}
@@ -76,7 +76,7 @@ func TestContextMenu(t *testing.T) {
 
 	t.Run("Hide menu", func(t *testing.T) {
 		menu.Hide()
-		
+
 		if menu.IsVisible() {
 			t.Error("Menu should not be visible after hiding")
 		}
@@ -84,7 +84,7 @@ func TestContextMenu(t *testing.T) {
 
 	t.Run("Show menu", func(t *testing.T) {
 		menu.Show(20, 10)
-		
+
 		if !menu.IsVisible() {
 			t.Error("Menu should be visible after showing")
 		}
@@ -97,7 +97,7 @@ func TestContextMenu(t *testing.T) {
 
 	t.Run("Escape key", func(t *testing.T) {
 		menu, _ = menu.Update(tea.KeyMsg{Type: tea.KeyEsc})
-		
+
 		if menu.IsVisible() {
 			t.Error("Menu should be hidden after escape key")
 		}
@@ -107,23 +107,23 @@ func TestContextMenu(t *testing.T) {
 func TestContextMenuItem(t *testing.T) {
 	t.Run("NewMenuItem", func(t *testing.T) {
 		item := NewMenuItem("Test Item", "test_action", "t")
-		
+
 		if item.Label != "Test Item" {
 			t.Errorf("Expected label 'Test Item', got '%s'", item.Label)
 		}
-		
+
 		if item.Action != "test_action" {
 			t.Errorf("Expected action 'test_action', got '%s'", item.Action)
 		}
-		
+
 		if item.Key != "t" {
 			t.Errorf("Expected key 't', got '%s'", item.Key)
 		}
-		
+
 		if !item.Enabled {
 			t.Error("Item should be enabled by default")
 		}
-		
+
 		if item.Divider {
 			t.Error("Item should not be a divider")
 		}
@@ -131,7 +131,7 @@ func TestContextMenuItem(t *testing.T) {
 
 	t.Run("NewMenuItemWithIcon", func(t *testing.T) {
 		item := NewMenuItemWithIcon("Test Item", "test_action", "t", "🔧")
-		
+
 		if item.Icon != "🔧" {
 			t.Errorf("Expected icon '🔧', got '%s'", item.Icon)
 		}
@@ -139,7 +139,7 @@ func TestContextMenuItem(t *testing.T) {
 
 	t.Run("NewMenuItemWithShortcut", func(t *testing.T) {
 		item := NewMenuItemWithShortcut("Test Item", "test_action", "t", "Ctrl+T")
-		
+
 		if item.Shortcut != "Ctrl+T" {
 			t.Errorf("Expected shortcut 'Ctrl+T', got '%s'", item.Shortcut)
 		}
@@ -147,11 +147,11 @@ func TestContextMenuItem(t *testing.T) {
 
 	t.Run("NewMenuDivider", func(t *testing.T) {
 		item := NewMenuDivider()
-		
+
 		if !item.Divider {
 			t.Error("Item should be a divider")
 		}
-		
+
 		if item.Enabled {
 			t.Error("Divider should not be enabled")
 		}
@@ -159,11 +159,11 @@ func TestContextMenuItem(t *testing.T) {
 
 	t.Run("NewDisabledMenuItem", func(t *testing.T) {
 		item := NewDisabledMenuItem("Disabled Item")
-		
+
 		if item.Enabled {
 			t.Error("Item should be disabled")
 		}
-		
+
 		if item.Label != "Disabled Item" {
 			t.Errorf("Expected label 'Disabled Item', got '%s'", item.Label)
 		}
@@ -222,7 +222,7 @@ func TestMenuWithSubmenu(t *testing.T) {
 	t.Run("Has submenu", func(t *testing.T) {
 		// Navigate to item with submenu
 		menu, _ = menu.Update(tea.KeyMsg{Type: tea.KeyDown})
-		
+
 		if !menu.hasSelectedSubmenu() {
 			t.Error("Should detect submenu on selected item")
 		}
@@ -230,7 +230,7 @@ func TestMenuWithSubmenu(t *testing.T) {
 
 	t.Run("Open submenu", func(t *testing.T) {
 		_, cmd := menu.Update(tea.KeyMsg{Type: tea.KeyRight})
-		
+
 		if cmd == nil {
 			t.Error("Opening submenu should return a command")
 		}

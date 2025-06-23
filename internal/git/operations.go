@@ -71,7 +71,7 @@ func (ops *GitOperations) CreateBranch(name, source string) error {
 	if name == "" {
 		return fmt.Errorf("branch name cannot be empty")
 	}
-	
+
 	if source == "" {
 		source = ops.repo.DefaultBranch
 	}
@@ -183,7 +183,7 @@ func (ops *GitOperations) ListBranches(includeRemote bool) ([]BranchInfo, error)
 
 	var branches []BranchInfo
 	scanner := bufio.NewScanner(strings.NewReader(output))
-	
+
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
@@ -251,7 +251,7 @@ func (ops *GitOperations) MergeBranch(source, target string) (*MergeResult, erro
 
 	// Perform the merge
 	output, err := ops.gitCmd.Execute(ops.repo.RootPath, "merge", source)
-	
+
 	result := &MergeResult{
 		Success: err == nil,
 	}
@@ -267,7 +267,7 @@ func (ops *GitOperations) MergeBranch(source, target string) (*MergeResult, erro
 
 	// Parse successful merge output
 	result.FilesChanged = ops.parseFilesChanged(output)
-	
+
 	// Get the new commit hash
 	if hash, err := ops.gitCmd.Execute(ops.repo.RootPath, "rev-parse", "HEAD"); err == nil {
 		result.CommitHash = hash
@@ -442,7 +442,7 @@ func (ops *GitOperations) ListStashes() ([]StashInfo, error) {
 
 	var stashes []StashInfo
 	scanner := bufio.NewScanner(strings.NewReader(output))
-	
+
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
@@ -454,7 +454,7 @@ func (ops *GitOperations) ListStashes() ([]StashInfo, error) {
 			index := ops.parseStashIndex(parts[0])
 			message := parts[1]
 			hash := parts[2]
-			
+
 			timestamp, _ := strconv.ParseInt(parts[3], 10, 64)
 			date := time.Unix(timestamp, 0)
 
@@ -536,7 +536,7 @@ func (ops *GitOperations) GetCommitHistory(branch string, limit int) ([]CommitIn
 
 	var commits []CommitInfo
 	scanner := bufio.NewScanner(strings.NewReader(output))
-	
+
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
@@ -581,7 +581,7 @@ func (ops *GitOperations) CreateTag(name, message string, commit string) error {
 	} else {
 		args = append(args, name)
 	}
-	
+
 	if commit != "" {
 		args = append(args, commit)
 	}
@@ -621,7 +621,7 @@ func (ops *GitOperations) ListTags() ([]TagInfo, error) {
 
 	var tags []TagInfo
 	scanner := bufio.NewScanner(strings.NewReader(output))
-	
+
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
@@ -633,7 +633,7 @@ func (ops *GitOperations) ListTags() ([]TagInfo, error) {
 			name := parts[0]
 			hash := parts[1]
 			message := parts[2]
-			
+
 			tag := TagInfo{
 				Name:    name,
 				Hash:    hash,
@@ -667,7 +667,7 @@ func (ops *GitOperations) GetStatus() (map[string]string, error) {
 
 	status := make(map[string]string)
 	scanner := bufio.NewScanner(strings.NewReader(output))
-	
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(line) >= 3 {
@@ -686,7 +686,7 @@ func (ops *GitOperations) IsClean() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	
+
 	return len(status) == 0, nil
 }
 
@@ -712,7 +712,7 @@ func (ops *GitOperations) getAheadBehindCounts(local, remote string) (ahead, beh
 func (ops *GitOperations) parseConflicts(output string) []string {
 	var conflicts []string
 	lines := strings.Split(output, "\n")
-	
+
 	for _, line := range lines {
 		if strings.Contains(line, "CONFLICT") {
 			// Extract filename from conflict line
@@ -760,7 +760,7 @@ func (ops *GitOperations) getCommitFiles(commitHash string) ([]string, error) {
 
 	var files []string
 	scanner := bufio.NewScanner(strings.NewReader(output))
-	
+
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line != "" {

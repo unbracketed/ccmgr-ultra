@@ -9,39 +9,39 @@ import (
 
 // Config represents the main configuration structure
 type Config struct {
-	Version       string                 `yaml:"version" json:"version"`
-	StatusHooks   StatusHooksConfig      `yaml:"status_hooks" json:"status_hooks"`
-	WorktreeHooks WorktreeHooksConfig    `yaml:"worktree_hooks" json:"worktree_hooks"`
-	Worktree      WorktreeConfig         `yaml:"worktree" json:"worktree"`
-	Tmux          TmuxConfig             `yaml:"tmux" json:"tmux"`
-	Git              GitConfig              `yaml:"git" json:"git"`
-	Claude           ClaudeConfig           `yaml:"claude" json:"claude"`
-	TUI              TUIConfig              `yaml:"tui" json:"tui"`
-	Analytics        AnalyticsConfig        `yaml:"analytics" json:"analytics"`
-	Shortcuts        map[string]string      `yaml:"shortcuts" json:"shortcuts"`
-	Commands         CommandsConfig         `yaml:"commands" json:"commands"`
-	LastModified     time.Time              `yaml:"last_modified" json:"last_modified"`
-	
+	Version       string              `yaml:"version" json:"version"`
+	StatusHooks   StatusHooksConfig   `yaml:"status_hooks" json:"status_hooks"`
+	WorktreeHooks WorktreeHooksConfig `yaml:"worktree_hooks" json:"worktree_hooks"`
+	Worktree      WorktreeConfig      `yaml:"worktree" json:"worktree"`
+	Tmux          TmuxConfig          `yaml:"tmux" json:"tmux"`
+	Git           GitConfig           `yaml:"git" json:"git"`
+	Claude        ClaudeConfig        `yaml:"claude" json:"claude"`
+	TUI           TUIConfig           `yaml:"tui" json:"tui"`
+	Analytics     AnalyticsConfig     `yaml:"analytics" json:"analytics"`
+	Shortcuts     map[string]string   `yaml:"shortcuts" json:"shortcuts"`
+	Commands      CommandsConfig      `yaml:"commands" json:"commands"`
+	LastModified  time.Time           `yaml:"last_modified" json:"last_modified"`
+
 	// Additional common config fields
-	ConfigFile       string                 `yaml:"-" json:"-"`
-	LogLevel         string                 `yaml:"log_level" json:"log_level" default:"info"`
-	RefreshInterval  int                    `yaml:"refresh_interval" json:"refresh_interval" default:"5"`
+	ConfigFile      string `yaml:"-" json:"-"`
+	LogLevel        string `yaml:"log_level" json:"log_level" default:"info"`
+	RefreshInterval int    `yaml:"refresh_interval" json:"refresh_interval" default:"5"`
 }
 
 // StatusHooksConfig defines status hook configuration
 type StatusHooksConfig struct {
-	Enabled      bool              `yaml:"enabled" json:"enabled"`
-	IdleHook     HookConfig        `yaml:"idle" json:"idle"`
-	BusyHook     HookConfig        `yaml:"busy" json:"busy"`
-	WaitingHook  HookConfig        `yaml:"waiting" json:"waiting"`
+	Enabled     bool       `yaml:"enabled" json:"enabled"`
+	IdleHook    HookConfig `yaml:"idle" json:"idle"`
+	BusyHook    HookConfig `yaml:"busy" json:"busy"`
+	WaitingHook HookConfig `yaml:"waiting" json:"waiting"`
 }
 
 // HookConfig defines individual hook configuration
 type HookConfig struct {
-	Enabled  bool   `yaml:"enabled" json:"enabled"`
-	Script   string `yaml:"script" json:"script"`
-	Timeout  int    `yaml:"timeout" json:"timeout"` // seconds
-	Async    bool   `yaml:"async" json:"async"`
+	Enabled bool   `yaml:"enabled" json:"enabled"`
+	Script  string `yaml:"script" json:"script"`
+	Timeout int    `yaml:"timeout" json:"timeout"` // seconds
+	Async   bool   `yaml:"async" json:"async"`
 }
 
 // WorktreeHooksConfig defines worktree lifecycle hooks
@@ -53,79 +53,85 @@ type WorktreeHooksConfig struct {
 
 // WorktreeConfig defines worktree configuration
 type WorktreeConfig struct {
-	AutoDirectory    bool   `yaml:"auto_directory" json:"auto_directory"`
+	AutoDirectory bool `yaml:"auto_directory" json:"auto_directory"`
 	// DirectoryPattern defines the template for worktree directory names.
 	// Supports Go template syntax with variables:
 	// - {{.Project}}: Project/repository name (sanitized)
-	// - {{.Branch}}: Git branch name (sanitized)  
+	// - {{.Branch}}: Git branch name (sanitized)
 	// - {{.Worktree}}: Unique worktree identifier
 	// - {{.Timestamp}}: Current timestamp (YYYYMMDD-HHMMSS)
 	// - {{.UserName}}: Git user name or system user (sanitized)
 	// - {{.Prefix}}: Configured prefix value
 	// - {{.Suffix}}: Configured suffix value
-	// 
+	//
 	// Template functions available: lower, upper, title, replace, trim, sanitize, truncate
 	// Example: "{{.Project}}-{{.Branch}}" or "{{.Project | upper}}-{{.Branch | lower}}"
 	DirectoryPattern string `yaml:"directory_pattern" json:"directory_pattern"` // e.g., "{{.Project}}-{{.Branch}}"
 	DefaultBranch    string `yaml:"default_branch" json:"default_branch"`
 	CleanupOnMerge   bool   `yaml:"cleanup_on_merge" json:"cleanup_on_merge"`
+
+	// BaseDirectory defines the base directory for worktrees (relative to repository parent or absolute).
+	// Supports Go template syntax with variables (same as DirectoryPattern).
+	// Default: "../.worktrees/{{.Project}}" (sibling directory pattern)
+	// Example: "/tmp/worktrees/{{.Project}}" or "../my-worktrees"
+	BaseDirectory string `yaml:"base_directory" json:"base_directory"`
 }
 
 // CommandsConfig defines command configuration
 type CommandsConfig struct {
-	ClaudeCommand   string            `yaml:"claude_command" json:"claude_command"`
-	GitCommand      string            `yaml:"git_command" json:"git_command"`
-	TmuxPrefix      string            `yaml:"tmux_prefix" json:"tmux_prefix"`
-	Environment     map[string]string `yaml:"environment" json:"environment"`
+	ClaudeCommand string            `yaml:"claude_command" json:"claude_command"`
+	GitCommand    string            `yaml:"git_command" json:"git_command"`
+	TmuxPrefix    string            `yaml:"tmux_prefix" json:"tmux_prefix"`
+	Environment   map[string]string `yaml:"environment" json:"environment"`
 }
 
 // TmuxConfig defines tmux integration configuration
 type TmuxConfig struct {
-	SessionPrefix    string            `yaml:"session_prefix" json:"session_prefix"`
-	NamingPattern    string            `yaml:"naming_pattern" json:"naming_pattern"`
-	MaxSessionName   int               `yaml:"max_session_name" json:"max_session_name"`
-	MonitorInterval  time.Duration     `yaml:"monitor_interval" json:"monitor_interval"`
-	StateFile        string            `yaml:"state_file" json:"state_file"`
-	DefaultEnv       map[string]string `yaml:"default_env" json:"default_env"`
-	AutoCleanup      bool              `yaml:"auto_cleanup" json:"auto_cleanup"`
-	CleanupAge       time.Duration     `yaml:"cleanup_age" json:"cleanup_age"`
+	SessionPrefix   string            `yaml:"session_prefix" json:"session_prefix"`
+	NamingPattern   string            `yaml:"naming_pattern" json:"naming_pattern"`
+	MaxSessionName  int               `yaml:"max_session_name" json:"max_session_name"`
+	MonitorInterval time.Duration     `yaml:"monitor_interval" json:"monitor_interval"`
+	StateFile       string            `yaml:"state_file" json:"state_file"`
+	DefaultEnv      map[string]string `yaml:"default_env" json:"default_env"`
+	AutoCleanup     bool              `yaml:"auto_cleanup" json:"auto_cleanup"`
+	CleanupAge      time.Duration     `yaml:"cleanup_age" json:"cleanup_age"`
 }
 
 // ClaudeConfig defines Claude Code process monitoring configuration
 type ClaudeConfig struct {
 	// Monitoring settings
-	Enabled              bool              `yaml:"enabled" json:"enabled" default:"true"`
-	PollInterval         time.Duration     `yaml:"poll_interval" json:"poll_interval" default:"3s"`
-	MaxProcesses         int               `yaml:"max_processes" json:"max_processes" default:"10"`
-	CleanupInterval      time.Duration     `yaml:"cleanup_interval" json:"cleanup_interval" default:"5m"`
-	StateTimeout         time.Duration     `yaml:"state_timeout" json:"state_timeout" default:"30s"`
-	StartupTimeout       time.Duration     `yaml:"startup_timeout" json:"startup_timeout" default:"10s"`
-	
+	Enabled         bool          `yaml:"enabled" json:"enabled" default:"true"`
+	PollInterval    time.Duration `yaml:"poll_interval" json:"poll_interval" default:"3s"`
+	MaxProcesses    int           `yaml:"max_processes" json:"max_processes" default:"10"`
+	CleanupInterval time.Duration `yaml:"cleanup_interval" json:"cleanup_interval" default:"5m"`
+	StateTimeout    time.Duration `yaml:"state_timeout" json:"state_timeout" default:"30s"`
+	StartupTimeout  time.Duration `yaml:"startup_timeout" json:"startup_timeout" default:"10s"`
+
 	// Detection settings
-	LogPaths             []string          `yaml:"log_paths" json:"log_paths"`
-	StatePatterns        map[string]string `yaml:"state_patterns" json:"state_patterns"`
-	EnableLogParsing     bool              `yaml:"enable_log_parsing" json:"enable_log_parsing" default:"true"`
-	EnableResourceMonitoring bool          `yaml:"enable_resource_monitoring" json:"enable_resource_monitoring" default:"true"`
-	
+	LogPaths                 []string          `yaml:"log_paths" json:"log_paths"`
+	StatePatterns            map[string]string `yaml:"state_patterns" json:"state_patterns"`
+	EnableLogParsing         bool              `yaml:"enable_log_parsing" json:"enable_log_parsing" default:"true"`
+	EnableResourceMonitoring bool              `yaml:"enable_resource_monitoring" json:"enable_resource_monitoring" default:"true"`
+
 	// Integration settings
-	IntegrateTmux        bool              `yaml:"integrate_tmux" json:"integrate_tmux" default:"true"`
-	IntegrateWorktrees   bool              `yaml:"integrate_worktrees" json:"integrate_worktrees" default:"true"`
+	IntegrateTmux      bool `yaml:"integrate_tmux" json:"integrate_tmux" default:"true"`
+	IntegrateWorktrees bool `yaml:"integrate_worktrees" json:"integrate_worktrees" default:"true"`
 }
 
 // GitConfig defines git worktree and operations configuration
 type GitConfig struct {
 	// Worktree settings
-	AutoDirectory    bool          `yaml:"auto_directory" json:"auto_directory" default:"true"`
+	AutoDirectory bool `yaml:"auto_directory" json:"auto_directory" default:"true"`
 	// DirectoryPattern defines the template for worktree directory names.
 	// Supports Go template syntax with variables:
 	// - {{.Project}}: Project/repository name (sanitized)
-	// - {{.Branch}}: Git branch name (sanitized)  
+	// - {{.Branch}}: Git branch name (sanitized)
 	// - {{.Worktree}}: Unique worktree identifier
 	// - {{.Timestamp}}: Current timestamp (YYYYMMDD-HHMMSS)
 	// - {{.user}}: Git user name or system user (sanitized)
 	// - {{.prefix}}: Configured prefix value
 	// - {{.suffix}}: Configured suffix value
-	// 
+	//
 	// Template functions available: lower, upper, title, replace, trim, sanitize, truncate
 	// Example: "{{.Project}}-{{.Branch}}" or "{{.Project | upper}}-{{.Branch | lower}}"
 	DirectoryPattern string        `yaml:"directory_pattern" json:"directory_pattern" default:"{{.Project}}-{{.Branch}}"`
@@ -149,8 +155,8 @@ type GitConfig struct {
 	BitbucketToken string `yaml:"bitbucket_token" json:"bitbucket_token" env:"BITBUCKET_TOKEN"`
 
 	// GitHub-specific configuration (Phase 5.3)
-	GitHubPRTemplate       string `yaml:"github_pr_template" json:"github_pr_template"`
-	DefaultPRTargetBranch  string `yaml:"default_pr_target_branch" json:"default_pr_target_branch" default:"main"`
+	GitHubPRTemplate      string `yaml:"github_pr_template" json:"github_pr_template"`
+	DefaultPRTargetBranch string `yaml:"default_pr_target_branch" json:"default_pr_target_branch" default:"main"`
 
 	// Safety settings
 	RequireCleanWorkdir bool `yaml:"require_clean_workdir" json:"require_clean_workdir" default:"true"`
@@ -164,35 +170,35 @@ type TUIConfig struct {
 	Theme           string `yaml:"theme" json:"theme" default:"default"`
 	RefreshInterval int    `yaml:"refresh_interval" json:"refresh_interval" default:"5"` // seconds
 	MouseSupport    bool   `yaml:"mouse_support" json:"mouse_support" default:"true"`
-	
+
 	// Screen settings
-	DefaultScreen   string `yaml:"default_screen" json:"default_screen" default:"dashboard"`
-	ShowStatusBar   bool   `yaml:"show_status_bar" json:"show_status_bar" default:"true"`
-	ShowKeyHelp     bool   `yaml:"show_key_help" json:"show_key_help" default:"true"`
-	
+	DefaultScreen string `yaml:"default_screen" json:"default_screen" default:"dashboard"`
+	ShowStatusBar bool   `yaml:"show_status_bar" json:"show_status_bar" default:"true"`
+	ShowKeyHelp   bool   `yaml:"show_key_help" json:"show_key_help" default:"true"`
+
 	// Behavior settings
-	ConfirmQuit     bool   `yaml:"confirm_quit" json:"confirm_quit" default:"false"`
-	AutoRefresh     bool   `yaml:"auto_refresh" json:"auto_refresh" default:"true"`
-	DebugMode       bool   `yaml:"debug_mode" json:"debug_mode" default:"false"`
+	ConfirmQuit bool `yaml:"confirm_quit" json:"confirm_quit" default:"false"`
+	AutoRefresh bool `yaml:"auto_refresh" json:"auto_refresh" default:"true"`
+	DebugMode   bool `yaml:"debug_mode" json:"debug_mode" default:"false"`
 }
 
 // AnalyticsConfig defines analytics configuration
 type AnalyticsConfig struct {
-	Enabled         bool                    `yaml:"enabled" json:"enabled" default:"true"`
-	Collector       AnalyticsCollectorConfig `yaml:"collector" json:"collector"`
-	Engine          AnalyticsEngineConfig    `yaml:"engine" json:"engine"`
-	Hooks           AnalyticsHooksConfig     `yaml:"hooks" json:"hooks"`
-	Retention       AnalyticsRetentionConfig `yaml:"retention" json:"retention"`
-	Performance     AnalyticsPerformanceConfig `yaml:"performance" json:"performance"`
+	Enabled     bool                       `yaml:"enabled" json:"enabled" default:"true"`
+	Collector   AnalyticsCollectorConfig   `yaml:"collector" json:"collector"`
+	Engine      AnalyticsEngineConfig      `yaml:"engine" json:"engine"`
+	Hooks       AnalyticsHooksConfig       `yaml:"hooks" json:"hooks"`
+	Retention   AnalyticsRetentionConfig   `yaml:"retention" json:"retention"`
+	Performance AnalyticsPerformanceConfig `yaml:"performance" json:"performance"`
 }
 
 // AnalyticsCollectorConfig defines collector configuration
 type AnalyticsCollectorConfig struct {
-	PollInterval    time.Duration `yaml:"poll_interval" json:"poll_interval" default:"30s"`
-	BufferSize      int           `yaml:"buffer_size" json:"buffer_size" default:"1000"`
-	BatchSize       int           `yaml:"batch_size" json:"batch_size" default:"50"`
-	EnableMetrics   bool          `yaml:"enable_metrics" json:"enable_metrics" default:"true"`
-	RetentionDays   int           `yaml:"retention_days" json:"retention_days" default:"90"`
+	PollInterval  time.Duration `yaml:"poll_interval" json:"poll_interval" default:"30s"`
+	BufferSize    int           `yaml:"buffer_size" json:"buffer_size" default:"1000"`
+	BatchSize     int           `yaml:"batch_size" json:"batch_size" default:"50"`
+	EnableMetrics bool          `yaml:"enable_metrics" json:"enable_metrics" default:"true"`
+	RetentionDays int           `yaml:"retention_days" json:"retention_days" default:"90"`
 }
 
 // AnalyticsEngineConfig defines engine configuration
@@ -205,26 +211,26 @@ type AnalyticsEngineConfig struct {
 
 // AnalyticsHooksConfig defines hooks integration configuration
 type AnalyticsHooksConfig struct {
-	Enabled              bool `yaml:"enabled" json:"enabled" default:"true"`
-	CaptureStateChanges  bool `yaml:"capture_state_changes" json:"capture_state_changes" default:"true"`
+	Enabled               bool `yaml:"enabled" json:"enabled" default:"true"`
+	CaptureStateChanges   bool `yaml:"capture_state_changes" json:"capture_state_changes" default:"true"`
 	CaptureWorktreeEvents bool `yaml:"capture_worktree_events" json:"capture_worktree_events" default:"true"`
-	CaptureSessionEvents bool `yaml:"capture_session_events" json:"capture_session_events" default:"true"`
+	CaptureSessionEvents  bool `yaml:"capture_session_events" json:"capture_session_events" default:"true"`
 }
 
 // AnalyticsRetentionConfig defines data retention configuration
 type AnalyticsRetentionConfig struct {
-	SessionEventsDays    int           `yaml:"session_events_days" json:"session_events_days" default:"90"`
-	AggregatedDataDays   int           `yaml:"aggregated_data_days" json:"aggregated_data_days" default:"365"`
-	CleanupInterval      time.Duration `yaml:"cleanup_interval" json:"cleanup_interval" default:"24h"`
-	EnableAutoCleanup    bool          `yaml:"enable_auto_cleanup" json:"enable_auto_cleanup" default:"true"`
+	SessionEventsDays  int           `yaml:"session_events_days" json:"session_events_days" default:"90"`
+	AggregatedDataDays int           `yaml:"aggregated_data_days" json:"aggregated_data_days" default:"365"`
+	CleanupInterval    time.Duration `yaml:"cleanup_interval" json:"cleanup_interval" default:"24h"`
+	EnableAutoCleanup  bool          `yaml:"enable_auto_cleanup" json:"enable_auto_cleanup" default:"true"`
 }
 
 // AnalyticsPerformanceConfig defines performance configuration
 type AnalyticsPerformanceConfig struct {
-	MaxCPUUsage       float64       `yaml:"max_cpu_usage" json:"max_cpu_usage" default:"5.0"`
-	MaxMemoryUsageMB  int64         `yaml:"max_memory_usage_mb" json:"max_memory_usage_mb" default:"100"`
-	MaxQueryTime      time.Duration `yaml:"max_query_time" json:"max_query_time" default:"100ms"`
-	EnableMonitoring  bool          `yaml:"enable_monitoring" json:"enable_monitoring" default:"true"`
+	MaxCPUUsage      float64       `yaml:"max_cpu_usage" json:"max_cpu_usage" default:"5.0"`
+	MaxMemoryUsageMB int64         `yaml:"max_memory_usage_mb" json:"max_memory_usage_mb" default:"100"`
+	MaxQueryTime     time.Duration `yaml:"max_query_time" json:"max_query_time" default:"100ms"`
+	EnableMonitoring bool          `yaml:"enable_monitoring" json:"enable_monitoring" default:"true"`
 }
 
 // Validate validates the entire configuration
@@ -350,6 +356,18 @@ func (w *WorktreeConfig) Validate() error {
 		}
 	}
 
+	// Validate base directory is not empty if auto directory is enabled
+	if w.AutoDirectory && w.BaseDirectory == "" {
+		return errors.New("base directory is required when auto directory is enabled")
+	}
+
+	// Validate base directory contains valid placeholders if it's a template
+	if w.BaseDirectory != "" && strings.Contains(w.BaseDirectory, "{{") {
+		if !strings.Contains(w.BaseDirectory, "}}") {
+			return errors.New("base directory template must contain valid template variables like {{.Project}}")
+		}
+	}
+
 	return nil
 }
 
@@ -448,38 +466,38 @@ func (c *ClaudeConfig) Validate() error {
 	if c.PollInterval < 0 {
 		return errors.New("poll interval cannot be negative")
 	}
-	
+
 	if c.PollInterval < time.Second {
 		return errors.New("poll interval must be at least 1 second")
 	}
-	
+
 	if c.MaxProcesses < 0 {
 		return errors.New("max processes cannot be negative")
 	}
-	
+
 	if c.MaxProcesses > 100 {
 		return errors.New("max processes cannot exceed 100")
 	}
-	
+
 	if c.CleanupInterval < 0 {
 		return errors.New("cleanup interval cannot be negative")
 	}
-	
+
 	if c.StateTimeout < 0 {
 		return errors.New("state timeout cannot be negative")
 	}
-	
+
 	if c.StartupTimeout < 0 {
 		return errors.New("startup timeout cannot be negative")
 	}
-	
+
 	// Validate log paths
 	for _, path := range c.LogPaths {
 		if path == "" {
 			return errors.New("log path cannot be empty")
 		}
 	}
-	
+
 	// Validate state patterns
 	for key, pattern := range c.StatePatterns {
 		if key == "" {
@@ -489,14 +507,14 @@ func (c *ClaudeConfig) Validate() error {
 			return fmt.Errorf("state pattern for '%s' cannot be empty", key)
 		}
 	}
-	
+
 	return nil
 }
 
 // SetDefaults sets default values for missing configuration
 func (c *Config) SetDefaults() {
 	if c.Version == "" {
-		c.Version = "1.0.0"
+		c.Version = "2.0.0"
 	}
 
 	// Set default hooks
@@ -560,10 +578,13 @@ func (h *HookConfig) SetDefaults(hookType string) {
 // SetDefaults sets default values for worktree config
 func (w *WorktreeConfig) SetDefaults() {
 	if w.DirectoryPattern == "" {
-		w.DirectoryPattern = "{{.Project}}-{{.Branch}}"
+		w.DirectoryPattern = "{{.Branch}}" // Simplified since repo name is in base directory path
 	}
 	if w.DefaultBranch == "" {
 		w.DefaultBranch = "main"
+	}
+	if w.BaseDirectory == "" {
+		w.BaseDirectory = "../.worktrees/{{.Project}}" // Default sibling pattern
 	}
 }
 
@@ -635,7 +656,7 @@ Brief description of changes
 ## Testing
 How the changes were tested`
 	}
-	
+
 	// GitHub-specific defaults (Phase 5.3)
 	if g.GitHubPRTemplate == "" {
 		g.GitHubPRTemplate = `## Summary
@@ -650,11 +671,11 @@ Brief description of changes
 - [ ] Code follows project conventions
 - [ ] Documentation updated if needed`
 	}
-	
+
 	if g.DefaultPRTargetBranch == "" {
 		g.DefaultPRTargetBranch = "main"
 	}
-	
+
 	// Boolean defaults are handled by Go's zero values and struct tags
 }
 
@@ -722,7 +743,7 @@ func (t *TUIConfig) Validate() error {
 	if t.RefreshInterval < 1 {
 		return errors.New("refresh interval must be at least 1 second")
 	}
-	
+
 	validScreens := []string{"dashboard", "sessions", "worktrees", "config", "help"}
 	validScreen := false
 	for _, screen := range validScreens {
@@ -734,7 +755,7 @@ func (t *TUIConfig) Validate() error {
 	if !validScreen {
 		return fmt.Errorf("invalid default screen: %s", t.DefaultScreen)
 	}
-	
+
 	return nil
 }
 
@@ -756,23 +777,23 @@ func (a *AnalyticsConfig) Validate() error {
 	if err := a.Collector.Validate(); err != nil {
 		return fmt.Errorf("collector validation failed: %w", err)
 	}
-	
+
 	if err := a.Engine.Validate(); err != nil {
 		return fmt.Errorf("engine validation failed: %w", err)
 	}
-	
+
 	if err := a.Hooks.Validate(); err != nil {
 		return fmt.Errorf("hooks validation failed: %w", err)
 	}
-	
+
 	if err := a.Retention.Validate(); err != nil {
 		return fmt.Errorf("retention validation failed: %w", err)
 	}
-	
+
 	if err := a.Performance.Validate(); err != nil {
 		return fmt.Errorf("performance validation failed: %w", err)
 	}
-	
+
 	return nil
 }
 

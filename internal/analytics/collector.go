@@ -11,11 +11,11 @@ import (
 
 // CollectorConfig defines configuration for the analytics collector
 type CollectorConfig struct {
-	PollInterval    time.Duration `yaml:"poll_interval" json:"poll_interval" default:"30s"`
-	BufferSize      int           `yaml:"buffer_size" json:"buffer_size" default:"1000"`
-	BatchSize       int           `yaml:"batch_size" json:"batch_size" default:"50"`
-	EnableMetrics   bool          `yaml:"enable_metrics" json:"enable_metrics" default:"true"`
-	RetentionDays   int           `yaml:"retention_days" json:"retention_days" default:"90"`
+	PollInterval  time.Duration `yaml:"poll_interval" json:"poll_interval" default:"30s"`
+	BufferSize    int           `yaml:"buffer_size" json:"buffer_size" default:"1000"`
+	BatchSize     int           `yaml:"batch_size" json:"batch_size" default:"50"`
+	EnableMetrics bool          `yaml:"enable_metrics" json:"enable_metrics" default:"true"`
+	RetentionDays int           `yaml:"retention_days" json:"retention_days" default:"90"`
 }
 
 // SetDefaults sets default values for CollectorConfig
@@ -65,7 +65,7 @@ type Collector struct {
 	wg        sync.WaitGroup
 	mutex     sync.RWMutex
 	running   bool
-	
+
 	// Statistics
 	eventsProcessed   int64
 	eventsFailed      int64
@@ -184,7 +184,7 @@ func (c *Collector) collectionLoop() {
 
 		case event := <-c.eventChan:
 			buffer = append(buffer, event)
-			
+
 			// Process batch when it's full
 			if len(buffer) >= c.config.BatchSize {
 				c.processBatch(buffer)
@@ -282,7 +282,7 @@ func (c *Collector) performCleanup() {
 	}
 
 	cutoffTime := time.Now().AddDate(0, 0, -c.config.RetentionDays)
-	
+
 	// This would require implementing a cleanup method in storage
 	// For now, we'll log the operation
 	fmt.Printf("Analytics cleanup: removing events older than %s\n", cutoffTime.Format(time.RFC3339))
@@ -294,14 +294,14 @@ func (c *Collector) GetStats() map[string]interface{} {
 	defer c.mutex.RUnlock()
 
 	return map[string]interface{}{
-		"running":              c.running,
-		"events_processed":     c.eventsProcessed,
-		"events_failed":        c.eventsFailed,
-		"last_processed_time":  c.lastProcessedTime,
-		"buffer_size":          c.config.BufferSize,
-		"batch_size":           c.config.BatchSize,
-		"poll_interval":        c.config.PollInterval.String(),
-		"retention_days":       c.config.RetentionDays,
+		"running":             c.running,
+		"events_processed":    c.eventsProcessed,
+		"events_failed":       c.eventsFailed,
+		"last_processed_time": c.lastProcessedTime,
+		"buffer_size":         c.config.BufferSize,
+		"batch_size":          c.config.BatchSize,
+		"poll_interval":       c.config.PollInterval.String(),
+		"retention_days":      c.config.RetentionDays,
 	}
 }
 

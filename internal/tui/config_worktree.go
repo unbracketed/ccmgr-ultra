@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bcdekker/ccmgr-ultra/internal/config"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/bcdekker/ccmgr-ultra/internal/config"
 )
 
 // WorktreeSettingsModel represents the worktree settings configuration screen
 type WorktreeSettingsModel struct {
-	config     *config.WorktreeConfig
-	original   *config.WorktreeConfig
-	theme      Theme
-	width      int
-	height     int
-	cursor     int
-	components []interface{}
+	config       *config.WorktreeConfig
+	original     *config.WorktreeConfig
+	theme        Theme
+	width        int
+	height       int
+	cursor       int
+	components   []interface{}
 	focusedIndex int
 }
 
@@ -49,20 +49,20 @@ func (m *WorktreeSettingsModel) initComponents() {
 		// Auto-directory setting
 		NewConfigSection("Directory Management", m.theme),
 		NewConfigToggle("Auto-create directories", m.config.AutoDirectory, m.theme),
-		
+
 		// Directory pattern
 		m.createPatternInput(),
 		m.createPatternHelp(),
-		
+
 		// Default branch
 		NewConfigSection("Branch Settings", m.theme),
 		m.createDefaultBranchInput(),
-		
+
 		// Cleanup settings
 		NewConfigSection("Cleanup Options", m.theme),
 		NewConfigToggle("Cleanup on merge", m.config.CleanupOnMerge, m.theme),
 	}
-	
+
 	// Set descriptions for toggles
 	if toggle, ok := m.components[3].(*ConfigToggle); ok {
 		toggle.SetDescription("Automatically create directory structure when creating worktrees")
@@ -94,7 +94,7 @@ Examples:
   {{.project}}-{{.branch}}     → myapp-feature-auth
   work/{{.project}}/{{.branch}} → work/myapp/feature-auth
   {{.user}}/{{.project}}-{{.branch}} → john/myapp-feature-auth`
-	
+
 	return NewConfigHelp(helpText, m.theme)
 }
 

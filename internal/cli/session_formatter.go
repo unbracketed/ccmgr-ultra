@@ -28,7 +28,7 @@ func (f *SessionTableFormatter) Format(data interface{}) error {
 		}
 		v = v.Elem()
 	}
-	
+
 	if v.Kind() != reflect.Struct {
 		return fmt.Errorf("invalid data type for session formatter: expected struct, got %T", data)
 	}
@@ -58,19 +58,19 @@ func (f *SessionTableFormatter) Format(data interface{}) error {
 // formatSessionsReflection formats sessions using reflection
 func (f *SessionTableFormatter) formatSessionsReflection(sessionsField reflect.Value) error {
 	f.printSectionHeader("Sessions")
-	
+
 	// Define column headers and widths
 	headers := []string{"Name", "Project", "Branch", "Status", "Directory", "Created", "Last Access"}
 	widths := []int{25, 15, 15, 8, 30, 12, 12}
-	
+
 	// Print header
 	f.printTableHeader(headers, widths)
-	
+
 	// Print rows
 	for i := 0; i < sessionsField.Len(); i++ {
 		sessionInterface := sessionsField.Index(i).Interface()
 		session := reflect.ValueOf(sessionInterface)
-		
+
 		row := []string{
 			getFieldString(session, "Name"),
 			getFieldString(session, "Project"),
@@ -82,7 +82,7 @@ func (f *SessionTableFormatter) formatSessionsReflection(sessionsField reflect.V
 		}
 		f.printTableRow(row, widths)
 	}
-	
+
 	f.printTableFooter(widths)
 	return nil
 }
@@ -107,7 +107,7 @@ func (f *SessionTableFormatter) printTableHeader(headers []string, widths []int)
 		}
 	}
 	fmt.Fprintf(f.writer, " │\n")
-	
+
 	// Separator
 	fmt.Fprintf(f.writer, "├")
 	for i, width := range widths {

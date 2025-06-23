@@ -49,11 +49,11 @@ func TestGenerateSessionName(t *testing.T) {
 			if result != tt.expected {
 				t.Errorf("Expected %s, got %s", tt.expected, result)
 			}
-			
+
 			if len(result) > maxNameLength {
 				t.Errorf("Generated name too long: %d > %d", len(result), maxNameLength)
 			}
-			
+
 			if !ValidateSessionName(result) {
 				t.Errorf("Generated name is not valid: %s", result)
 			}
@@ -114,27 +114,27 @@ func TestParseSessionName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			project, worktree, branch, err := ParseSessionName(tt.sessionName)
-			
+
 			if tt.expectErr {
 				if err == nil {
 					t.Errorf("Expected error but got none")
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Errorf("Unexpected error: %v", err)
 				return
 			}
-			
+
 			if project != tt.project {
 				t.Errorf("Expected project %s, got %s", tt.project, project)
 			}
-			
+
 			if worktree != tt.worktree {
 				t.Errorf("Expected worktree %s, got %s", tt.worktree, worktree)
 			}
-			
+
 			if branch != tt.branch {
 				t.Errorf("Expected branch %s, got %s", tt.branch, branch)
 			}
@@ -244,7 +244,7 @@ func TestSanitizeNameComponent(t *testing.T) {
 			if result != tt.expected {
 				t.Errorf("Expected %s, got %s", tt.expected, result)
 			}
-			
+
 			if len(result) > 20 {
 				t.Errorf("Sanitized component too long: %d > 20", len(result))
 			}
@@ -285,7 +285,7 @@ func TestTruncateSessionName(t *testing.T) {
 			if len(result) > tt.maxLen {
 				t.Errorf("Truncated name too long: %d > %d", len(result), tt.maxLen)
 			}
-			
+
 			if !strings.HasPrefix(result, "ccmgr-") {
 				t.Errorf("Truncated name should still have prefix: %s", result)
 			}
@@ -307,21 +307,21 @@ func TestRoundTripParsing(t *testing.T) {
 	for _, tt := range tests {
 		t.Run("round trip", func(t *testing.T) {
 			sessionName := GenerateSessionName(tt.project, tt.worktree, tt.branch)
-			
+
 			parsedProject, parsedWorktree, parsedBranch, err := ParseSessionName(sessionName)
 			if err != nil {
 				t.Errorf("Failed to parse generated session name: %v", err)
 				return
 			}
-			
+
 			if SanitizeNameComponent(tt.project) != parsedProject {
 				t.Errorf("Project mismatch: expected %s, got %s", SanitizeNameComponent(tt.project), parsedProject)
 			}
-			
+
 			if SanitizeNameComponent(tt.worktree) != parsedWorktree {
 				t.Errorf("Worktree mismatch: expected %s, got %s", SanitizeNameComponent(tt.worktree), parsedWorktree)
 			}
-			
+
 			if SanitizeNameComponent(tt.branch) != parsedBranch {
 				t.Errorf("Branch mismatch: expected %s, got %s", SanitizeNameComponent(tt.branch), parsedBranch)
 			}

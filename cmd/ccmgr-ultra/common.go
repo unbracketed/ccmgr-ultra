@@ -34,7 +34,7 @@ func handleCLIError(err error) error {
 	if err == nil {
 		return nil
 	}
-	
+
 	return cli.HandleCLIError(err)
 }
 
@@ -44,7 +44,7 @@ func setupOutputFormatter(format string) (cli.OutputFormatter, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return cli.NewFormatter(outputFormat, nil), nil
 }
 
@@ -54,7 +54,7 @@ func setupStatusOutputFormatter(format string) (cli.OutputFormatter, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return cli.NewStatusFormatter(outputFormat, nil), nil
 }
 
@@ -64,8 +64,18 @@ func setupSessionOutputFormatter(format string) (cli.OutputFormatter, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return cli.NewSessionFormatter(outputFormat, nil), nil
+}
+
+// setupWorktreeOutputFormatter creates an output formatter specifically for worktree data
+func setupWorktreeOutputFormatter(format string) (cli.OutputFormatter, error) {
+	outputFormat, err := cli.ValidateFormat(format)
+	if err != nil {
+		return nil, err
+	}
+
+	return cli.NewWorktreeFormatter(outputFormat, nil), nil
 }
 
 // validateWorktreeArg validates a worktree name argument

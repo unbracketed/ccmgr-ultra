@@ -294,7 +294,7 @@ func TestConfigDefaults(t *testing.T) {
 		config := &Config{}
 		config.SetDefaults()
 
-		assert.Equal(t, "1.0.0", config.Version)
+		assert.Equal(t, "2.0.0", config.Version)
 		assert.NotEmpty(t, config.Shortcuts)
 		assert.Equal(t, "claude", config.Commands.ClaudeCommand)
 	})

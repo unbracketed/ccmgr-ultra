@@ -16,14 +16,14 @@ import (
 
 // DefaultStateMonitor implements StateMonitor interface
 type DefaultStateMonitor struct {
-	config       *ProcessConfig
-	detector     ProcessDetector
-	logMonitors  map[string]*LogMonitor
-	running      bool
-	mutex        sync.RWMutex
-	stopCh       chan struct{}
-	ctx          context.Context
-	cancel       context.CancelFunc
+	config      *ProcessConfig
+	detector    ProcessDetector
+	logMonitors map[string]*LogMonitor
+	running     bool
+	mutex       sync.RWMutex
+	stopCh      chan struct{}
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
 
 // NewDefaultStateMonitor creates a new state monitor
@@ -168,7 +168,7 @@ func (m *DefaultStateMonitor) detectStateFromResources(process *ProcessInfo) (Pr
 		if cpuPercent > 5.0 {
 			return StateBusy, nil
 		}
-		
+
 		// Very low CPU with stable memory suggests idle
 		if cpuPercent < 1.0 {
 			return StateIdle, nil
@@ -182,7 +182,7 @@ func (m *DefaultStateMonitor) detectStateFromResources(process *ProcessInfo) (Pr
 func (m *DefaultStateMonitor) detectStateFromLogs(process *ProcessInfo) (ProcessState, error) {
 	// Try to find log files for this process
 	logPaths := m.findLogFiles(process)
-	
+
 	for _, logPath := range logPaths {
 		state, err := m.analyzeLogFile(logPath, process.SessionID)
 		if err != nil {
@@ -280,7 +280,7 @@ func (m *DefaultStateMonitor) findLogFiles(process *ProcessInfo) []string {
 			filepath.Join(process.WorkingDir, "logs"),
 			filepath.Join(process.WorkingDir, ".logs"),
 		}
-		
+
 		for _, path := range commonPaths {
 			if info, err := os.Stat(path); err == nil && info.IsDir() {
 				// Look for log files in this directory
@@ -303,7 +303,7 @@ func (m *DefaultStateMonitor) findLogFiles(process *ProcessInfo) []string {
 func (m *DefaultStateMonitor) analyzeLogFile(logPath, sessionID string) (ProcessState, error) {
 	// Get or create log monitor for this file
 	monitor := m.getLogMonitor(logPath, sessionID)
-	
+
 	file, err := os.Open(logPath)
 	if err != nil {
 		return StateUnknown, err
@@ -360,7 +360,7 @@ func (m *DefaultStateMonitor) analyzeLogFile(logPath, sessionID string) (Process
 func (m *DefaultStateMonitor) analyzeTextContent(content string) ProcessState {
 	// Check each state pattern
 	states := []ProcessState{StateError, StateBusy, StateWaiting, StateIdle}
-	
+
 	for _, state := range states {
 		pattern := m.config.GetCompiledPattern(state)
 		if pattern != nil && pattern.MatchString(content) {
@@ -374,14 +374,14 @@ func (m *DefaultStateMonitor) analyzeTextContent(content string) ProcessState {
 // getLogMonitor gets or creates a log monitor for a file
 func (m *DefaultStateMonitor) getLogMonitor(logPath, sessionID string) *LogMonitor {
 	key := fmt.Sprintf("%s:%s", logPath, sessionID)
-	
+
 	if monitor, exists := m.logMonitors[key]; exists {
 		return monitor
 	}
 
 	monitor := &LogMonitor{
-		LogPath:   logPath,
-		ProcessID: sessionID,
+		LogPath:    logPath,
+		ProcessID:  sessionID,
 		StateRegex: make(map[ProcessState]*regexp.Regexp),
 	}
 
@@ -424,10 +424,10 @@ func (m *DefaultStateMonitor) GetMonitorStats() map[string]interface{} {
 	defer m.mutex.RUnlock()
 
 	stats := map[string]interface{}{
-		"running":          m.running,
-		"log_monitors":     len(m.logMonitors),
-		"poll_interval":    m.config.PollInterval.String(),
-		"log_parsing":      m.config.EnableLogParsing,
+		"running":             m.running,
+		"log_monitors":        len(m.logMonitors),
+		"poll_interval":       m.config.PollInterval.String(),
+		"log_parsing":         m.config.EnableLogParsing,
 		"resource_monitoring": m.config.EnableResourceMonitoring,
 	}
 
